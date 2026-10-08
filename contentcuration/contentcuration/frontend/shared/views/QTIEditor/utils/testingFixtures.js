@@ -1,5 +1,8 @@
 // Centralized QTI Mock XML Fixtures for Unit Tests
 
+import { QTI_INTERACTION_TAGS } from '../constants';
+import { registry } from '../interactions/descriptors';
+
 export const CHOICE_SINGLE_SELECT_XML = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
   <qti-prompt>Which planet is closest to the Sun?</qti-prompt>
   <qti-simple-choice identifier="mercury">Mercury</qti-simple-choice>
@@ -77,6 +80,36 @@ export const ASSOCIATE_DECL_XML = `<qti-response-declaration identifier="RESPONS
     <qti-value>choice_ccc33333 choice_ddd44444</qti-value>
   </qti-correct-response>
 </qti-response-declaration>`;
+
+// choice_reptile is named by no correct-response value — the fixture's distractor.
+export const MATCH_XML = `<qti-match-interaction response-identifier="RESPONSE" shuffle="true" max-associations="3">
+  <qti-prompt><p>Match each animal to its biological classification class.</p></qti-prompt>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="row_dog" match-max="1">Dog</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="row_eagle" match-max="1">Eagle</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="row_frog" match-max="1">Frog</qti-simple-associable-choice>
+  </qti-simple-match-set>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="choice_bird" match-max="1">Bird</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_mammal" match-max="1">Mammal</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_amphibian" match-max="1">Amphibian</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_reptile" match-max="1">Reptile</qti-simple-associable-choice>
+  </qti-simple-match-set>
+</qti-match-interaction>`;
+
+export const MATCH_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+  <qti-correct-response>
+    <qti-value>row_dog choice_mammal</qti-value>
+    <qti-value>row_eagle choice_bird</qti-value>
+    <qti-value>row_frog choice_amphibian</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
+// A third match set is outside what the editor can represent.
+export const MATCH_THREE_SETS_XML = MATCH_XML.replace(
+  '</qti-match-interaction>',
+  '<qti-simple-match-set/></qti-match-interaction>',
+);
 
 // Full QTI Assessment Item XML Documents
 
@@ -269,35 +302,6 @@ export const CHOICE_ITEM_DOCUMENT_WITH_HINTS = `<?xml version="1.0" encoding="UT
   </qti-catalog-info>
 </qti-assessment-item>`;
 
-/**
- * A converted question with nothing to answer, which still carries its text in the body and
- * hints in its catalog. No interaction means no interaction editor, so the only thing an
- * author can edit here is a hint — and that must not cost the body.
- */
-export const NO_INTERACTION_ITEM_WITH_HINTS = `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item
-  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
-  identifier="item-no-interaction-hints"
-  title="Answerless Question"
-  adaptive="false"
-  time-dependent="false"
-  xml:lang="en"
->
-  <qti-item-body>
-    <div><p>What is the capital of France?</p></div>
-  </qti-item-body>
-  <qti-catalog-info>
-    <qti-catalog id="kolibri-hints">
-      <qti-card support="ext:kolibri-hint">
-        <qti-html-content><p>It is on the Seine</p></qti-html-content>
-      </qti-card>
-      <qti-card support="ext:kolibri-hint">
-        <qti-html-content><p>Starts with a P</p></qti-html-content>
-      </qti-card>
-    </qti-catalog>
-  </qti-catalog-info>
-</qti-assessment-item>`;
-
 export const VALID_ASSOCIATE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
@@ -311,6 +315,22 @@ export const VALID_ASSOCIATE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-
 
   <qti-item-body>
     ${ASSOCIATE_XML}
+  </qti-item-body>
+</qti-assessment-item>`;
+
+export const VALID_MATCH_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-test-match"
+  title="Test Match Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  ${MATCH_DECL_XML}
+
+  <qti-item-body>
+    ${MATCH_XML}
   </qti-item-body>
 </qti-assessment-item>`;
 
@@ -333,6 +353,122 @@ export const TWO_INTERACTIONS_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
     </qti-choice-interaction>
     <p>Middle text</p>
     <qti-text-entry-interaction response-identifier="RESP2" />
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/** Two choice interactions and a hint catalog: parses, but cannot be edited faithfully. */
+export const MULTI_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-multi-choice"
+  title="Two Choice Questions"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESP1" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="RESP2" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>C</qti-value></qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESP1" max-choices="1">
+      <qti-prompt>First question</qti-prompt>
+      <qti-simple-choice identifier="A">Yes</qti-simple-choice>
+      <qti-simple-choice identifier="B">No</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-choice-interaction response-identifier="RESP2" max-choices="1">
+      <qti-prompt>Second question</qti-prompt>
+      <qti-simple-choice identifier="C">Yes</qti-simple-choice>
+      <qti-simple-choice identifier="D">No</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-catalog-info>
+    <qti-catalog id="kolibri-hints">
+      <qti-card support="ext:kolibri-hint">
+        <qti-html-content><p>Think about it</p></qti-html-content>
+      </qti-card>
+    </qti-catalog>
+  </qti-catalog-info>
+</qti-assessment-item>`;
+
+/**
+ * An interaction QTI defines but no registered descriptor handles. Picked from the
+ * registry so a fixture stays unrecognized when a descriptor is added for another type.
+ */
+export const UNDESCRIBED_INTERACTION = QTI_INTERACTION_TAGS.find(tag => !registry[tag]);
+
+export const UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-unrecognized"
+  title="Unrecognized Interaction Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string" />
+
+  <qti-item-body>
+    <${UNDESCRIBED_INTERACTION} response-identifier="RESPONSE">
+      <qti-prompt>Describe the capital</qti-prompt>
+    </${UNDESCRIBED_INTERACTION}>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
+ * Inline choice dropdowns, which have a descriptor but no editor yet. The second dropdown
+ * has no correct answer, which the editor's rules would report.
+ */
+export const INLINE_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-inline-choice"
+  title="Inline Choice"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESPONSE_1" cardinality="single" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>blue</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="RESPONSE_2" cardinality="single" base-type="identifier" />
+
+  <qti-item-body>
+    <p>The sky is <qti-inline-choice-interaction response-identifier="RESPONSE_1"><qti-inline-choice identifier="blue">blue</qti-inline-choice><qti-inline-choice identifier="red">red</qti-inline-choice></qti-inline-choice-interaction> and grass is <qti-inline-choice-interaction response-identifier="RESPONSE_2"><qti-inline-choice identifier="green">green</qti-inline-choice><qti-inline-choice identifier="purple">purple</qti-inline-choice></qti-inline-choice-interaction>.</p>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
+ * Two text entries whose declarations are listed out of body order.
+ */
+export const MULTI_TEXT_ENTRY_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-multi-text-entry"
+  title="Multi Text Entry"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="response_pw4rzk8d" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Moon</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="response_xq7tbn2c" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Sun</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <p>The Earth orbits the <qti-text-entry-interaction response-identifier="response_xq7tbn2c" />.</p>
+    <p>The <qti-text-entry-interaction response-identifier="response_pw4rzk8d" /> orbits the Earth.</p>
   </qti-item-body>
 </qti-assessment-item>`;
 

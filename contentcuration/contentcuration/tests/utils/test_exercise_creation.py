@@ -5,9 +5,11 @@
 import json
 import os
 import re
+import struct
 import zipfile
 from io import BytesIO
 from tempfile import TemporaryDirectory
+from unittest import mock
 from uuid import uuid4
 
 from django.core.files.storage import default_storage as storage
@@ -15,13 +17,21 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from lxml import etree
+from PIL import Image
+from PIL import ImageCms
+from PIL import ImageDraw
+from PIL import PngImagePlugin
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests.testdata import create_studio_file
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.tests.utils.qti.test_convert import _normalize_xml
+from contentcuration.tests.utils.qti.test_perseus_derive import _text_item
+from contentcuration.tests.utils.qti.test_perseus_derive import TOLERANCE_ITEM
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
@@ -29,6 +39,144 @@ from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
+
+UNRESIZABLE_IMAGE_BYTES = b"not an image"
+
+
+def _create_unresizable_image():
+    return create_studio_file(
+        UNRESIZABLE_IMAGE_BYTES, preset=format_presets.EXERCISE_IMAGE, ext="jpg"
+    )["db_file"]
+
+
+def _animated_gif_bytes(size=(120, 90)):
+    frames = [Image.new("RGB", size, color=c) for c in ("red", "blue", "green")]
+    buffer = BytesIO()
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+    return buffer.getvalue()
+
+
+def _moving_block_gif_bytes():
+    # A red block crosses a transparent background, one third per frame
+    frames = []
+    for left in (0, 40, 80):
+        frame = Image.new("RGBA", (120, 90), (0, 0, 0, 0))
+        frame.paste((255, 0, 0, 255), (left, 0, left + 40, 90))
+        frames.append(frame)
+    buffer = BytesIO()
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:], disposal=2)
+    return buffer.getvalue()
+
+
+def _dotted_gif_bytes():
+    # 1px dots stay put while a block moves along the bottom edge
+    frames = []
+    for left in (0, 100, 200):
+        frame = Image.new("RGB", (400, 300), "white")
+        for x in range(0, 400, 8):
+            for y in range(0, 240, 8):
+                frame.putpixel((x, y), (0, 0, 0))
+        frame.paste((255, 0, 0), (left, 260, left + 40, 300))
+        frames.append(frame)
+    buffer = BytesIO()
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+    return buffer.getvalue()
+
+
+def _red_thirds(content):
+    thirds = []
+    with Image.open(BytesIO(content)) as f:
+        for index in range(f.n_frames):
+            f.seek(index)
+            frame = f.convert("RGBA")
+            thirds.append(
+                "".join(
+                    "R"
+                    if frame.getpixel((x, frame.height // 2)) == (255, 0, 0, 255)
+                    else "."
+                    for x in (frame.width // 6, frame.width // 2, frame.width * 5 // 6)
+                )
+            )
+    return thirds
+
+
+def _assert_animated_60x45(test, content):
+    with Image.open(BytesIO(content)) as f:
+        test.assertEqual((f.size, f.n_frames), ((60, 45), 3))
+
+
+def _exif_rotated_jpeg_bytes(image_format="JPEG", **save_kwargs):
+    # Stored 400x300 with the left half red; orientation 6 displays it
+    # 300x400 with the red half on top.
+    stored = Image.new("RGB", (400, 300), color="blue")
+    stored.paste("red", (0, 0, 200, 300))
+    exif = Image.Exif()
+    exif[0x0112] = 6
+    buffer = BytesIO()
+    stored.save(buffer, image_format, exif=exif, **save_kwargs)
+    return buffer.getvalue()
+
+
+def _jpeg_with_exif(tiff):
+    # A 400x300 JPEG whose EXIF segment holds ``tiff`` as written, valid or not
+    buffer = BytesIO()
+    Image.new("RGB", (400, 300), "blue").save(buffer, "JPEG")
+    payload = b"Exif\x00\x00" + tiff
+    app1 = b"\xff\xe1" + (len(payload) + 2).to_bytes(2, "big") + payload
+    # The APP1 segment goes straight after the start-of-image marker
+    return buffer.getvalue()[:2] + app1 + buffer.getvalue()[2:]
+
+
+def _mpo_bytes():
+    # A phone-camera JPEG with an embedded second image, which Pillow opens as MPO
+    return _exif_rotated_jpeg_bytes(
+        "MPO", save_all=True, append_images=[Image.new("RGB", (400, 300))]
+    )
+
+
+SVG_BYTES = b'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"/>'
+
+
+def _svg_size(content):
+    root = etree.fromstring(content)
+    return root.get("width"), root.get("height")
+
+
+def _noisy_jpeg_bytes(quality=95, **save_kwargs):
+    buffer = BytesIO()
+    Image.effect_noise((400, 300), 64).convert("RGB").save(
+        buffer, "JPEG", quality=quality, **save_kwargs
+    )
+    return buffer.getvalue()
+
+
+def _png_bytes(size):
+    buffer = BytesIO()
+    Image.new("RGB", size, color="blue").save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def _flat_colour_png_bytes():
+    """A 400x300 diagram-like PNG whose downscale anti-aliases into a larger file."""
+    image = Image.new("RGB", (400, 300), "white")
+    draw = ImageDraw.Draw(image)
+    for index in range(300):
+        x, y = index * 37 % 400, index * 53 % 300
+        draw.ellipse(
+            [x, y, x + 20, y + 20], fill=(index * 71 % 256, index * 13 % 256, 90)
+        )
+    buffer = BytesIO()
+    image.save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def _assert_upright_150x200(test, content):
+    with Image.open(BytesIO(content)) as f:
+        test.assertEqual(f.size, (150, 200))
+        red, _, blue = f.convert("RGB").getpixel((130, 20))
+        test.assertGreater(red, blue)
+        red, _, blue = f.convert("RGB").getpixel((20, 180))
+        test.assertGreater(blue, red)
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -606,6 +754,45 @@ class TestPerseusExerciseCreation(StudioTestCase):
         )
         self.assertIn("$\\frac{x}{2} = 3$", item_json["question"]["content"])
 
+    def _numeric_answer_values(self, answers):
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is the answer?",
+            [
+                {"answer": answer, "correct": True, "order": order}
+                for order, answer in enumerate(answers, start=1)
+            ],
+        )
+        self._create_perseus_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
+            }
+        )
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+        options = item_json["question"]["widgets"]["numeric-input 1"]["options"]
+        return [answer["value"] for answer in options["answers"]]
+
+    def test_input_question_drops_non_finite_answers(self):
+        values = self._numeric_answer_values(
+            [
+                "6",
+                "1e400",
+                "-1e400",
+                "1" * 401,
+                "1" * 401 + "/" + "1" * 401,
+            ]
+        )
+        self.assertEqual(values, [6.0])
+
     def test_multiple_formula_processing(self):
         """Test that formulas are properly processed in exercises"""
         # Create a question with LaTeX formulas
@@ -1050,6 +1237,233 @@ class TestPerseusExerciseCreation(StudioTestCase):
         """Test image resizing functionality in hint content"""
         self._test_image_resizing_in_field("hint")
 
+    def _publish_sized_image(self, content, ext, width, height):
+        image_file = create_studio_file(
+            content, preset=format_presets.EXERCISE_IMAGE, ext=ext
+        )["db_file"]
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            f"![shape]({image_url} ={width}x{height})",
+            [{"answer": "Answer A", "correct": True, "order": 1}],
+        )
+        image_file.assessment_item = item
+        image_file.save()
+
+        self._create_perseus_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+            }
+        )
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        image_files = sorted(
+            name for name in zip_file.namelist() if name.startswith("images/")
+        )
+        return zip_file, image_file.filename(), image_files
+
+    def test_sized_animated_gif_is_resized_with_its_frames(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _animated_gif_bytes(), "gif", 60, 45
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        _assert_animated_60x45(self, zip_file.read(image))
+
+    def test_sized_animated_gif_clears_each_frame_before_the_next(self):
+        zip_file, _, (image,) = self._publish_sized_image(
+            _moving_block_gif_bytes(), "gif", 60, 45
+        )
+        self.assertEqual(_red_thirds(zip_file.read(image)), ["R..", ".R.", "..R"])
+
+    def test_sized_animated_gif_resamples_every_frame_alike(self):
+        zip_file, _, (image,) = self._publish_sized_image(
+            _dotted_gif_bytes(), "gif", 200, 150
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            dots = []
+            for index in range(f.n_frames):
+                f.seek(index)
+                dots.append(f.convert("RGB").crop((0, 0, 200, 120)).tobytes())
+        self.assertEqual(dots[0], dots[1])
+
+    def test_sized_animated_png_keeps_each_frame(self):
+        # A red block moves along the bottom of a blue background and back
+        frames = []
+        for left in (0, 40, 80, 40):
+            frame = Image.new("RGBA", (120, 90), "blue")
+            frame.paste("red", (left, 60, left + 40, 90))
+            frames.append(frame)
+        buffer = BytesIO()
+        frames[0].save(
+            buffer,
+            "PNG",
+            save_all=True,
+            append_images=frames[1:],
+            duration=[100, 200, 300, 400],
+        )
+        zip_file, _, (image,) = self._publish_sized_image(
+            buffer.getvalue(), "png", 60, 45
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            durations = []
+            tops = []
+            for index in range(f.n_frames):
+                f.seek(index)
+                f.load()
+                durations.append(f.info["duration"])
+                tops.append(f.convert("RGBA").getpixel((30, 5)))
+        self.assertEqual(durations, [100, 200, 300, 400])
+        self.assertEqual(tops, [(0, 0, 255, 255)] * 4)
+
+    def test_sized_transparent_animated_png_leaves_no_trail(self):
+        # A green block moves across a transparent background
+        frames = []
+        for left in (0, 50, 100, 150):
+            frame = Image.new("RGBA", (200, 150), (0, 0, 0, 0))
+            frame.paste((0, 255, 0, 255), (left, 0, left + 50, 150))
+            frames.append(frame)
+        buffer = BytesIO()
+        frames[0].save(
+            buffer,
+            "PNG",
+            save_all=True,
+            append_images=frames[1:],
+            duration=100,
+            disposal=PngImagePlugin.Disposal.OP_BACKGROUND,
+            blend=PngImagePlugin.Blend.OP_OVER,
+        )
+        zip_file, _, (image,) = self._publish_sized_image(
+            buffer.getvalue(), "png", 100, 75
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            first_quarter_alphas = []
+            for index in range(f.n_frames):
+                f.seek(index)
+                first_quarter_alphas.append(f.convert("RGBA").getpixel((12, 37))[3])
+        self.assertEqual(first_quarter_alphas, [255, 0, 0, 0])
+
+    def test_sized_exif_rotated_photo_is_resized_upright(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _exif_rotated_jpeg_bytes(), "jpg", 150, 200
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        _assert_upright_150x200(self, zip_file.read(image))
+
+    def test_sized_photo_with_truncated_exif_is_resized(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _jpeg_with_exif(b"II"), "jpg", 200, 150
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.size, (200, 150))
+
+    def test_sized_rotated_photo_with_mistyped_exif_tag_is_resized(self):
+        # Orientation 6, then tag 0x0121, a LONG, stored as ASCII "Cam"
+        tiff = (
+            b"II*\x00\x08\x00\x00\x00\x02\x00"
+            + struct.pack("<HHIHH", 0x0112, 3, 1, 6, 0)
+            + struct.pack("<HHI", 0x0121, 2, 4)
+            + b"Cam\x00\x00\x00\x00\x00"
+        )
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _jpeg_with_exif(tiff), "jpg", 150, 200
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.size, (150, 200))
+
+    def test_sized_mpo_photo_is_resized_upright(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _mpo_bytes(), "jpg", 150, 200
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        _assert_upright_150x200(self, zip_file.read(image))
+
+    def test_animated_gif_at_its_natural_size_ships_original(self):
+        _, filename, image_files = self._publish_sized_image(
+            _animated_gif_bytes(), "gif", 120, 90
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+
+    def test_animated_gif_sized_down_from_past_the_pixel_budget_is_resized(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            # Frames past the resized pixel budget, yet a small file
+            _animated_gif_bytes((2600, 2600)),
+            "gif",
+            400,
+            300,
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual((f.size, f.n_frames), ((400, 300), 3))
+
+    def test_animated_gif_sized_past_the_pixel_budget_ships_original(self):
+        original = _animated_gif_bytes()
+        zip_file, filename, image_files = self._publish_sized_image(
+            original, "gif", 3000, 3000
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+        self.assertEqual(zip_file.read(image_files[0]), original)
+
+    @mock.patch(
+        "contentcuration.utils.assessment.base.MAX_DECODED_ANIMATION_PIXELS", 30_000
+    )
+    def test_animated_gif_past_the_decode_budget_ships_original(self):
+        # Three 120x90 frames decode 32,400 pixels
+        original = _animated_gif_bytes()
+        zip_file, filename, image_files = self._publish_sized_image(
+            original, "gif", 60, 45
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+        self.assertEqual(zip_file.read(image_files[0]), original)
+
+    def test_sized_jpeg_at_its_own_size_ships_the_smaller_re_encode(self):
+        original = _noisy_jpeg_bytes()
+        zip_file, filename, (image,) = self._publish_sized_image(
+            original, "jpg", 400, 300
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        self.assertLess(len(zip_file.read(image)), len(original))
+
+    def test_sized_jpeg_at_its_own_size_ships_original_when_re_encode_is_larger(
+        self,
+    ):
+        original = _noisy_jpeg_bytes(quality=30)
+        zip_file, filename, image_files = self._publish_sized_image(
+            original, "jpg", 400, 300
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+        self.assertEqual(zip_file.read(image_files[0]), original)
+
+    def test_sized_jpeg_keeps_its_colour_profile(self):
+        icc_profile = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
+        zip_file, _, (image,) = self._publish_sized_image(
+            _noisy_jpeg_bytes(icc_profile=icc_profile), "jpg", 200, 150
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.info.get("icc_profile"), icc_profile)
+
+    def test_sized_transparent_static_gif_keeps_its_transparency(self):
+        # A red block on a transparent background
+        image = Image.new("P", (400, 300), 0)
+        image.putpalette([0, 0, 0, 255, 0, 0])
+        image.paste(1, (100, 75, 300, 225))
+        buffer = BytesIO()
+        image.save(buffer, "GIF", transparency=0)
+        zip_file, _, (image,) = self._publish_sized_image(
+            buffer.getvalue(), "gif", 200, 150
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            f = f.convert("RGBA")
+            self.assertEqual(f.getpixel((0, 0))[3], 0)
+            self.assertEqual(f.getpixel((100, 75)), (255, 0, 0, 255))
+
     def test_image_with_same_resize_dimensions(self):
         """Test handling of multiple instances of the same image with the same resize dimensions"""
         # Create a base image file
@@ -1265,6 +1679,51 @@ class TestPerseusExerciseCreation(StudioTestCase):
             f"Expected 1 resized images, found {len(image_files)}: {image_files}",
         )
 
+    def test_image_resize_failure_uses_original(self):
+        bad_image = _create_unresizable_image()
+        bad_image_url = exercises.CONTENT_STORAGE_FORMAT.format(bad_image.filename())
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            f"Question: ![x]({bad_image_url} =60x45)",
+            [
+                {
+                    "answer": f"![y]({bad_image_url} =30x20)",
+                    "correct": True,
+                    "order": 1,
+                }
+            ],
+        )
+        bad_image.assessment_item = item
+        bad_image.save()
+
+        self._create_perseus_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+            }
+        )
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+
+        image_path = f"images/{bad_image.filename()}"
+        self.assertEqual(
+            [name for name in zip_file.namelist() if name.startswith("images/")],
+            [image_path],
+        )
+        self.assertEqual(zip_file.read(image_path), UNRESIZABLE_IMAGE_BYTES)
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+        self.assertIn(
+            f"${exercises.IMG_PLACEHOLDER}/{image_path}",
+            item_json["question"]["content"],
+        )
+
 
 class TestQTIExerciseCreation(StudioTestCase):
     """
@@ -1288,6 +1747,12 @@ class TestQTIExerciseCreation(StudioTestCase):
         '<qti-simple-choice identifier="choice_0" show-hide="show" fixed="false">A</qti-simple-choice>'
         '<qti-simple-choice identifier="choice_1" show-hide="show" fixed="false">B</qti-simple-choice>'
         "</qti-choice-interaction>",
+    )
+
+    TWO_SIZE_IMGS = (
+        '<img src="{filename}" alt="a" width="200" height="150" />'
+        '<img src="{filename}" alt="b" width="200" height="150" />'
+        '<img src="{filename}" alt="c" width="100" height="75" />'
     )
 
     def setUp(self):
@@ -1717,9 +2182,9 @@ class TestQTIExerciseCreation(StudioTestCase):
         <qti-item-body>
         <qti-choice-interaction response-identifier="RESPONSE" shuffle="true" max-choices="1" min-choices="0" orientation="vertical">
         <qti-prompt>
-            <p>First resized image: <img alt="shape1" src="images/b8f3062ca5795e39ff813958296b4884.jpg" /></p>
-            <p>Second resized image (same): <img alt="shape2" src="images/b8f3062ca5795e39ff813958296b4884.jpg" /></p>
-            <p>Third resized image (different): <img alt="shape3" src="images/abb0589d29a3852a5ebfd2726a832761.jpg" /></p>
+            <p>First resized image: <img alt="shape1" src="images/b8f3062ca5795e39ff813958296b4884.jpg" width="200" height="150" /></p>
+            <p>Second resized image (same): <img alt="shape2" src="images/b8f3062ca5795e39ff813958296b4884.jpg" width="200" height="150" /></p>
+            <p>Third resized image (different): <img alt="shape3" src="images/abb0589d29a3852a5ebfd2726a832761.jpg" width="100" height="75" /></p>
         </qti-prompt>
         <qti-simple-choice identifier="choice_0" show-hide="show" fixed="false">
         <p>Answer A</p>
@@ -1741,6 +2206,129 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(expected_item_xml),
             _normalize_xml(actual_item_xml),
         )
+
+    def test_image_resize_failure_uses_original(self):
+        bad_image = _create_unresizable_image()
+        bad_image_url = exercises.CONTENT_STORAGE_FORMAT.format(bad_image.filename())
+        item_type = exercises.SINGLE_SELECTION
+        item = self._create_assessment_item(
+            item_type,
+            f"Question: ![x]({bad_image_url} =60x45)",
+            [{"answer": "Answer A", "correct": True, "order": 1}],
+        )
+        bad_image.assessment_item = item
+        bad_image.save()
+
+        self._create_qti_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: item_type},
+            }
+        )
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        image_path = f"items/images/{bad_image.filename()}"
+        self.assertEqual(
+            [name for name in zip_file.namelist() if name.startswith("items/images/")],
+            [image_path],
+        )
+        self.assertEqual(zip_file.read(image_path), UNRESIZABLE_IMAGE_BYTES)
+        item_xml = zip_file.read(
+            f"items/{hex_to_qti_id(item.assessment_id)}.xml"
+        ).decode("utf-8")
+        self.assertIn(f'src="images/{bad_image.filename()}"', item_xml)
+
+    def _publish_legacy_sized_image(self, content, ext, width, height, ref_ext=None):
+        image_file = create_studio_file(
+            content, preset=format_presets.EXERCISE_IMAGE, ext=ext
+        )["db_file"]
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(
+            f"{image_file.checksum}.{ref_ext or ext}"
+        )
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            f"![shape]({image_url} ={width}x{height})",
+            [{"answer": "Answer A", "correct": True, "order": 1}],
+        )
+        image_file.assessment_item = item
+        image_file.save()
+
+        self._create_qti_zip(self._exercise_data([item]))
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        image_files = sorted(
+            name for name in zip_file.namelist() if name.startswith("items/images/")
+        )
+        item_doc = parse_qti_xml(
+            zip_file.read(f"items/{hex_to_qti_id(item.assessment_id)}.xml")
+        )
+        (img,) = item_doc.iter("{http://www.imsglobal.org/xsd/imsqtiasi_v3p0}img")
+        return zip_file, image_file.filename(), image_files, img
+
+    def test_legacy_sized_animated_gif_is_resized_with_its_frames(self):
+        zip_file, filename, (image,), img = self._publish_legacy_sized_image(
+            _animated_gif_bytes(), "gif", 60, 45
+        )
+        self.assertNotEqual(image, f"items/images/{filename}")
+        self.assertEqual(f"items/{img.get('src')}", image)
+        self.assertEqual((img.get("width"), img.get("height")), ("60", "45"))
+        _assert_animated_60x45(self, zip_file.read(image))
+        manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
+        self.assertIn(f'<file href="{img.get("src")}" />', manifest_xml)
+
+    def test_legacy_image_sized_above_natural_size_ships_a_copy_at_that_size(self):
+        zip_file, filename, (image,), img = self._publish_legacy_sized_image(
+            _png_bytes((400, 300)), "png", 800, 600
+        )
+        self.assertNotEqual(image, f"items/images/{filename}")
+        self.assertEqual(f"items/{img.get('src')}", image)
+        self.assertEqual((img.get("width"), img.get("height")), ("800", "600"))
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.size, (800, 600))
+
+    def test_legacy_image_with_a_fractional_size_carries_the_resized_size(self):
+        zip_file, _, (image,), img = self._publish_legacy_sized_image(
+            _png_bytes((400, 300)), "png", 200.6, 150.4
+        )
+        self.assertEqual((img.get("width"), img.get("height")), ("200", "150"))
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.size, (200, 150))
+
+    def test_legacy_image_with_a_size_below_one_pixel_carries_no_size(self):
+        for width, height in ((0.5, 0.5), (300, 0.6)):
+            with self.subTest(width=width, height=height):
+                *_, img = self._publish_legacy_sized_image(
+                    _png_bytes((400, 300)), "png", width, height
+                )
+                self.assertEqual((img.get("width"), img.get("height")), (None, None))
+
+    def _assert_legacy_uppercase_extension_resolves(self, width, height):
+        zip_file, _, (image,), img = self._publish_legacy_sized_image(
+            _png_bytes((400, 300)), "png", width, height, ref_ext="PNG"
+        )
+        self.assertEqual(f"items/{img.get('src')}", image)
+        manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
+        self.assertIn(f'<file href="{img.get("src")}" />', manifest_xml)
+
+    def test_legacy_resized_image_with_an_uppercase_extension_resolves(self):
+        self._assert_legacy_uppercase_extension_resolves(200, 150)
+
+    def test_legacy_image_at_its_own_size_with_an_uppercase_extension_resolves(self):
+        self._assert_legacy_uppercase_extension_resolves(400, 300)
+
+    def test_legacy_sized_svg_with_an_uppercase_extension_is_resized(self):
+        zip_file, _, (image,), img = self._publish_legacy_sized_image(
+            SVG_BYTES, "svg", 200, 150, ref_ext="SVG"
+        )
+        self.assertEqual(f"items/{img.get('src')}", image)
+        self.assertEqual(_svg_size(zip_file.read(image)), ("200", "150"))
 
     def test_multiple_question_types_mixed(self):
         """Test creating a QTI exercise with multiple supported question types"""
@@ -1956,6 +2544,34 @@ class TestQTIExerciseCreation(StudioTestCase):
         item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
         self.assertEqual(item_xml, raw_data)
 
+    def test_native_qti_item_published_without_studio_attributes(self):
+        """The QTI editor's data-studio-* markers are for reopening an item, not for Kolibri."""
+        raw_data = _item_xml(
+            "native_item_1",
+            "Native Item",
+            '<qti-response-declaration identifier="r1" cardinality="single" base-type="identifier">'
+            "<qti-correct-response><qti-value>c1</qti-value></qti-correct-response>"
+            "</qti-response-declaration>",
+            '<p data-studio-prompt="">Pick the word.</p>'
+            '<p>The <qti-inline-choice-interaction response-identifier="r1" shuffle="false">'
+            '<qti-inline-choice identifier="c1">sky</qti-inline-choice>'
+            "</qti-inline-choice-interaction> is blue.</p>",
+        )
+        item = self._create_native_qti_item(raw_data)
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.QTI},
+        }
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
+        self.assertEqual(item_xml, raw_data.replace(' data-studio-prompt=""', ""))
+
     def test_native_qti_item_media_included_and_addressed(self):
         # fileobj_exercise_image() writes real bytes to storage keyed by their
         # actual md5 checksum + "jpg" ext -- use that real checksum/ext rather
@@ -2019,20 +2635,94 @@ class TestQTIExerciseCreation(StudioTestCase):
             [name for name in zip_file.namelist() if name.startswith("items/")], []
         )
 
-    def test_native_qti_item_missing_media_file_is_logged_and_omitted(self):
-        """A dangling media reference is logged and skipped, not fatal to publish."""
-        raw_data = self.NATIVE_ITEM_XML.format(checksum="b" * 32, ext="png")
-        item = self._create_native_qti_item(raw_data)  # no File row linked
-        exercise_data = {
+    def _exercise_data(self, items):
+        return {
             "mastery_model": exercises.M_OF_N,
             "randomize": True,
-            "n": 5,
-            "m": 3,
-            "all_assessment_items": [item.assessment_id],
-            "assessment_mapping": {item.assessment_id: exercises.QTI},
+            "n": len(items),
+            "m": 1,
+            "all_assessment_items": [item.assessment_id for item in items],
+            "assessment_mapping": {item.assessment_id: item.type for item in items},
         }
+
+    def _assert_only_item_packaged(self, items, identifier):
+        with self.assertLogs(level="WARNING") as logs:
+            self._create_qti_zip(self._exercise_data(items))
+        self.assertTrue(any("no correct answer" in message for message in logs.output))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        self.assertEqual(
+            [name for name in zip_file.namelist() if name.startswith("items/")],
+            [f"items/{identifier}.xml"],
+        )
+        manifest = zip_file.read("imsmanifest.xml").decode("utf-8")
+        self.assertEqual(manifest.count("<resource "), 1)
+
+    def test_legacy_answerless_input_question_images_are_not_packaged(self):
+        choice = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "What is 2+2?",
+            [{"answer": "4", "correct": True, "order": 1}],
+        )
+        image_file = fileobj_exercise_image()
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        answerless = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            f"How many sides? ![shape]({image_url})",
+            [{"answer": "", "correct": True, "order": 1}],
+        )
+        image_file.assessment_item = answerless
+        image_file.save()
+        self._assert_only_item_packaged(
+            [choice, answerless], hex_to_qti_id(choice.assessment_id)
+        )
+
+    def test_legacy_input_question_answer_blanked_by_processing_is_skipped(self):
+        choice = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "What is 2+2?",
+            [{"answer": "4", "correct": True, "order": 1}],
+        )
+        zero_size_image = exercises.CONTENT_STORAGE_FORMAT.format(f"{'a' * 32}.png")
+        answerless = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 6 times 7?",
+            [{"answer": f"![]({zero_size_image} =0x0)", "correct": True, "order": 1}],
+        )
+        self._assert_only_item_packaged(
+            [choice, answerless], hex_to_qti_id(choice.assessment_id)
+        )
+
+    def test_legacy_input_question_zero_answer_is_packaged(self):
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 5 minus 5?",
+            [{"answer": 0, "correct": True, "order": 1}],
+        )
+        self._create_qti_zip(self._exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        item_xml = zip_file.read(
+            f"items/{hex_to_qti_id(item.assessment_id)}.xml"
+        ).decode("utf-8")
+        self.assertIn("<qti-value>0</qti-value>", item_xml)
+
+    def test_native_answerless_float_entry_is_skipped(self):
+        choice = self._create_native_qti_item(VALID_CHOICE_ITEM)
+        answerless = self._create_native_qti_item(_text_item("single", []))
+        self._assert_only_item_packaged([choice, answerless], "item_1")
+
+    def test_native_custom_processed_float_entry_is_packaged(self):
+        item = self._create_native_qti_item(TOLERANCE_ITEM)
+        self._create_qti_zip(self._exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        self.assertIn("items/item_text.xml", zip_file.namelist())
+
+    def _assert_missing_media_is_logged_and_omitted(self, raw_data):
+        item = self._create_native_qti_item(raw_data)  # no File row linked
         with self.assertLogs(level="ERROR") as logs:
-            self._create_qti_zip(exercise_data)
+            self._create_qti_zip(self._exercise_data([item]))
         self.assertTrue(
             any("no matching File record linked" in message for message in logs.output)
         )
@@ -2040,6 +2730,142 @@ class TestQTIExerciseCreation(StudioTestCase):
         zip_file = self._validate_qti_zip_structure(exercise_file)
         self.assertIn("items/native_item_1.xml", zip_file.namelist())
         self.assertNotIn(f"items/{'b' * 32}.png", zip_file.namelist())
+
+    def test_native_qti_item_missing_media_file_is_logged_and_omitted(self):
+        """A dangling media reference is logged and skipped, not fatal to publish."""
+        self._assert_missing_media_is_logged_and_omitted(
+            self.NATIVE_ITEM_XML.format(checksum="b" * 32, ext="png")
+        )
+
+    def test_native_qti_sized_image_missing_media_file_is_logged_and_omitted(self):
+        self._assert_missing_media_is_logged_and_omitted(
+            self.NATIVE_ITEM_XML.format(checksum="b" * 32, ext="png").replace(
+                'alt="diagram"', 'alt="diagram" width="200" height="150"'
+            )
+        )
+
+    def _create_native_qti_image_item(self, image_file, imgs):
+        raw_data = self.NATIVE_ITEM_XML.replace(
+            '<img src="{checksum}.{ext}" alt="diagram" />', imgs
+        )
+        item = self._create_native_qti_item(raw_data)
+        image_file.assessment_item = item
+        image_file.save()
+        return item
+
+    def _publish_native_qti_images(self, image_file, imgs):
+        item = self._create_native_qti_image_item(image_file, imgs)
+        self._create_qti_zip(self._exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        item_doc = parse_qti_xml(zip_file.read("items/native_item_1.xml"))
+        img_elements = item_doc.iter("{http://www.imsglobal.org/xsd/imsqtiasi_v3p0}img")
+        image_files = sorted(
+            name for name in zip_file.namelist() if name.startswith("items/images/")
+        )
+        return zip_file, list(img_elements), image_files
+
+    def test_native_qti_sized_images_ship_resized_per_size(self):
+        image_file = fileobj_exercise_image(size=(400, 300), color="blue")
+        filename = image_file.filename()
+
+        zip_file, imgs, image_files = self._publish_native_qti_images(
+            image_file, self.TWO_SIZE_IMGS.format(filename=filename)
+        )
+
+        self.assertEqual(len(image_files), 2, image_files)
+        self.assertNotIn(f"items/images/{filename}", image_files)
+        self.assertEqual(imgs[0].get("src"), imgs[1].get("src"))
+        manifest = zip_file.read("imsmanifest.xml").decode("utf-8")
+        for img in imgs:
+            size = (int(img.get("width")), int(img.get("height")))
+            with Image.open(BytesIO(zip_file.read(f"items/{img.get('src')}"))) as f:
+                self.assertEqual(f.size, size)
+            self.assertIn(img.get("src"), manifest)
+
+    def test_native_qti_image_sized_and_unsized_ships_both(self):
+        image_file = fileobj_exercise_image(size=(400, 300), color="blue")
+        filename = image_file.filename()
+
+        _, imgs, image_files = self._publish_native_qti_images(
+            image_file,
+            f'<img src="{filename}" alt="a" width="200" height="150" />'
+            f'<img src="{filename}" alt="b" />',
+        )
+
+        self.assertEqual(len(image_files), 2, image_files)
+        self.assertEqual(imgs[1].get("src"), f"images/{filename}")
+        self.assertNotEqual(imgs[0].get("src"), f"images/{filename}")
+        self.assertIn(f"items/{imgs[0].get('src')}", image_files)
+        self.assertIn(f"items/images/{filename}", image_files)
+
+    def _assert_native_qti_ships_original(self, filename, imgs, image_files):
+        self.assertEqual(image_files, [f"items/images/{filename}"])
+        self.assertEqual(imgs[0].get("src"), f"images/{filename}")
+
+    def test_native_qti_sized_image_that_fails_to_resize_ships_original(self):
+        image_file = _create_unresizable_image()
+        filename = image_file.filename()
+
+        _, imgs, image_files = self._publish_native_qti_images(
+            image_file, f'<img src="{filename}" alt="a" width="200" height="150" />'
+        )
+
+        self._assert_native_qti_ships_original(filename, imgs, image_files)
+
+    def _publish_sized_native_qti_images(self, content, ext, *sizes):
+        image_file = create_studio_file(
+            content, preset=format_presets.EXERCISE_IMAGE, ext=ext
+        )["db_file"]
+        zip_file, imgs, image_files = self._publish_native_qti_images(
+            image_file,
+            "".join(
+                f'<img src="{image_file.filename()}" alt="a" '
+                f'width="{width}" height="{height}" />'
+                for width, height in sizes
+            ),
+        )
+        return zip_file, image_file.filename(), imgs, image_files
+
+    def test_native_qti_image_sized_over_the_pixel_budget_ships_original(self):
+        _, filename, imgs, image_files = self._publish_sized_native_qti_images(
+            _png_bytes((40, 30)), "png", (20000, 15000)
+        )
+
+        self._assert_native_qti_ships_original(filename, imgs, image_files)
+
+    def test_native_qti_sized_image_ships_the_resize_even_when_it_is_larger(self):
+        _, filename, imgs, image_files = self._publish_sized_native_qti_images(
+            _flat_colour_png_bytes(), "png", (200, 150)
+        )
+
+        self.assertEqual(image_files, [f"items/{imgs[0].get('src')}"])
+        self.assertNotEqual(imgs[0].get("src"), f"images/{filename}")
+
+    def test_native_qti_sized_svg_ships_a_scaled_copy_per_size(self):
+        with self.assertNoLogs(level="WARNING"):
+            (
+                zip_file,
+                filename,
+                imgs,
+                image_files,
+            ) = self._publish_sized_native_qti_images(
+                SVG_BYTES, "svg", (200, 150), (200, 150), (100, 75)
+            )
+
+        self.assertEqual(len(image_files), 2, image_files)
+        self.assertNotIn(f"items/images/{filename}", image_files)
+        for img in imgs:
+            content = zip_file.read(f"items/{img.get('src')}")
+            self.assertEqual(_svg_size(content), (img.get("width"), img.get("height")))
+            self.assertIn(b'viewBox="0 0 400 300"', content)
+
+    def test_native_qti_sized_svg_without_a_natural_size_ships_original(self):
+        _, filename, imgs, image_files = self._publish_sized_native_qti_images(
+            b'<svg xmlns="http://www.w3.org/2000/svg" width="50%"/>', "svg", (200, 150)
+        )
+
+        self._assert_native_qti_ships_original(filename, imgs, image_files)
 
     def test_native_qti_duplicate_identifier_raises(self):
         item1 = self._create_native_qti_item(VALID_CHOICE_ITEM)
@@ -2145,3 +2971,28 @@ class TestQTIExerciseCreation(StudioTestCase):
         # The kolibri-hint catalog card is derived back into a Perseus hint.
         hint_content = "".join(hint["content"] for hint in item_json["hints"])
         self.assertIn("First hint.", hint_content)
+
+    def test_native_qti_perseus_derivation_resizes_sized_images(self):
+        image_file = fileobj_exercise_image(size=(400, 300), color="blue")
+        filename = image_file.filename()
+        item = self._create_native_qti_image_item(
+            image_file, self.TWO_SIZE_IMGS.format(filename=filename)
+        )
+
+        self._create_perseus_zip(self._exercise_data([item]))
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        with storage.open(exercise_file.file_on_disk.name, "rb") as f:
+            zip_file = zipfile.ZipFile(BytesIO(f.read()))
+        image_files = [n for n in zip_file.namelist() if n.startswith("images/")]
+        self.assertEqual(len(image_files), 2, image_files)
+        self.assertNotIn(f"images/{filename}", image_files)
+
+        item_json = json.loads(zip_file.read("native_item_1.json").decode("utf-8"))
+        self.assertEqual(
+            sorted(
+                (size["width"], size["height"])
+                for size in item_json["question"]["images"].values()
+            ),
+            [(100, 75), (200, 150)],
+        )

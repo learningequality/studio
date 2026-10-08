@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 from dataclasses import dataclass
 from typing import Any
 from typing import Dict
@@ -11,6 +13,7 @@ from le_utils.constants import format_presets
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
 from contentcuration.utils.assessment.qti.constants import ResourceType
+from contentcuration.utils.assessment.qti.convert import accepted_answers
 from contentcuration.utils.assessment.qti.convert import (
     build_perseus_custom_interaction_item,
 )
@@ -26,7 +29,12 @@ from contentcuration.utils.assessment.qti.imsmanifest import Resource
 from contentcuration.utils.assessment.qti.imsmanifest import Resources
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
+from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
+from contentcuration.utils.assessment.qti.media import strip_studio_attributes
+from contentcuration.utils.assessment.qti.perseus_derive import (
+    is_answerless_numeric_entry,
+)
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
@@ -45,6 +53,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
     """
 
     file_format = "zip"
+    KEEP_IMAGE_SIZES = True
     preset = format_presets.QTI_ZIP
 
     PERSEUS_IMAGE_DIR = "perseus/images"
@@ -84,6 +93,22 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
         self.qti_resources.append(resource)
 
+    def _warn_answerless(self, assessment_item):
+        logging.warning(
+            f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
+            f"has no correct answer and will be excluded from the package"
+        )
+
+    def _skip_answerless_input(self, assessment_item, answers) -> bool:
+        # Conversion makes an input question with no accepted answer an
+        # answerless float entry.
+        is_answerless = assessment_item.type == exercises.INPUT_QUESTION and not (
+            accepted_answers(answers)
+        )
+        if is_answerless:
+            self._warn_answerless(assessment_item)
+        return is_answerless
+
     def _create_native_qti_item(self, assessment_item) -> Optional[Tuple[str, bytes]]:
         raw_bytes = assessment_item.raw_data.encode("utf-8")
 
@@ -99,6 +124,10 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
             return None
 
+        if is_answerless_numeric_entry(assessment_item.raw_data):
+            self._warn_answerless(assessment_item)
+            return None
+
         identifier = parse_qti_xml(raw_bytes).getroot().get("identifier")
         if not identifier:
             raise ValueError(
@@ -112,6 +141,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         # Otherwise one package declares a language for some items and not others,
         # depending only on which editor wrote them.
         item_xml = set_qti_item_language(item_xml, self._node_language())
+        item_xml = strip_studio_attributes(item_xml)
 
         self._add_resource(
             QTIResource(
@@ -142,25 +172,66 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
                 f"{', '.join(sorted(missing))}"
             )
 
+        resized_paths = set()
+
+        def _resized_path(filename, width, height):
+            file_obj = files_by_name.get(filename)
+            if file_obj is None:
+                return None
+            resized = self._process_single_image(
+                filename,
+                file_obj.checksum,
+                f".{file_obj.file_format_id}",
+                width,
+                height,
+                self.get_image_file_path(),
+            )
+            path = f"{self.get_image_ref_prefix()}/{resized}"
+            resized_paths.add(path)
+            return path
+
+        item_xml = rewrite_qti_sized_image_paths(raw_data, _resized_path)
+
         # Media files can't stay bare in items/ alongside the item XML - they're
         # written to items/images/ (matching the legacy generator's layout) and
         # the item XML's references are remapped to the images/ prefix that
-        # resolves to that directory relative to the item file.
+        # resolves to that directory relative to the item file. Resized paths
+        # already carry that prefix, so only references to originals remain.
+        references = get_qti_media_references(item_xml) if resized_paths else filenames
         path_by_filename = {}
-        for filename in sorted(filenames - missing):
+        for filename in sorted(references - missing):
             file_obj = files_by_name[filename]
             self._add_original_image(
                 file_obj.checksum, filename, self.get_image_file_path()
             )
             path_by_filename[filename] = f"{self.get_image_ref_prefix()}/{filename}"
 
-        item_xml = rewrite_qti_media_paths(raw_data, path_by_filename)
-        return item_xml, sorted(path_by_filename.values())
+        item_xml = rewrite_qti_media_paths(item_xml, path_by_filename)
+        return item_xml, sorted(resized_paths | set(path_by_filename.values()))
 
     def process_assessment_item(self, assessment_item):
         if assessment_item.type == exercises.PERSEUS_QUESTION:
             return self._create_perseus_custom_interaction(assessment_item)
+        # Checked before processing, which writes the item's images to the
+        # package, and again after, which can blank an image-only answer.
+        if self._skip_answerless_input(
+            assessment_item, json.loads(assessment_item.answers)
+        ):
+            return None
         return super().process_assessment_item(assessment_item)
+
+    def _process_answers(self, assessment_item):
+        # The base drops every falsy answer, including a JSON 0; conversion
+        # drops the blank and false input answers itself.
+        if assessment_item.type != exercises.INPUT_QUESTION:
+            return super()._process_answers(assessment_item)
+        answers = json.loads(assessment_item.answers)
+        for answer in answers:
+            if isinstance(answer.get("answer"), str):
+                answer["answer"], answer["images"] = self._process_content(
+                    answer["answer"]
+                )
+        return self._sort_by_order(answers, "answers")
 
     def _create_perseus_custom_interaction(self, assessment_item) -> None:
         """Embed a raw Perseus question as a ``qti-custom-interaction``.
@@ -203,6 +274,9 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         if assessment_item.type == exercises.QTI:
             return self._create_native_qti_item(assessment_item)
 
+        if self._skip_answerless_input(assessment_item, processed_data["answers"]):
+            return None
+
         legacy_item = LegacyAssessmentItem(
             type=assessment_item.type,
             question=processed_data["question"],
@@ -215,15 +289,30 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         )
         result = convert_legacy_assessment_item_to_qti(legacy_item)
 
+        # Sized images come out of the conversion with a bare filename
+        image_entries = processed_data.get("question_images", []) + [
+            image
+            for part in processed_data.get("answers", [])
+            + processed_data.get("hints", [])
+            for image in part.get("images", [])
+        ]
+        path_by_filename = {
+            os.path.basename(image["name"]): image["name"] for image in image_entries
+        }
+        item_xml = rewrite_qti_media_paths(result.xml, path_by_filename)
+        file_dependencies = list(
+            dict.fromkeys(path_by_filename.get(d, d) for d in result.file_dependencies)
+        )
+
         filename = self._qti_item_filepath(result.identifier)
         self._add_resource(
             QTIResource(
                 identifier=result.identifier,
                 filepath=filename,
-                file_dependencies=result.file_dependencies,
+                file_dependencies=file_dependencies,
             )
         )
-        return filename, result.xml.encode("utf-8")
+        return filename, item_xml.encode("utf-8")
 
     def _create_manifest_resources(self) -> List[Resource]:
         """Create manifest resources for all QTI items."""

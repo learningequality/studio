@@ -111,7 +111,7 @@
   import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import KChip from 'kolibri-design-system/lib/candidate/multiselect/KChip';
   import { getSortedCategories } from 'shared/utils/helpers';
-  import { commonStrings } from 'shared/strings/commonStrings';
+  import { createMultiSelectMessages } from 'shared/utils/multiSelectMessages';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
@@ -186,32 +186,13 @@
         );
       },
       messages() {
-        const {
-          openMenuAction$,
-          closeMenuAction$,
-          optionsClickableLabel$,
-          allOptionsSelectedLabel$,
-          allOptionsDeselectedLabel$,
-          optionDeselectedLabel$,
-          partiallySelectedLabel$,
-          optionSelectedLabel$,
-          optionRemovedLabel$,
-        } = commonStrings;
         const { clearAllAction$ } = communityChannelsStrings;
-        return {
+        return createMultiSelectMessages({
           clearText: clearAllAction$,
-          open: openMenuAction$,
-          close: closeMenuAction$,
-          clickable: optionsClickableLabel$,
-          allOptionsSelected: allOptionsSelectedLabel$,
-          allOptionsDeselected: allOptionsDeselectedLabel$,
-          optionDeselected: optionDeselectedLabel$,
-          partiallySelected: partiallySelectedLabel$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          selected: optionSelectedLabel$,
-          removed: optionRemovedLabel$,
           cleared: () => this.$tr('allCategoriesCleared'),
-        };
+          partiallySelected: true,
+        });
       },
     },
     methods: {

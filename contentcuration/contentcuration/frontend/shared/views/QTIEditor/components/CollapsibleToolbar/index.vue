@@ -5,6 +5,7 @@
       <KIconButton
         v-for="action in visibleIconActions"
         :key="action.id"
+        :ref="el => setActionRef(action.id, el)"
         :icon="action.icon"
         :tooltip="action.label"
         :ariaLabel="action.label"
@@ -16,6 +17,7 @@
 
     <KIconButton
       v-if="collapsedMenuActions.length > 0"
+      ref="optionsButton"
       icon="optionsVertical"
       :color="$themePalette.grey.v_800"
       :tooltip="optionsLabel || optionsLabel$()"
@@ -35,7 +37,7 @@
 
 <script>
 
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   import { commonStrings } from 'shared/strings/commonStrings';
 
   export default {
@@ -68,11 +70,34 @@
         }
       }
 
+      const actionButtons = {};
+      const optionsButton = ref(null);
+
+      function setActionRef(id, button) {
+        if (button) {
+          actionButtons[id] = button;
+        } else {
+          delete actionButtons[id];
+        }
+      }
+
+      /** Moves focus to an action's button, or to the options menu holding it if collapsed. */
+      function focusAction(id) {
+        if (!props.actions.some(action => action.id === id)) return;
+        const button = actionButtons[id] ?? optionsButton.value;
+        button?.$el.focus();
+      }
+
       return {
+        optionsButton,
+        setActionRef,
         visibleIconActions,
         collapsedMenuActions,
         dropdownOptions,
         handleSelect,
+        // Public: lets a consumer move focus onto one of the actions.
+        // eslint-disable-next-line vue/no-unused-properties
+        focusAction,
         optionsLabel$,
       };
     },

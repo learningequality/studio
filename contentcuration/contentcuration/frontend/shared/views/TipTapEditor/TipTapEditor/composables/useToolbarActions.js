@@ -1,28 +1,42 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
-import { transformPastedHTML } from '../utils/pasteTransform';
+
+/**
+ * Evaluates a contributed insert action against the editor's insert context.
+ * `isActive` and `isAvailable` may be booleans or predicates of the context.
+ * Its `icon` names a KDS icon, so it becomes `kIcon`: built-in `icon`s are image URLs.
+ * Its `handler` does nothing while the action is unavailable.
+ * `contributed` tells it apart from the built-in insert tools.
+ */
+export function resolveInsertAction({ icon, ...action }, insertContext) {
+  const evaluate = value => (typeof value === 'function' ? value(insertContext.value) : value);
+  const isAvailable = action.isAvailable === undefined || Boolean(evaluate(action.isAvailable));
+  return {
+    ...action,
+    kIcon: icon,
+    contributed: true,
+    isActive: evaluate(action.isActive),
+    isAvailable,
+    handler: () => {
+      if (isAvailable) action.handler(insertContext.value);
+    },
+  };
+}
 
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
+  const insertContext = inject('insertContext', null);
+  const contributedInsertActions = inject('insertActions', null);
+  const inlineOnly = inject('inlineOnly', false);
 
   /**
-   * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
-   * the mobile bars alike. Same convention as the hidden groups in EditorToolbar.vue:
-   * the action stays defined, with the reason it is not offered, so restoring it is a
-   * matter of deleting one flag.
+   * Drop the actions marked `hide`, and in an inline-only editor those marked `blockOnly`.
+   * Every toolbar honours this — the desktop one and the mobile bars alike. A `hide` action
+   * stays defined, with the reason it is not offered, so restoring it is a matter of
+   * deleting one flag.
    */
-  const visible = actions => actions.filter(action => !action.hide);
-
-  /*
-   * TextAlign writes `style="text-align: …"`, and the QTI 3.0 HTML profile declares no
-   * style attribute — the item schema admits one only through its lax wildcard, so an
-   * aligned paragraph saves and then ships as non-conformant QTI. The image extension
-   * carries alignment as `data-text-align` instead, which the schema does allow.
-   *
-   * Kept out of `alignAction` so a toolbar can ask whether to offer the control without
-   * evaluating the action, which reads the editor's current selection to pick its icon.
-   */
-  const alignActionHidden = true;
+  const visible = actions =>
+    actions.filter(action => !action.hide && !(inlineOnly && action.blockOnly));
 
   // helper
   const getEffectiveAlignment = editorInstance => {
@@ -173,6 +187,18 @@ export function useToolbarActions(emit) {
     }
   };
 
+  // Paste through ProseMirror, as a native paste does, so the editor's and its
+  // extensions' paste props apply. `insertContent` skips them and parses text as HTML.
+  const pasteText = text => {
+    editor.value.commands.focus();
+    editor.value.view.pasteText(text);
+  };
+
+  const pasteHTML = html => {
+    editor.value.commands.focus();
+    editor.value.view.pasteHTML(html);
+  };
+
   const handlePaste = async () => {
     if (!editor.value) return;
 
@@ -184,16 +210,13 @@ export function useToolbarActions(emit) {
           if (item.types.includes('text/html')) {
             const htmlBlob = await item.getType('text/html');
             const html = await htmlBlob.text();
-            const cleaned = transformPastedHTML(html);
-
-            editor.value.chain().focus().insertContent(cleaned).run();
+            pasteHTML(html);
             return;
           }
           if (item.types.includes('text/plain')) {
             const textBlob = await item.getType('text/plain');
             const text = await textBlob.text();
-
-            editor.value.chain().focus().insertContent(text).run();
+            pasteText(text);
             return;
           }
         }
@@ -212,8 +235,7 @@ export function useToolbarActions(emit) {
 
       // Note: Genereted this regex with the help of LLM.
       const normalized = text.replace(/\r\n/g, '\n');
-
-      editor.value.chain().focus().insertContent(normalized).run();
+      pasteText(normalized);
     } catch (err) {
       editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
@@ -364,63 +386,59 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const textActions = computed(() =>
+  const textActions = computed(() => [
+    {
+      name: 'bold',
+      title: bold$(),
+      icon: require('../../assets/icon-bold.svg'),
+      handler: handleBold,
+      isActive: isMarkActive('bold'),
+    },
+    {
+      name: 'italic',
+      title: italic$(),
+      icon: require('../../assets/icon-italic.svg'),
+      handler: handleItalic,
+      isActive: isMarkActive('italic'),
+    },
+    {
+      name: 'underline',
+      title: underline$(),
+      icon: require('../../assets/icon-underline.svg'),
+      handler: handleUnderline,
+      isActive: isMarkActive('underline'),
+    },
+    {
+      name: 'strikethrough',
+      title: strikethrough$(),
+      icon: require('../../assets/icon-strikethrough.svg'),
+      handler: handleStrikethrough,
+      isActive: isMarkActive('strike'),
+    },
+  ]);
+
+  const listActions = computed(() =>
     visible([
       {
-        name: 'bold',
-        title: bold$(),
-        icon: require('../../assets/icon-bold.svg'),
-        handler: handleBold,
-        isActive: isMarkActive('bold'),
+        name: 'bulletList',
+        title: bulletList$(),
+        icon: require('../../assets/icon-bulletList.svg'),
+        handler: handleBulletList,
+        isActive: isMarkActive('bulletList'),
+        shouldFlipInRtl: true,
+        blockOnly: true,
       },
       {
-        name: 'italic',
-        title: italic$(),
-        icon: require('../../assets/icon-italic.svg'),
-        handler: handleItalic,
-        isActive: isMarkActive('italic'),
-      },
-      {
-        name: 'underline',
-        title: underline$(),
-        icon: require('../../assets/icon-underline.svg'),
-        handler: handleUnderline,
-        isActive: isMarkActive('underline'),
-        // The QTI 3.0 HTML profile has no <u> or <s>, so the item schema rejects an item
-        // carrying either and the save fails. Both marks are switched off in useEditor.js
-        // as well, since hiding a button leaves its keyboard shortcut behind — offering
-        // these again means undoing both halves.
-        hide: true,
-      },
-      {
-        name: 'strikethrough',
-        title: strikethrough$(),
-        icon: require('../../assets/icon-strikethrough.svg'),
-        handler: handleStrikethrough,
-        isActive: isMarkActive('strike'),
-        hide: true,
+        name: 'numberList',
+        title: numberedList$(),
+        icon: require('../../assets/icon-numberList.svg'),
+        rtlIcon: require('../../assets/icon-numberListRTL.svg'),
+        handler: handleNumberList,
+        isActive: isMarkActive('orderedList'),
+        blockOnly: true,
       },
     ]),
   );
-
-  const listActions = computed(() => [
-    {
-      name: 'bulletList',
-      title: bulletList$(),
-      icon: require('../../assets/icon-bulletList.svg'),
-      handler: handleBulletList,
-      isActive: isMarkActive('bulletList'),
-      shouldFlipInRtl: true,
-    },
-    {
-      name: 'numberList',
-      title: numberedList$(),
-      icon: require('../../assets/icon-numberList.svg'),
-      rtlIcon: require('../../assets/icon-numberListRTL.svg'),
-      handler: handleNumberList,
-      isActive: isMarkActive('orderedList'),
-    },
-  ]);
 
   const scriptActions = computed(() => [
     {
@@ -441,13 +459,14 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const insertTools = computed(() =>
+  const builtInInsertTools = computed(() =>
     visible([
       {
         name: 'image',
         title: insertImage$(),
         icon: require('../../assets/icon-insertImage.svg'),
         handler: handleInsertImage,
+        blockOnly: true,
       },
       {
         name: 'link',
@@ -472,9 +491,22 @@ export function useToolbarActions(emit) {
         icon: require('../../assets/icon-codeblock.svg'),
         handler: handleCodeBlock,
         isActive: isMarkActive('codeBlock'),
+        blockOnly: true,
       },
     ]),
   );
+
+  // Kept apart from the built-ins: a predicate reads the insert context, which
+  // changes on every transaction.
+  const resolvedInsertActions = computed(() =>
+    visible(
+      (contributedInsertActions?.value ?? []).map(action =>
+        resolveInsertAction(action, insertContext),
+      ),
+    ),
+  );
+
+  const insertTools = computed(() => [...builtInInsertTools.value, ...resolvedInsertActions.value]);
 
   const minimizeAction = {
     name: 'minimize',
@@ -483,21 +515,26 @@ export function useToolbarActions(emit) {
     handler: handleMinimize,
   };
 
-  const alignAction = computed(() => {
+  const alignActions = computed(() => {
+    // Reading the effective alignment computes the selection's style on every
+    // transaction, for a button an inline-only editor never shows.
+    if (inlineOnly) return [];
     const editorInstance = editor?.value;
     const effectiveAlign = getEffectiveAlignment(editorInstance);
     const effectiveRight = effectiveAlign === 'right';
 
-    return {
-      name: 'toggleAlign',
-      title: effectiveRight ? alignLeft$() : alignRight$(),
-      icon: effectiveRight
-        ? require('../../assets/icon-alignLeft.svg')
-        : require('../../assets/icon-alignRight.svg'),
-      handler: handleToggleAlign,
-      isActive: false,
-      isAvailable: !isMarkActive('codeBlock'),
-    };
+    return [
+      {
+        name: 'toggleAlign',
+        title: effectiveRight ? alignLeft$() : alignRight$(),
+        icon: effectiveRight
+          ? require('../../assets/icon-alignLeft.svg')
+          : require('../../assets/icon-alignRight.svg'),
+        handler: handleToggleAlign,
+        isActive: false,
+        isAvailable: !isMarkActive('codeBlock'),
+      },
+    ];
   });
 
   return {
@@ -527,8 +564,7 @@ export function useToolbarActions(emit) {
     // Action arrays
     historyActions,
     textActions,
-    alignAction,
-    alignActionHidden,
+    alignActions,
     listActions,
     scriptActions,
     insertTools,

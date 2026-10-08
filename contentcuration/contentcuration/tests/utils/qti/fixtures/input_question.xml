@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" title="Test Question 1" adaptive="false" time-dependent="false" xml:lang="en-US" tool-name="kolibri" tool-version="0.1">
-    <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="float">
+    <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">
         <qti-correct-response>
             <qti-value>1</qti-value>
-            <qti-value>2</qti-value>
         </qti-correct-response>
+        <qti-mapping default-value="0.0">
+            <qti-map-entry map-key="1" mapped-value="1.0" case-sensitive="true" />
+            <qti-map-entry map-key="2" mapped-value="1.0" case-sensitive="true" />
+        </qti-mapping>
     </qti-response-declaration>
     <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
     <qti-item-body>
@@ -13,5 +16,5 @@
             <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50" placeholder-text="Enter your answer here" /></p>
         </div>
     </qti-item-body>
-    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml" />
 </qti-assessment-item>

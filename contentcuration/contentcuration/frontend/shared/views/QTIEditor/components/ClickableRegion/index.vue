@@ -6,10 +6,12 @@
   -->
   <div
     class="clickable-area"
+    :class="{ 'is-text-target': textCursor && !suppressed }"
     @click="onClick"
   >
     <button
-      v-if="!suppressed"
+      v-if="!suppressed && !pointerOnly"
+      ref="button"
       type="button"
       class="overlay-button"
       :aria-label="ariaLabel"
@@ -25,9 +27,13 @@
 
 <script>
 
+  import { ref } from 'vue';
+
   export default {
     name: 'ClickableRegion',
     setup(props, { emit }) {
+      const button = ref(null);
+
       function onClick(event) {
         if (props.suppressed) return;
         if (event && event.stopPropagation) {
@@ -35,7 +41,13 @@
         }
         emit('click', event);
       }
-      return { onClick };
+      return {
+        button,
+        onClick,
+        // Public: lets a parent move focus to the region.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus: () => button.value?.focus(),
+      };
     },
     props: {
       ariaLabel: {
@@ -43,6 +55,16 @@
         required: true,
       },
       suppressed: {
+        type: Boolean,
+        default: false,
+      },
+      /** Clicks without a button, for a region whose keyboard route is elsewhere */
+      pointerOnly: {
+        type: Boolean,
+        default: false,
+      },
+      /** A text cursor and no hover tint, for a region that opens an editor where it is clicked */
+      textCursor: {
         type: Boolean,
         default: false,
       },
@@ -58,6 +80,19 @@
   .clickable-area {
     position: relative;
     border-radius: inherit;
+
+    &.is-text-target {
+      cursor: text;
+
+      // Child only: regions nested in this one keep their own cursor and tint.
+      > .overlay-button {
+        cursor: inherit;
+
+        &:hover {
+          background-color: transparent;
+        }
+      }
+    }
   }
 
   .overlay-button {

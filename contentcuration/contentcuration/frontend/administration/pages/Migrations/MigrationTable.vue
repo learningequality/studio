@@ -71,36 +71,7 @@
   import { computed, nextTick, onMounted, ref } from 'vue';
   import { RouteNames } from '../../constants';
   import { Invitation } from 'shared/data/resources';
-  import { createTranslator } from 'shared/i18n';
-
-  const strings = createTranslator('MigrationTable', {
-    title: { message: 'Contested migrations', context: 'Administration migration table heading' },
-    count: {
-      message:
-        '{count, number} {count, plural, one {contested migration} other {contested migrations}}',
-      context: 'Number of pending migration requests',
-    },
-    channel: { message: 'Channel', context: 'Migration table column' },
-    organization: { message: 'Organization', context: 'Migration table column' },
-    user: { message: 'Requestor', context: 'Migration table column' },
-    options: { message: 'Options', context: 'Migration actions menu' },
-    accept: { message: 'Accept', context: 'Approve channel migration' },
-    decline: { message: 'Decline', context: 'Reject channel migration' },
-    accepted: {
-      message: 'Migration for {channel} accepted.',
-      context: 'Confirmation after approving a channel migration',
-    },
-    declined: {
-      message: 'Migration for {channel} declined.',
-      context: 'Confirmation after rejecting a channel migration',
-    },
-    empty: { message: 'No contested migrations', context: 'Empty migration table' },
-    error: {
-      message: 'Unable to load or resolve migrations. Please try again.',
-      context: 'Migration API request failed',
-    },
-    retry: { message: 'Retry', context: 'Reload migration table' },
-  });
+  import { migrationTableStrings as strings } from 'shared/strings/organizationStrings';
 
   export default {
     name: 'MigrationTable',

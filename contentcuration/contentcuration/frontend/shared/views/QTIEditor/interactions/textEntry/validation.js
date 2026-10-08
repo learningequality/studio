@@ -1,11 +1,11 @@
 import { QuestionType, ValidationError } from '../../constants';
-import { floatOrIntRegex } from '../../utils/math';
+import { parseXsdDouble } from '../../utils/math';
 import { hasRichTextContent } from '../../utils/richText';
 
 /**
  * Validate TextEntryState → ValidationError[].
  *
- * - numeric:      prompt required + at least one answer + each value must be a valid number
+ * - numeric:      prompt required + at least one answer + each value a finite xsd:double
  * - textEntry:    prompt required + at least one answer (any non-blank string)
  * - freeResponse: prompt required only
  *
@@ -26,34 +26,41 @@ export function validateTextEntryInteraction(state, questionType) {
       errors.push({ code: ValidationError.NO_CORRECT_ANSWER });
     }
 
-    const seen = new Set();
+    // A later match flags the first answer too.
+    const firstSeenId = new Map();
+    const duplicateIds = new Set();
 
     for (const answer of answers) {
       const val = answer.value.trim();
+      let lookupKey;
 
       if (questionType === QuestionType.NUMERIC) {
-        if (!floatOrIntRegex.test(val)) {
+        const number = parseXsdDouble(val);
+        if (number === null) {
           errors.push({ code: ValidationError.INVALID_NUMERIC_VALUE, id: answer.id });
         }
+        // Invalid answers keep their text as key so two different ones don't collide.
+        lookupKey = number ?? val;
       } else {
         if (!val) {
           errors.push({ code: ValidationError.EMPTY_ANSWER_CONTENT, id: answer.id });
         }
+        const normalizedVal = answer.caseSensitive ? val : val.toLowerCase();
+        lookupKey = `${normalizedVal}|${answer.caseSensitive}`;
       }
-
-      const normalizedVal =
-        questionType === QuestionType.TEXT_ENTRY && !answer.caseSensitive ? val.toLowerCase() : val;
-      const lookupKey =
-        questionType === QuestionType.TEXT_ENTRY
-          ? `${normalizedVal}|${answer.caseSensitive}`
-          : normalizedVal;
 
       if (val) {
-        if (seen.has(lookupKey)) {
-          errors.push({ code: ValidationError.DUPLICATE_ANSWER_CONTENT, id: answer.id });
+        if (firstSeenId.has(lookupKey)) {
+          duplicateIds.add(firstSeenId.get(lookupKey));
+          duplicateIds.add(answer.id);
+        } else {
+          firstSeenId.set(lookupKey, answer.id);
         }
-        seen.add(lookupKey);
       }
+    }
+
+    for (const duplicateId of duplicateIds) {
+      errors.push({ code: ValidationError.DUPLICATE_ANSWER_CONTENT, id: duplicateId });
     }
   }
 

@@ -1,9 +1,9 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { parseXML } from '../../serialization/xml';
-import { buildXmlNode } from '../../serialization/assembleItem';
+import { buildXmlNode, parseXML, serializeAsHtml, wrapInlineRuns } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import Mapping from '../../serialization/qti/declarations/mapping';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
+import { parseXsdDouble } from '../../utils/math';
 import { BaseType, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
 
 const serializer = new XMLSerializer();
@@ -11,9 +11,9 @@ const serializer = new XMLSerializer();
 /**
  * @typedef {object} TextEntryAnswer
  * @property {string}  id            - Client-side slug (not serialized to XML)
- * @property {string}  value         - The answer value as a string. For numeric this is a
- *                                     float/int string (e.g. "12", "0.5"); for textEntry it
- *                                     is a free-form string (e.g. "Paris").
+ * @property {string}  value         - The answer value as a string. For numeric this is the
+ *                                     authored text, valid or not (e.g. "12", "1e-5");
+ *                                     for textEntry it is a free-form string (e.g. "Paris").
  * @property {boolean} caseSensitive - textEntry only. When true, "H2O" ≠ "h2o".
  *                                     Always false for numeric answers.
  */
@@ -67,7 +67,49 @@ function extractPromptHTML(bodyEl) {
     interactionEl.remove();
   }
 
-  return clone.innerHTML.trim();
+  return serializeAsHtml([...clone.childNodes], bodyEl.namespaceURI).trim();
+}
+
+/**
+ * Numeric answers as authored, read from the XML rather than through
+ * `QTIDeclaration.fromXML`: its float coercion would throw on an invalid value (dropping
+ * every answer) or truncate it (`1.2.3` → 1.2), hiding it from validation.
+ *
+ * @param {Element} declarationEl - A float `<qti-response-declaration>`
+ * @returns {TextEntryAnswer[]}
+ */
+function extractNumericAnswers(declarationEl) {
+  // Built only to validate: throws on a bad identifier or cardinality, as fromXML does.
+  new QTIDeclaration({
+    identifier: declarationEl.getAttribute('identifier'),
+    baseType: BaseType.FLOAT,
+    cardinality: declarationEl.getAttribute('cardinality') ?? undefined,
+  });
+  // Run only to throw: fromXML rejects a non-numeric default value, dropping every answer.
+  for (const el of declarationEl.querySelectorAll(':scope > qti-default-value qti-value')) {
+    QTIDeclaration.coerceValue(el.textContent.trim(), BaseType.FLOAT);
+  }
+
+  // Repeats stay, so validation flags them as it does in the editor.
+  const values = [...declarationEl.querySelectorAll(':scope > qti-correct-response qti-value')].map(
+    el => el.textContent.trim(),
+  );
+  // Full-credit map-keys are answers too, as on the string path. One equal in value to an
+  // answer already read (`5.0` for `5`) is that answer, so it is not added again.
+  const keys = new Set(values.map(value => parseXsdDouble(value) ?? value));
+  for (const entry of declarationEl.querySelectorAll(':scope > qti-mapping qti-map-entry')) {
+    const value = (entry.getAttribute('map-key') ?? '').trim();
+    const key = parseXsdDouble(value) ?? value;
+    if (parseFloat(entry.getAttribute('mapped-value')) >= 1 && !keys.has(key)) {
+      keys.add(key);
+      values.push(value);
+    }
+  }
+  return values.map(value => ({
+    id: generateRandomSlug('answer'),
+    value,
+    caseSensitive: false,
+  }));
 }
 
 /**
@@ -76,6 +118,7 @@ function extractPromptHTML(bodyEl) {
  * correct response is declared (i.e. free-response items).
  *
  * Supports both float (numeric) and string (textEntry) base-types.
+ * Answers are the correct response values plus any full-credit `map-key`s.
  * For string base-types `caseSensitive` comes from the declaration's
  * <qti-mapping>, matched by `map-key`; it is always false for float.
  *
@@ -87,42 +130,44 @@ export function _extractAnswers(responseDeclarations) {
   if (!declXml) return [];
 
   try {
-    const declaration = QTIDeclaration.fromXML(parseXML(declXml).documentElement);
+    const declarationEl = parseXML(declXml).documentElement;
+    if (declarationEl.getAttribute('base-type') === BaseType.FLOAT) {
+      return extractNumericAnswers(declarationEl);
+    }
+
+    const declaration = QTIDeclaration.fromXML(declarationEl);
     const { baseType, correctResponse } = declaration;
 
-    if (baseType !== BaseType.FLOAT && baseType !== BaseType.STRING) {
+    if (baseType !== BaseType.STRING) {
       // eslint-disable-next-line no-console
       console.error(`[QTI Editor] Unsupported text-entry base-type: ${baseType}`);
       return [];
     }
 
-    if (correctResponse === null) {
-      if (baseType === BaseType.FLOAT) {
-        // eslint-disable-next-line no-console
-        console.error('[QTI Editor] Missing <qti-correct-response> for numeric interaction');
-      }
-      return [];
-    }
-
-    // Case sensitivity is a string-only concept, so numeric answers never read the mapping.
-    const mapEntries = baseType === BaseType.STRING ? (declaration.mapping?.entries ?? []) : [];
+    const mapEntries = declaration.mapping?.entries ?? [];
     // Key on the XML string form: both map-key and correct-response values are coerced
     // on parse (empty → null under QTI NULL semantics), so formatting both back matches
     // them on equal terms.
     const caseSensitivity = new Map(
       mapEntries.map(entry => [declaration.formatValue(entry.mapKey), entry.caseSensitive]),
     );
+    // Legacy conversion writes only the first accepted answer as correct and maps them
+    // all, so every full-credit key is an answer too. It writes no correct response
+    // for an answerless input question.
+    const values = new Set([
+      ...(correctResponse ?? []).map(value => declaration.formatValue(value)),
+      ...mapEntries
+        .filter(entry => entry.mappedValue >= 1)
+        .map(entry => declaration.formatValue(entry.mapKey)),
+    ]);
 
-    return correctResponse.map(value => {
-      const formatted = declaration.formatValue(value);
-      return {
-        id: generateRandomSlug('answer'),
-        value: formatted,
-        // An answer with no matching qti-map-entry — including every answer in an
-        // item authored before mappings were written — takes the XSD default, false.
-        caseSensitive: caseSensitivity.get(formatted) ?? false,
-      };
-    });
+    return [...values].map(value => ({
+      id: generateRandomSlug('answer'),
+      value,
+      // An answer with no matching qti-map-entry — including every answer in an
+      // item authored before mappings were written — takes the XSD default, false.
+      caseSensitive: caseSensitivity.get(value) ?? false,
+    }));
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[QTI Editor] Failed to parse text-entry response declaration:', err);
@@ -201,8 +246,11 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
 
   // The prompt is authored HTML, so it goes in through innerHTML: buildXmlNode parses it
   // and adopts the result into the item's namespace.
-  const bodyEl = buildXmlNode({ tag: 'qti-item-body', innerHTML: prompt || '' });
-  bodyEl.appendChild(interactionParagraph);
+  const promptEl = buildXmlNode({ tag: 'div', innerHTML: prompt || '' });
+  const bodyEl = buildXmlNode({
+    tag: 'qti-item-body',
+    children: [...wrapInlineRuns(promptEl), interactionParagraph],
+  });
   const bodyXml = serializer.serializeToString(bodyEl);
 
   // Build the response declaration.

@@ -50,12 +50,28 @@ export const Orientation = Object.freeze({
  * so they serve as both type keys and CSS selectors for querySelectorAll.
  */
 export const QtiInteraction = Object.freeze({
-  CHOICE: 'qti-choice-interaction',
-  ORDER: 'qti-order-interaction',
-  MATCH: 'qti-match-interaction',
   ASSOCIATE: 'qti-associate-interaction',
-  TEXT_ENTRY: 'qti-text-entry-interaction',
+  CHOICE: 'qti-choice-interaction',
+  CUSTOM: 'qti-custom-interaction',
+  DRAWING: 'qti-drawing-interaction',
+  END_ATTEMPT: 'qti-end-attempt-interaction',
   EXTENDED_TEXT: 'qti-extended-text-interaction',
+  GAP_MATCH: 'qti-gap-match-interaction',
+  GRAPHIC_ASSOCIATE: 'qti-graphic-associate-interaction',
+  GRAPHIC_GAP_MATCH: 'qti-graphic-gap-match-interaction',
+  GRAPHIC_ORDER: 'qti-graphic-order-interaction',
+  HOTSPOT: 'qti-hotspot-interaction',
+  HOTTEXT: 'qti-hottext-interaction',
+  INLINE_CHOICE: 'qti-inline-choice-interaction',
+  MATCH: 'qti-match-interaction',
+  MEDIA: 'qti-media-interaction',
+  ORDER: 'qti-order-interaction',
+  PORTABLE_CUSTOM: 'qti-portable-custom-interaction',
+  POSITION_OBJECT: 'qti-position-object-interaction',
+  SELECT_POINT: 'qti-select-point-interaction',
+  SLIDER: 'qti-slider-interaction',
+  TEXT_ENTRY: 'qti-text-entry-interaction',
+  UPLOAD: 'qti-upload-interaction',
 });
 
 export const QTI_INTERACTION_TAGS = Object.freeze(Object.values(QtiInteraction));
@@ -84,6 +100,8 @@ export const QuestionType = Object.freeze({
   FREE_RESPONSE: 'freeResponse',
   ORDERING: 'ordering',
   ASSOCIATE: 'associate',
+  MATCH: 'match',
+  INLINE_CHOICE: 'inlineChoice',
 });
 
 /**
@@ -108,9 +126,25 @@ export const ValidationError = Object.freeze({
   TOO_FEW_PAIRS: 'TOO_FEW_PAIRS',
   DUPLICATE_PAIR_CONTENT: 'DUPLICATE_PAIR_CONTENT',
   DUPLICATE_DISTRACTOR_CONTENT: 'DUPLICATE_DISTRACTOR_CONTENT',
+  EMPTY_ROW_CONTENT: 'EMPTY_ROW_CONTENT',
+  ROW_WITHOUT_MATCH: 'ROW_WITHOUT_MATCH',
+  TOO_FEW_ROWS: 'TOO_FEW_ROWS',
+  DUPLICATE_ROW_CONTENT: 'DUPLICATE_ROW_CONTENT',
+  DUPLICATE_MATCH_CONTENT: 'DUPLICATE_MATCH_CONTENT',
 });
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
+
+/**
+ * The QTI 3.0 standard response processing templates. Each one scores the response
+ * variable named RESPONSE into SCORE, so it only fits an item whose one response
+ * declaration has that identifier.
+ */
+export const ResponseProcessingTemplate = Object.freeze({
+  MATCH_CORRECT: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
+  MAP_RESPONSE: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml',
+  MAP_RESPONSE_POINT: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml',
+});
 
 export const Placement = Object.freeze({
   BLOCK: 'block',

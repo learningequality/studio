@@ -87,9 +87,9 @@
                   required
                 />
                 <LanguageDropdown
+                  ref="language"
                   v-model="language"
                   class="notranslate"
-                  box
                   required
                 />
                 <VTextarea
@@ -324,6 +324,7 @@
           this.updateTitleForPage();
           if (!this.isNew) {
             this.$refs.detailsform.validate();
+            this.$refs.language.validate();
           }
         })
         .catch(() => {});
@@ -343,7 +344,10 @@
       async saveChannel() {
         this.isDisable = true;
 
-        if (this.$refs.detailsform.validate()) {
+        const formValid = this.$refs.detailsform.validate();
+        const languageError = this.$refs.language.validate();
+
+        if (formValid && !languageError) {
           if (this.$refs.organizationField && !(await this.$refs.organizationField.save())) {
             this.isDisable = false;
             return;

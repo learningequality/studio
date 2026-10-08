@@ -42,9 +42,7 @@
               id="captionLanguage"
               v-model="selectedLanguage"
               data-test="select-language"
-              dropAbove
               :excludeLanguages="currentLanguages"
-              hide-details
             />
           </VListTileContent>
           <VListTileContent v-if="selectedLanguage">
@@ -165,13 +163,35 @@
 <style lang="scss" scoped>
 
   ::v-deep .languageTile > .v-list__tile {
-    height: 56px;
+    min-height: 56px;
   }
 
   .captionLanguageDropdown {
     max-width: 250px;
     height: auto;
+    // KMultiSelect's dropdown menu is absolutely positioned, so this can't be
+    // hidden without clipping it.
     overflow: visible;
+
+    // KMultiSelect always reserves space for a feedback/error row below the
+    // input, even when unused. This field has no `required` validation, so
+    // hide that row rather than letting the field grow past this tile.
+    ::v-deep .kmselect-feedback {
+      display: none;
+    }
+
+    // Keep the input on a single line and truncate long language names
+    // (e.g. "Français (Canada) (fr-CA)") instead of wrapping underneath the
+    // clear/dropdown buttons.
+    ::v-deep .kmselect-input {
+      flex-wrap: nowrap;
+    }
+
+    ::v-deep .kmselect-native-input {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
 </style>

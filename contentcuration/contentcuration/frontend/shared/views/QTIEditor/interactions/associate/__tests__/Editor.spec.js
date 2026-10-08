@@ -121,10 +121,10 @@ describe('AssociateEditor', () => {
       expect(button(tr.$tr('addDistractorBtn'))).toBeInTheDocument();
     });
 
-    it('opens the first pair item for editing when the prompt is already written', () => {
+    it('opens the prompt for editing when the prompt is already written', () => {
       renderEditor();
-      expect(queryButton(editPairItem(1, 1))).not.toBeInTheDocument();
-      expect(openTextarea()).toHaveValue('Antonio');
+      expect(queryButton(tr.$tr('editQuestionLabel'))).not.toBeInTheDocument();
+      expect(button(editPairItem(1, 1))).toBeInTheDocument();
     });
 
     it('opens the prompt for editing when there is no prompt yet', () => {
@@ -152,8 +152,8 @@ describe('AssociateEditor', () => {
 
     it('writes the typed prompt into the emitted XML', async () => {
       const user = userEvent.setup();
+      // The prompt opens on mount.
       const { emitted } = renderEditor();
-      await user.click(button(tr.$tr('editQuestionLabel')));
       await user.type(openTextarea(), 'Who rivals whom?');
       expect(latestBodyXml(emitted)).toContain('Who rivals whom?');
     });
@@ -200,8 +200,8 @@ describe('AssociateEditor', () => {
     it('stacks only the row whose editor is open', async () => {
       mockWindowIsLarge = false;
       const user = userEvent.setup();
-      // Pair 1 item 1 opens on mount.
       renderEditor();
+      await user.click(button(editPairItem(1, 1)));
       const [first, second] = pairRows();
       expect(first).toHaveClass('is-stacked');
       expect(second).not.toHaveClass('is-stacked');
@@ -383,6 +383,20 @@ describe('AssociateEditor', () => {
       });
       expect(screen.getAllByText('Antonio')).toHaveLength(2);
       expect(screen.getAllByText('Prospero')).toHaveLength(1);
+    });
+
+    it('keeps the pool order across a round trip through edit mode', async () => {
+      const { updateProps } = renderEditor(viewProps);
+      const order = () =>
+        within(screen.getByRole('list', { name: tr.$tr('responsePoolLabel') }))
+          .getAllByRole('listitem')
+          .map(el => el.textContent.trim());
+      const initial = order();
+      for (let i = 0; i < 3; i++) {
+        await updateProps({ mode: 'edit' });
+        await updateProps({ mode: 'view' });
+        expect(order()).toEqual(initial);
+      }
     });
 
     it('hides the editing controls', () => {

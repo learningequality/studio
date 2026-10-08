@@ -47,6 +47,14 @@ VALID_CHOICE_ITEM = _item_xml(
     "</qti-choice-interaction>",
 )
 
+_XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>'
+
+_ENTITY_DOCTYPE = '<!DOCTYPE qti-assessment-item [<!ENTITY e "hi">]>'
+
+ENTITY_CHOICE_ITEM = VALID_CHOICE_ITEM.replace(
+    _XML_DECLARATION, _XML_DECLARATION + _ENTITY_DOCTYPE
+).replace("Option A", "Option &e;")
+
 
 class ValidateQTIItemTests(unittest.TestCase):
     def test_accepts_valid_item(self):
@@ -95,6 +103,46 @@ class ValidateQTIItemTests(unittest.TestCase):
         result = validate_qti_item(xml)
         serialized = " ".join(e.message for e in result.errors)
         self.assertNotIn("super-secret-value", serialized)
+
+    def test_rejects_entity_reference_without_raising(self):
+        result = validate_qti_item(ENTITY_CHOICE_ITEM)
+        self.assertFalse(result.is_valid)
+        self.assertEqual(len(result.errors), 1)
+
+    def test_rejects_external_entity_reference_in_body(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("super-secret-value")
+            secret_path = f.name
+        self.addCleanup(os.remove, secret_path)
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION,
+            _XML_DECLARATION
+            + '<!DOCTYPE qti-assessment-item [<!ENTITY e SYSTEM "file://%s">]>'
+            % secret_path,
+        ).replace("Option A", "Option &e;")
+        result = validate_qti_item(xml)
+        self.assertFalse(result.is_valid)
+        self.assertNotIn(
+            "super-secret-value", " ".join(e.message for e in result.errors)
+        )
+
+    def test_accepts_entity_in_attribute_value(self):
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION, _XML_DECLARATION + _ENTITY_DOCTYPE
+        ).replace('title="Sample Item"', 'title="&e;"')
+        self.assertTrue(validate_qti_item(xml).is_valid)
+
+    def test_accepts_unused_entity_declaration(self):
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION, _XML_DECLARATION + _ENTITY_DOCTYPE
+        )
+        self.assertTrue(validate_qti_item(xml).is_valid)
+
+    def test_accepts_bare_doctype(self):
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION, _XML_DECLARATION + "<!DOCTYPE qti-assessment-item>"
+        )
+        self.assertTrue(validate_qti_item(xml).is_valid)
 
 
 MATCH_INTERACTION_ITEM = _item_xml(
@@ -151,12 +199,52 @@ class UncoveredInteractionTypeTests(unittest.TestCase):
         self.assertFalse(result.is_valid)
         self.assertTrue(result.errors)
 
+    def test_accepts_inline_choice_item_with_several_dropdowns(self):
+        declaration = (
+            '<qti-response-declaration identifier="r1" cardinality="single" base-type="identifier">'
+            "<qti-correct-response><qti-value>c2</qti-value></qti-correct-response>"
+            "</qti-response-declaration>"
+            '<qti-response-declaration identifier="r2" cardinality="single" base-type="identifier" />'
+        )
+        body = (
+            '<p data-studio-prompt="">Fill in the blanks.</p>'
+            '<p data-studio-prompt="">Choose well.</p>'
+            '<p>The <strong><qti-inline-choice-interaction response-identifier="r1" shuffle="true">'
+            '<qti-inline-choice identifier="c1">a</qti-inline-choice>'
+            '<qti-inline-choice identifier="c2">b</qti-inline-choice>'
+            "</qti-inline-choice-interaction></strong></p>"
+            '<ul><li><qti-inline-choice-interaction response-identifier="r2" shuffle="true">'
+            '<qti-inline-choice identifier="c3"></qti-inline-choice>'
+            "</qti-inline-choice-interaction></li></ul>"
+        )
+        result = validate_qti_item(
+            _item_xml("item_ic", "Inline choice", declaration, body)
+        )
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
+    def test_accepts_inline_choice_sentinel_item(self):
+        declaration = ""
+        body = (
+            '<p data-studio-prompt="">Question</p>'
+            "<p>Passage</p>"
+            '<p><qti-inline-choice-interaction response-identifier="studio_sentinel" '
+            'data-studio-sentinel="">'
+            '<qti-inline-choice identifier="studio_sentinel"></qti-inline-choice>'
+            "</qti-inline-choice-interaction></p>"
+        )
+        result = validate_qti_item(
+            _item_xml("item_ic_sentinel", "Inline choice", declaration, body)
+        )
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
 
 # Mirrors what the QTI editor emits for a brand new question, before the author has
 # written anything — see createBlankItem.js. Every "New question" click sends this to the
 # sync endpoint, which validates it, so the two have to stay in lockstep. It carries the
-# scoring outcome and the match_correct template, so a question authored here is gradable
-# in the same way as one the legacy conversion produces.
+# scoring outcome but no response processing: it has no correct answer yet to score
+# against, and gets the match_correct template once the author marks one.
 BLANK_EDITOR_ITEM = (
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" '
@@ -169,8 +257,6 @@ BLANK_EDITOR_ITEM = (
     '<qti-simple-choice identifier="choice_oaasu90l" />'
     "</qti-choice-interaction>"
     "</qti-item-body>"
-    "<qti-response-processing "
-    'template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />'
     "</qti-assessment-item>"
 )
 
@@ -178,6 +264,67 @@ BLANK_EDITOR_ITEM = (
 class BlankEditorItemTests(unittest.TestCase):
     def test_accepts_blank_item_from_editor(self):
         result = validate_qti_item(BLANK_EDITOR_ITEM)
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
+
+def _scoring_rule(identifier):
+    return (
+        "<qti-response-condition><qti-response-if><qti-match>"
+        f'<qti-variable identifier="{identifier}"/>'
+        f'<qti-correct identifier="{identifier}"/>'
+        "</qti-match>"
+        '<qti-set-outcome-value identifier="RAW_SCORE"><qti-sum>'
+        '<qti-variable identifier="RAW_SCORE"/>'
+        '<qti-base-value base-type="float">1.0</qti-base-value>'
+        "</qti-sum></qti-set-outcome-value>"
+        "</qti-response-if></qti-response-condition>"
+    )
+
+
+# Mirrors what assembleItem.js writes for an item with two responses. The schema does not
+# follow outcome references, so the Jest tests are what guard the RAW_SCORE declaration.
+MULTI_RESPONSE_EDITOR_ITEM = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" '
+    'identifier="item_k2lm9qaz" title="Question" adaptive="false" time-dependent="false">'
+    '<qti-response-declaration identifier="response_xq7tbn2c" cardinality="single" '
+    'base-type="identifier">'
+    "<qti-correct-response><qti-value>choice_a1b2c3d4</qti-value></qti-correct-response>"
+    "</qti-response-declaration>"
+    '<qti-response-declaration identifier="response_pw4rzk8d" cardinality="single" '
+    'base-type="identifier">'
+    "<qti-correct-response><qti-value>choice_m0o0n0aa</qti-value></qti-correct-response>"
+    "</qti-response-declaration>"
+    '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>'
+    '<qti-outcome-declaration identifier="RAW_SCORE" cardinality="single" base-type="float"/>'
+    "<qti-item-body><p>The Earth "
+    '<qti-inline-choice-interaction response-identifier="response_xq7tbn2c" shuffle="true">'
+    '<qti-inline-choice identifier="choice_a1b2c3d4">revolves</qti-inline-choice>'
+    '<qti-inline-choice identifier="choice_e5f6g7h8">stays</qti-inline-choice>'
+    "</qti-inline-choice-interaction> around the Sun, and the "
+    '<qti-inline-choice-interaction response-identifier="response_pw4rzk8d" shuffle="true">'
+    '<qti-inline-choice identifier="choice_s0u0n0aa">Sun</qti-inline-choice>'
+    '<qti-inline-choice identifier="choice_m0o0n0aa">Moon</qti-inline-choice>'
+    "</qti-inline-choice-interaction> orbits the Earth.</p></qti-item-body>"
+    "<qti-response-processing>"
+    '<qti-set-outcome-value identifier="RAW_SCORE">'
+    '<qti-base-value base-type="float">0.0</qti-base-value>'
+    "</qti-set-outcome-value>"
+    + _scoring_rule("response_xq7tbn2c")
+    + _scoring_rule("response_pw4rzk8d")
+    + '<qti-set-outcome-value identifier="SCORE"><qti-divide>'
+    '<qti-variable identifier="RAW_SCORE"/>'
+    '<qti-base-value base-type="float">2.0</qti-base-value>'
+    "</qti-divide></qti-set-outcome-value>"
+    "</qti-response-processing>"
+    "</qti-assessment-item>"
+)
+
+
+class MultiResponseEditorItemTests(unittest.TestCase):
+    def test_accepts_generated_response_processing(self):
+        result = validate_qti_item(MULTI_RESPONSE_EDITOR_ITEM)
         self.assertTrue(result.is_valid)
         self.assertEqual(result.errors, [])
 
@@ -244,6 +391,34 @@ class HintedEditorItemTests(unittest.TestCase):
         result = validate_qti_item(CATALOG_BEFORE_BODY_ITEM)
         self.assertFalse(result.is_valid)
         self.assertIn("qti-item-body", result.errors[0].message)
+
+
+STYLED_ITEM = _item_xml(
+    "item_styled",
+    "Styled Item",
+    '<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">'
+    "<qti-correct-response><qti-value>choice_0</qti-value></qti-correct-response>"
+    "</qti-response-declaration>",
+    '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1" min-choices="0" '
+    'orientation="vertical">'
+    "<qti-prompt>"
+    '<p style="text-align: right">Which is <span style="text-decoration: underline">not</span>'
+    ' <span style="text-decoration: line-through">wrong</span>?</p>'
+    "</qti-prompt>"
+    '<qti-simple-choice identifier="choice_0" show-hide="show" fixed="false">Option A</qti-simple-choice>'
+    "</qti-choice-interaction>",
+)
+
+
+class StyledItemTests(unittest.TestCase):
+    """The QTI 3.0 HTML profile has no <u>, no <s> and no alignment attribute, so the
+    editor writes all three as a style. QTI declares no style attribute either, but its
+    element definitions carry a lax attribute wildcard that admits one."""
+
+    def test_accepts_style_attribute(self):
+        result = validate_qti_item(STYLED_ITEM)
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
 
 
 class SchemaReuseTests(unittest.TestCase):

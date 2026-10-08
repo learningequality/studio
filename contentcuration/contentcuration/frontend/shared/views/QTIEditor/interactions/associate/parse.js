@@ -1,8 +1,7 @@
 import flatMap from 'lodash/flatMap';
 import flatten from 'lodash/flatten';
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { getPromptHTML, parseXML } from '../../serialization/xml';
-import { buildXmlNode } from '../../serialization/assembleItem';
+import { buildXmlNode, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { hasRichTextContent, richTextComparisonKey } from '../../utils/richText';

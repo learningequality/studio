@@ -2,7 +2,17 @@
  * Math utilities for the QTI editor.
  */
 
+// xsd:double lexical space without INF and NaN.
+const xsdDoubleRegex = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
+
 /**
- * Matches valid numeric answer values: integers, decimals, and scientific notation.
+ * @param {string} value
+ * @returns {number|null} the finite number, or null when `value` is not a finite xsd:double
  */
-export const floatOrIntRegex = /^(?=.)([+-]?([0-9e]*)(\.([0-9e]+))?)$/;
+export function parseXsdDouble(value) {
+  if (!xsdDoubleRegex.test(value)) {
+    return null;
+  }
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}

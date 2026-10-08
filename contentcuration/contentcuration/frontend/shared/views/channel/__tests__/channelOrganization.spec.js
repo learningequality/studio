@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import ChannelOrganization from '../ChannelOrganization.vue';
 import { Channel, Invitation } from 'shared/data/resources';
+import { channelOrganizationStrings as strings } from 'shared/strings/organizationStrings';
 
 jest.mock('shared/data/resources', () => ({
   Channel: { checkOrganizationMigration: jest.fn(), migrateOrganization: jest.fn() },
@@ -15,7 +16,7 @@ const state = {
 };
 
 async function selectOrganization() {
-  await userEvent.click(await screen.findByText('Channel organization'));
+  await userEvent.click(await screen.findByText(strings.label$()));
   await userEvent.click(screen.getByText('Destination', { selector: '.ui-select-option-basic' }));
 }
 
@@ -27,17 +28,11 @@ describe('ChannelOrganization', () => {
     );
   });
 
-  it('offers a ticket for a contested selection without changing the channel', async () => {
-    render(ChannelOrganization, { routes: [], props: { channelId: 'channel' } });
-    await selectOrganization();
-    expect(await screen.findByRole('button', { name: 'Create ticket' })).toBeInTheDocument();
-    expect(Channel.migrateOrganization).not.toHaveBeenCalled();
-  });
-
   it('creates a request and locks the selection', async () => {
     Invitation.createMigration.mockResolvedValue({ id: 'request' });
     render(ChannelOrganization, { routes: [], props: { channelId: 'channel' } });
     await selectOrganization();
+    expect(Channel.migrateOrganization).not.toHaveBeenCalled();
     Channel.checkOrganizationMigration.mockResolvedValue({
       ...state,
       pending: {
@@ -47,11 +42,14 @@ describe('ChannelOrganization', () => {
         can_decline: true,
       },
     });
-    await userEvent.click(await screen.findByRole('button', { name: 'Create ticket' }));
+    await userEvent.click(await screen.findByRole('button', { name: strings.createTicket$() }));
     await waitFor(() => expect(Invitation.createMigration).toHaveBeenCalledWith('channel', 'org'));
-    expect(await screen.findByRole('button', { name: 'Decline' })).toHaveFocus();
-    expect(screen.getByRole('button', { name: 'Decline' })).toHaveAttribute('aria-describedby');
-    expect(screen.getByText(/Migration to Destination is awaiting review/i)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: strings.decline$() })).toHaveFocus();
+    expect(screen.getByRole('button', { name: strings.decline$() })).toHaveAttribute(
+      'aria-describedby',
+      screen.getByRole('status').id,
+    );
+    expect(screen.getByText(strings.pending$({ organization: 'Destination' }))).toBeInTheDocument();
   });
 
   it('does not offer decline to another channel editor', async () => {
@@ -66,9 +64,9 @@ describe('ChannelOrganization', () => {
     });
     render(ChannelOrganization, { routes: [], props: { channelId: 'channel' } });
     expect(
-      await screen.findByText(/Migration to Destination is awaiting review/i),
+      await screen.findByText(strings.pending$({ organization: 'Destination' })),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Decline' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: strings.decline$() })).not.toBeInTheDocument();
   });
   it('keeps the current organization visible and restores focus after decline', async () => {
     Channel.checkOrganizationMigration.mockResolvedValue({
@@ -90,15 +88,17 @@ describe('ChannelOrganization', () => {
       await screen.findByText('Aurora', { selector: '.ui-select-display-value' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(
-      'Migration to Destination is awaiting review',
+      strings.pending$({ organization: 'Destination' }),
     );
     Channel.checkOrganizationMigration.mockResolvedValue({
       ...state,
       organization: 'source',
       organization_name: 'Aurora',
     });
-    await userEvent.click(screen.getByRole('button', { name: 'Decline' }));
+    await userEvent.click(screen.getByRole('button', { name: strings.decline$() }));
     await waitFor(() => expect(container.querySelector('.ui-select-label')).toHaveFocus());
+    expect(Invitation.decline).toHaveBeenCalledWith('request');
+    expect(screen.getByRole('status')).toHaveTextContent(strings.declined$());
     expect(
       screen.getByText('Aurora', { selector: '.ui-select-display-value' }),
     ).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe('ChannelOrganization', () => {
       routes: [],
       props: { channelId: 'channel', standalone: true },
     });
-    await screen.findByText('Select an organization', { selector: '.ui-select-display-value' });
+    await screen.findByText(strings.select$(), { selector: '.ui-select-display-value' });
     let finish;
     Channel.checkOrganizationMigration.mockReturnValue(
       new Promise(resolve => {
@@ -124,14 +124,10 @@ describe('ChannelOrganization', () => {
     );
     expect(select).toHaveAttribute('tabindex', '0');
     expect(select).toHaveFocus();
-    expect(screen.getByRole('button', { name: 'Save organization' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: strings.save$() })).toBeDisabled();
     finish({ ...state, uncontested: false });
-    await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent(
-        'Migration cannot be done automatically',
-      ),
-    );
-    expect(screen.getByRole('button', { name: 'Create ticket' })).toHaveAttribute(
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(strings.contested$()));
+    expect(screen.getByRole('button', { name: strings.createTicket$() })).toHaveAttribute(
       'aria-describedby',
       screen.getByRole('status').id,
     );
@@ -144,13 +140,14 @@ describe('ChannelOrganization', () => {
     Channel.migrateOrganization.mockResolvedValue({ organization: 'org' });
     render(ChannelOrganization, { routes: [], props: { channelId: 'channel', standalone: true } });
     await selectOrganization();
-    const button = screen.getByRole('button', { name: 'Save organization' });
+    const button = screen.getByRole('button', { name: strings.save$() });
     await waitFor(() => expect(button).toBeEnabled());
     expect(Channel.migrateOrganization).not.toHaveBeenCalled();
     Channel.checkOrganizationMigration.mockResolvedValue({ ...state, organization: 'org' });
     await userEvent.click(button);
     await waitFor(() => expect(Channel.migrateOrganization).toHaveBeenCalledWith('channel', 'org'));
     await waitFor(() => expect(button).toBeDisabled());
+    expect(screen.getByRole('status')).toHaveTextContent(strings.saved$());
   });
 
   it('recovers after a failed organization request', async () => {
@@ -159,12 +156,12 @@ describe('ChannelOrganization', () => {
       routes: [],
       props: { channelId: 'channel' },
     });
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(strings.error$());
     // A failed organization lookup must not disable unrelated channel edits.
     expect(emitted().blocked.slice(-1)[0]).toEqual([false]);
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await userEvent.click(screen.getByRole('button', { name: strings.retry$() }));
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
     await selectOrganization();
-    expect(await screen.findByRole('button', { name: 'Create ticket' })).toBeInTheDocument();
+    await waitFor(() => expect(emitted().blocked.slice(-1)[0]).toEqual([true]));
   });
 });

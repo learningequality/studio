@@ -1,4 +1,6 @@
 import re
+from typing import Optional
+from typing import Tuple
 
 from lxml import etree
 
@@ -14,13 +16,42 @@ QTI_MEDIA_REFERENCE_XPATH = etree.XPath(
     + " or ".join(f"@{attribute}" for attribute in QTI_REFERENCE_ATTRIBUTES)
     + " or @srcset]"
 )
-ITEM_ROOT_START_TAG_REGEX = re.compile(r"<qti-assessment-item\b[^>]*>")
-XML_LANG_ATTRIBUTE_REGEX = re.compile(r'\s+xml:lang="[^"]*"')
+ITEM_ROOT_START_TAG_REGEX = re.compile(
+    r"""<qti-assessment-item\b(?:"[^"]*"|'[^']*'|[^>"'])*>"""
+)
+# Quoted values are matched first so a lookalike inside another attribute is skipped.
+XML_LANG_OR_QUOTED_VALUE_REGEX = re.compile(
+    r"""(?P<lang>\s+xml:lang\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
+)
+START_TAG_REGEX = re.compile(r"""<[A-Za-z_](?:"[^"]*"|'[^']*'|[^>"'])*>""")
+STUDIO_ATTRIBUTE_OR_QUOTED_VALUE_REGEX = re.compile(
+    r"""(?P<studio>\s+data-studio-[\w.-]+\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
+)
+PIXEL_LENGTH_REGEX = re.compile(r"[1-9][0-9]*")
+# Comments and CDATA match whole, so an <img> inside one is never read as a start tag
+COMMENT_CDATA_OR_IMG_START_TAG_REGEX = re.compile(
+    r"""<!--.*?-->|<!\[CDATA\[.*?\]\]>|<img(?=[\s/>])(?:[^>"']|"[^"]*"|'[^']*')*>""",
+    re.DOTALL,
+)
+XML_ATTRIBUTE_REGEX = re.compile(
+    r"""\s(?P<name>[^\s=/>]+)\s*=\s*(?P<quote>["'])(?P<value>.*?)(?P=quote)""",
+    re.DOTALL,
+)
 
 QTI_MEDIA_ATTRIBUTE_VALUE_REGEX = re.compile(
     r"(?P<attr>" + "|".join(QTI_REFERENCE_ATTRIBUTES + ("srcset",)) + r")"
     r'(?P<eq>\s*=\s*)(?P<quote>["\'])(?P<value>[^"\']*)(?P=quote)'
 )
+
+
+def img_pixel_size(width, height) -> Optional[Tuple[int, int]]:
+    """
+    An ``<img>``'s size in pixels, or None unless both attributes are positive
+    integers: a percentage or a lone dimension gives no size to resize to.
+    """
+    if not all(PIXEL_LENGTH_REGEX.fullmatch(value or "") for value in (width, height)):
+        return None
+    return int(width), int(height)
 
 
 def get_qti_media_references(raw_data):
@@ -81,6 +112,35 @@ def rewrite_qti_media_paths(raw_data, path_by_filename):
     return QTI_MEDIA_ATTRIBUTE_VALUE_REGEX.sub(_replace_attribute, raw_data)
 
 
+def rewrite_qti_sized_image_paths(raw_data, path_for_size):
+    """
+    Point the ``src`` of each ``<img>`` with a pixel size at
+    ``path_for_size(filename, width, height)``, per element so one image at two
+    sizes gets two paths. A ``None`` path leaves the element alone. Every other
+    byte is kept, as in ``rewrite_qti_media_paths``.
+    """
+
+    def _replace_img(match):
+        tag = match.group(0)
+        if tag.startswith("<!"):
+            return tag
+        # Matching attribute by attribute consumes each value, so a "src=" inside
+        # another attribute's value is never read as the src.
+        attributes = {m["name"]: m for m in XML_ATTRIBUTE_REGEX.finditer(tag)}
+        src = attributes.get("src")
+        values = {name: m["value"] for name, m in attributes.items()}
+        size = img_pixel_size(values.get("width"), values.get("height"))
+        if not (src and size and QTI_CHECKSUM_FILENAME_REGEX.match(src["value"])):
+            return tag
+        path = path_for_size(src["value"], *size)
+        if path is None:
+            return tag
+        start, end = src.span("value")
+        return f"{tag[:start]}{path}{tag[end:]}"
+
+    return COMMENT_CDATA_OR_IMG_START_TAG_REGEX.sub(_replace_img, raw_data)
+
+
 def set_qti_item_language(raw_data, language):
     """
     Set ``xml:lang`` on the item root, replacing any value already there.
@@ -92,8 +152,7 @@ def set_qti_item_language(raw_data, language):
     Operates as a targeted text substitution on the root start tag, for the same reason
     ``rewrite_qti_media_paths`` does: every other byte of ``raw_data``, formatting included,
     is left as the author's editor produced it. An attribute already present is rewritten
-    where it stands rather than moved to the end, so an item that already declares the
-    node's language comes back byte for byte.
+    where it stands rather than moved to the end.
     """
     if not language:
         return raw_data
@@ -102,10 +161,31 @@ def set_qti_item_language(raw_data, language):
 
     def _replace_root(match):
         tag = match.group(0)
-        if XML_LANG_ATTRIBUTE_REGEX.search(tag):
-            # A function, not a string: a replacement string would read any backslash
-            # in the language tag as a group reference.
-            return XML_LANG_ATTRIBUTE_REGEX.sub(lambda _: replacement, tag, count=1)
+        for attribute in XML_LANG_OR_QUOTED_VALUE_REGEX.finditer(tag):
+            if attribute.group("lang"):
+                return tag[: attribute.start()] + replacement + tag[attribute.end() :]
         return f"{tag[:-1].rstrip()}{replacement}>"
 
     return ITEM_ROOT_START_TAG_REGEX.sub(_replace_root, raw_data, count=1)
+
+
+def strip_studio_attributes(raw_data):
+    """
+    Remove every ``data-studio-*`` attribute, such as the ``data-studio-prompt`` marker the
+    QTI editor writes for its own use when it reopens an item, so none reaches Kolibri.
+
+    Operates as a targeted text substitution on start tags, for the same reason
+    ``rewrite_qti_media_paths`` does.
+    """
+    if "data-studio-" not in raw_data:
+        return raw_data
+
+    def _strip_attribute(match):
+        return "" if match.group("studio") else match.group(0)
+
+    def _strip_tag(match):
+        return STUDIO_ATTRIBUTE_OR_QUOTED_VALUE_REGEX.sub(
+            _strip_attribute, match.group(0)
+        )
+
+    return START_TAG_REGEX.sub(_strip_tag, raw_data)

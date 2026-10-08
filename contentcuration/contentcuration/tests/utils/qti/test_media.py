@@ -1,7 +1,10 @@
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
+from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
+from contentcuration.utils.assessment.qti.media import strip_studio_attributes
+from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
 CHECKSUM_A = "a" * 32
@@ -85,6 +88,51 @@ def test_rewrite_ignores_values_not_in_mapping():
     )
 
 
+def _path_for_size(filename, width, height):
+    return f"images/{width}x{height}-{filename}"
+
+
+def test_sized_rewrite_points_each_sized_img_at_its_size():
+    xml = (
+        f'<item>\n  <img alt="a > b" src="{CHECKSUM_A}.png" width="200" height="150"/>'
+        f"<img height='75' src='{CHECKSUM_A}.png' width='100' />"
+        f'<img src="{CHECKSUM_B}.png" width="200" height="150"></img></item>'
+    )
+    assert rewrite_qti_sized_image_paths(xml, _path_for_size) == (
+        f'<item>\n  <img alt="a > b" src="images/200x150-{CHECKSUM_A}.png" width="200" height="150"/>'
+        f"<img height='75' src='images/100x75-{CHECKSUM_A}.png' width='100' />"
+        f'<img src="images/200x150-{CHECKSUM_B}.png" width="200" height="150"></img></item>'
+    )
+
+
+def test_sized_rewrite_leaves_imgs_without_a_pixel_size_or_checksum_src():
+    xml = (
+        f'<item><img src="{CHECKSUM_A}.png"/>'
+        f'<img src="{CHECKSUM_A}.png" width="200"/>'
+        f'<img src="{CHECKSUM_A}.png" width="50%" height="150"/>'
+        f'<img srcset="{CHECKSUM_A}.png 1x" width="200" height="150"/>'
+        f'<img permanentSrc="{CHECKSUM_A}.png" width="200" height="150"/>'
+        f'<img data-src="{CHECKSUM_A}.png" width="200" height="150"/>'
+        f'<img alt=\'src="{CHECKSUM_A}.png"\' width="200" height="150"/>'
+        '<img src="https://example.com/x.png" width="200" height="150"/>'
+        f'<object data="{CHECKSUM_A}.png" width="200" height="150"></object></item>'
+    )
+    assert rewrite_qti_sized_image_paths(xml, _path_for_size) == xml
+
+
+def test_sized_rewrite_leaves_imgs_in_comments_and_cdata():
+    sized_img = f'<img src="{CHECKSUM_A}.png" width="200" height="150"/>'
+    for hidden in (f"<!-- {sized_img}\n-->", f"<![CDATA[{sized_img}]]>"):
+        xml = (
+            f"<item>{hidden}"
+            f'<img src="{CHECKSUM_A}.png" width="100" height="75"/></item>'
+        )
+        assert rewrite_qti_sized_image_paths(xml, _path_for_size) == (
+            f"<item>{hidden}"
+            f'<img src="images/100x75-{CHECKSUM_A}.png" width="100" height="75"/></item>'
+        )
+
+
 ITEM_WITHOUT_LANGUAGE = (
     '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" '
     'identifier="i" title="t" adaptive="false" time-dependent="false">'
@@ -104,6 +152,42 @@ def test_set_language_replaces_a_language_the_item_already_had():
     result = set_qti_item_language(already, "sw")
     # Rewritten where it stands, so the value is the only thing that differs.
     assert result == already.replace('xml:lang="en"', 'xml:lang="sw"')
+
+
+def test_set_language_replaces_a_single_quoted_language():
+    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"t\" xml:lang='en'")
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace("xml:lang='en'", 'xml:lang="sw"')
+    parse_qti_xml(result.encode("utf-8"))
+
+
+def test_set_language_replaces_a_language_containing_the_other_quote():
+    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', 'title="t" xml:lang="it\'s"')
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace('xml:lang="it\'s"', 'xml:lang="sw"')
+    parse_qti_xml(result.encode("utf-8"))
+
+
+def test_set_language_replaces_a_language_with_spaces_around_the_equals_sign():
+    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"t\" xml:lang = 'en'")
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace("xml:lang = 'en'", 'xml:lang="sw"')
+
+
+def test_set_language_finds_the_language_after_a_greater_than_in_an_attribute():
+    already = ITEM_WITHOUT_LANGUAGE.replace(
+        'title="t"', "title=\"a > b\" xml:lang='en'"
+    )
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace("xml:lang='en'", 'xml:lang="sw"')
+
+
+def test_set_language_ignores_language_text_inside_another_attribute_value():
+    tricky = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"see xml:lang='x'\"")
+    result = set_qti_item_language(tricky, "sw")
+    assert result == tricky.replace(
+        'time-dependent="false">', 'time-dependent="false" xml:lang="sw">'
+    )
 
 
 def test_set_language_leaves_an_item_already_declaring_it_byte_for_byte():
@@ -127,3 +211,25 @@ def test_set_language_keeps_the_item_schema_valid():
     result = set_qti_item_language(VALID_CHOICE_ITEM, "es")
     validation = validate_qti_item(result)
     assert validation.is_valid, validation.errors
+
+
+def test_strip_studio_attributes_removes_every_one_and_nothing_else():
+    marked = ITEM_WITHOUT_LANGUAGE.replace(
+        "<p>Body</p>",
+        '<p data-studio-prompt="" class="q">Question</p>'
+        '<p><qti-inline-choice-interaction response-identifier="r" '
+        "data-studio-sentinel='' shuffle=\"false\">"
+        '<qti-inline-choice identifier="c"/></qti-inline-choice-interaction></p>',
+    )
+    result = strip_studio_attributes(marked)
+    assert result == marked.replace(' data-studio-prompt=""', "").replace(
+        " data-studio-sentinel=''", ""
+    )
+
+
+def test_strip_studio_attributes_ignores_lookalikes_in_values_and_text():
+    tricky = ITEM_WITHOUT_LANGUAGE.replace(
+        "<p>Body</p>",
+        '<p title="a > b data-studio-prompt=\'\'" data-other="1">data-studio-prompt=""</p>',
+    )
+    assert strip_studio_attributes(tricky) == tricky

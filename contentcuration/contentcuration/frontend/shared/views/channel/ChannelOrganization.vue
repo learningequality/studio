@@ -65,34 +65,7 @@
   import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
   import uniqueId from 'lodash/uniqueId';
   import { Channel, Invitation } from 'shared/data/resources';
-  import { createTranslator } from 'shared/i18n';
-
-  const strings = createTranslator('ChannelOrganization', {
-    label: { message: 'Channel organization', context: 'Organization selector label' },
-    select: { message: 'Select an organization', context: 'Organization selector placeholder' },
-    pending: {
-      message: 'Migration to {organization} is awaiting review.',
-      context: 'Pending channel migration notice',
-    },
-    declined: {
-      message: 'Migration request declined.',
-      context: 'Migration cancellation confirmation',
-    },
-    saved: { message: 'Channel organization saved.', context: 'Organization save confirmation' },
-    contested: {
-      message:
-        'Migration cannot be done automatically. Create a ticket with website administrators below.',
-      context: 'Contested channel migration notice',
-    },
-    createTicket: { message: 'Create ticket', context: 'Request a channel migration' },
-    decline: { message: 'Decline', context: 'Cancel a channel migration request' },
-    save: { message: 'Save organization', context: 'Save organization from administration' },
-    error: {
-      message: 'Unable to update the organization. Please try again.',
-      context: 'Organization request failed',
-    },
-    retry: { message: 'Retry', context: 'Reload organization choices' },
-  });
+  import { channelOrganizationStrings as strings } from 'shared/strings/organizationStrings';
 
   export default {
     name: 'ChannelOrganization',

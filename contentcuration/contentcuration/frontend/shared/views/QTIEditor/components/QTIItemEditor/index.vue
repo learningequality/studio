@@ -1,9 +1,18 @@
 <template>
 
+  <!--
+    a11y: The whole closed card opens on click, as a shortcut for pointer users only. It is
+    deliberately not a ClickableRegion: keyboard and screen reader users already have the
+    Edit button in the card's toolbar, which does the same thing, so a second focusable
+    control covering the card would just add a redundant tab stop and announcement.
+  -->
   <KPageContainer
+    ref="card"
     noPadding
     :topMargin="0"
     class="item question-card"
+    :class="{ 'is-clickable': canOpen }"
+    @click.native="onCardClick"
   >
     <div
       class="question-card-header"
@@ -34,7 +43,13 @@
           />
           <span>{{ incompleteItemIndicatorLabel$() }}</span>
         </span>
-        <slot name="toolbarActions"></slot>
+        <!-- .stop: the toolbar actions handle their own clicks, which must not open the card -->
+        <div @click.stop>
+          <slot
+            name="toolbarActions"
+            :canOpen="canOpen"
+          ></slot>
+        </div>
       </div>
     </div>
 
@@ -63,11 +78,13 @@
         {{ questionContentPlaceholder$() }}
       </p>
 
+      <!-- .stop: expanding or collapsing the hints must not open the card -->
       <HintsSection
-        v-if="hasHints && (mode === 'edit' || showAnswers)"
+        v-if="showHints"
         :hints="hints"
         :mode="mode"
         @update:hints="onUpdateHints"
+        @click.native.stop
       />
     </div>
 
@@ -75,10 +92,16 @@
       v-if="mode === 'edit'"
       class="question-card-footer"
     >
+      <!--
+        .stop: closing re-renders the card closed, and removes this footer, before the click
+        finishes bubbling, so it would reach the card as a click on a closed card and reopen
+        it. It has to stop here, in the button's own listener: one on the footer is detached
+        by that re-render before the click gets to it.
+      -->
       <KButton
         :text="closeBtnLabel$()"
         class="close-item-btn"
-        @click="$emit('close')"
+        @click.stop="$emit('close')"
       />
     </div>
   </KPageContainer>
@@ -88,11 +111,12 @@
 
 <script>
 
-  import { computed, ref, watch } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
-  import { validateItemShape } from '../../validateItem';
+  import { validateItemShape, validateQtiItem } from '../../validateItem';
+  import { isSupportedItem } from '../../interactions/resolveDescriptor';
   import InteractionSection from '../InteractionSection/index.vue';
   import HintsSection from '../HintsSection/index.vue';
 
@@ -101,7 +125,7 @@
 
     components: { InteractionSection, HintsSection },
 
-    setup(props, { emit }) {
+    setup(props, { emit, listeners }) {
       const {
         questionNumberLabel$,
         questionNumberAndTypeLabel$,
@@ -124,32 +148,34 @@
       // Parse the item XML. rawData is a computed inside useQtiItem that
       // re-assembles the full XML whenever identifier/title/language or the
       // editor refs change — no need to duplicate assembleItemXml here.
-      const { interactions, itemBodyXml, hints, parseError, rawData } = useQtiItem(
-        props.item.raw_data,
-        {
-          bodyXml: currentBodyXml,
-          responseDeclarations: currentResponseDeclarations,
-        },
+      const { interactions, hints, parseError, rawData } = useQtiItem(props.item.raw_data, {
+        bodyXml: currentBodyXml,
+        responseDeclarations: currentResponseDeclarations,
+      });
+
+      const isQti = computed(() => props.item.type === AssessmentItemTypes.QTI);
+
+      /**
+       * Whether this editor can edit the item's XML faithfully: it is readable, and it is
+       * either blank or holds exactly one interaction this editor knows.
+       */
+      const isBlank = !props.item.raw_data;
+      const isEditableQti = computed(
+        () => !parseError.value && (isBlank || isSupportedItem(interactions.value)),
       );
 
       /**
-       * Items authored outside this editor (e.g. Perseus questions) and items whose XML
-       * cannot be read are shown as read-only cards.
+       * Items authored outside this editor (e.g. Perseus questions) and QTI it cannot edit
+       * faithfully are shown as read-only cards.
        */
-      const isUnsupported = computed(
-        () => props.item.type !== AssessmentItemTypes.QTI || Boolean(parseError.value),
-      );
+      const isUnsupported = computed(() => !isQti.value || !isEditableQti.value);
 
       /*
-       * Seed the editor refs from the parsed item (first interaction only).
-       *
-       * The body is seeded even when there is no interaction to edit. Such an item still has
-       * content — its own text, and any interaction this editor has no descriptor for — and
-       * anything else the author can change, a hint, reassembles the whole item. Leaving the
-       * body unseeded would write an empty <qti-item-body/> over that text.
+       * Seed the editor refs from the parsed item's first block, which for an inline
+       * passage holds every declaration.
        */
-      currentBodyXml.value = interactions.value[0]?.bodyXml ?? itemBodyXml.value;
       if (interactions.value.length > 0) {
+        currentBodyXml.value = interactions.value[0].bodyXml;
         currentResponseDeclarations.value = interactions.value[0].responseDeclarations;
       }
 
@@ -183,6 +209,7 @@
           [QuestionType.FREE_RESPONSE]: qtiEditorStrings.freeResponseLabel$,
           [QuestionType.ORDERING]: qtiEditorStrings.orderingLabel$,
           [QuestionType.ASSOCIATE]: qtiEditorStrings.associateLabel$,
+          [QuestionType.MATCH]: qtiEditorStrings.matchLabel$,
         };
         return (QUESTION_TYPE_LABELS[type] ?? unknownTypeLabel$)();
       });
@@ -203,11 +230,17 @@
        * card nobody was editing.
        */
       let editedHere = false;
+      let lastReported = null;
 
+      // Watch the inputs, not rawData: watching the computed would assemble it for every card
+      // on screen, logging assembly warnings for items nobody is saving.
       // Emit only when the assembled XML actually changes after initial mount.
-      watch(rawData, newVal => {
+      watch([currentBodyXml, currentResponseDeclarations, hints], () => {
         if (!editedHere) return;
         editedHere = false;
+        const newVal = rawData.value;
+        if (newVal === lastReported) return;
+        lastReported = newVal;
         if (process.env.NODE_ENV === 'development') {
           // debug to help devs understand what the editor is sending to the parent
           // eslint-disable-next-line no-console
@@ -231,10 +264,50 @@
        */
       const hasHints = hints.value.length > 0;
 
+      const showHints = computed(
+        () => hasHints && (props.mode === 'edit' ? !isUnsupported.value : props.showAnswers),
+      );
+
       function onUpdateHints(newHints) {
         editedHere = props.mode === 'edit';
         hints.value = newHints;
       }
+
+      /**
+       * Whether this card can be opened for editing, by a click on the card or by its toolbar's
+       * Edit action. Only the card knows whether its XML could be read, and a consumer that
+       * does not listen for `open` gets no affordance.
+       */
+      const canOpen = computed(
+        () => props.mode === 'view' && !isUnsupported.value && Boolean(listeners.open),
+      );
+
+      function onCardClick(event) {
+        if (!canOpen.value) return;
+        // The click would otherwise carry on to the rich text editor's click-outside handler
+        // on `document`, which minimizes the question this just opened.
+        event.stopPropagation();
+        emit('open');
+      }
+
+      const card = ref(null);
+
+      function scrollToStart() {
+        card.value.$el.scrollIntoView({ block: 'start' });
+      }
+
+      onMounted(() => {
+        if (props.mode === 'edit') scrollToStart();
+      });
+
+      watch(
+        () => props.mode,
+        mode => {
+          if (mode === 'edit') scrollToStart();
+        },
+        // After the re-render, so the card's position is where it has settled.
+        { flush: 'post' },
+      );
 
       /** Errors the interaction editor reports about the state it holds. */
       const errors = ref([]);
@@ -248,7 +321,13 @@
        */
       const isIncomplete = computed(() => {
         if (isUnsupported.value) {
-          return false;
+          // Unreadable or empty QTI can't be fixed here and blocks publishing; other
+          // unsupported items are publishable.
+          return (
+            isQti.value &&
+            validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })
+              .length > 0
+          );
         }
         const itemErrors = validateItemShape({
           interactions: interactions.value,
@@ -259,11 +338,14 @@
       });
 
       return {
+        card,
         currentQuestionType,
         interactions,
         currentInteraction,
         isUnsupported,
         isIncomplete,
+        canOpen,
+        onCardClick,
         questionNumberLabel,
         questionNumberAndTypeLabel,
         closeBtnLabel$,
@@ -273,7 +355,7 @@
         onUpdateInteraction,
         onUpdateErrors,
         hints,
-        hasHints,
+        showHints,
         onUpdateHints,
       };
     },
@@ -318,7 +400,7 @@
       },
     },
 
-    emits: ['close', 'update:rawData'],
+    emits: ['open', 'close', 'update:rawData'],
   };
 
 </script>
@@ -326,10 +408,23 @@
 
 <style lang="scss" scoped>
 
+  @import '~kolibri-design-system/lib/styles/definitions';
+
   .question-card {
     --question-card-horizontal-padding: 20px;
 
     padding: 0;
+    // Room for the tab bar above, so an opened card is not scrolled in under it.
+    scroll-margin-top: 64px;
+
+    &.is-clickable {
+      cursor: pointer;
+      transition: box-shadow $core-time ease;
+
+      &:hover {
+        @extend %dropshadow-6dp;
+      }
+    }
   }
 
   .question-card-header {

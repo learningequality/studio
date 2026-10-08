@@ -1,6 +1,6 @@
-import { descriptors, editors, registry, DEFAULT_INTERACTION } from '../index';
-import { isInlineInteraction } from '../descriptors';
-import { Placement } from '../../constants';
+import { descriptors, editors, registry } from '../index';
+import { HEADLESS_INTERACTIONS, isInlineInteraction } from '../descriptors';
+import { Placement, QtiInteraction } from '../../constants';
 
 /**
  * An interaction is registered in two places: its descriptor in `descriptors.js` and its
@@ -10,8 +10,10 @@ import { Placement } from '../../constants';
  * opens the question.
  */
 describe('interaction registry', () => {
+  const editable = descriptors.filter(d => !HEADLESS_INTERACTIONS.includes(d.type));
+
   it('registers an editor for every descriptor', () => {
-    const missing = descriptors.filter(d => !editors[d.type]).map(d => d.type);
+    const missing = editable.filter(d => !editors[d.type]).map(d => d.type);
     expect(missing).toEqual([]);
   });
 
@@ -21,15 +23,11 @@ describe('interaction registry', () => {
   });
 
   it('holds the same number of descriptors and editors', () => {
-    expect(Object.keys(editors)).toHaveLength(descriptors.length);
+    expect(Object.keys(editors)).toHaveLength(editable.length);
   });
 
   it('keys the registry by every descriptor type', () => {
     expect(Object.keys(registry).sort()).toEqual(descriptors.map(d => d.type).sort());
-  });
-
-  it('has a descriptor for the fallback interaction', () => {
-    expect(registry[DEFAULT_INTERACTION]).toBeDefined();
   });
 
   describe('isInlineInteraction', () => {
@@ -42,7 +40,7 @@ describe('interaction registry', () => {
     });
 
     it('reports an interaction with no descriptor as not inline', () => {
-      expect(isInlineInteraction('qti-match-interaction')).toBe(false);
+      expect(isInlineInteraction(QtiInteraction.EXTENDED_TEXT)).toBe(false);
     });
   });
 });

@@ -3,7 +3,7 @@
   <div
     ref="editorContainer"
     class="editor-container"
-    :class="{ 'view-mode': editorMode === 'view' }"
+    :class="{ 'view-mode': editorMode === 'view', 'is-padded': padding === 'default' }"
     :style="[
       minHeight && editorMode !== 'view' ? { minHeight } : {},
       editorMode !== 'view' ? { backgroundColor: $themePalette.white } : {},
@@ -11,7 +11,7 @@
     :tabindex="tabindex"
     role="textbox"
     :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"
-    aria-multiline="true"
+    :aria-multiline="String(!inlineOnly)"
     @keydown="handleContainerKeydown"
     @focusin="hasFocusWithin = true"
     @focusout="handleFocusout"
@@ -27,33 +27,6 @@
         v-else
         v-on="sharedEventHandlers"
         @minimize="emitMinimize"
-      />
-    </div>
-
-    <div
-      v-if="linkHandler.isBubbleMenuOpen.value"
-      :style="linkHandler.popoverStyle.value"
-    >
-      <LinkBubbleMenu
-        v-if="isReady"
-        :editor="editor"
-      />
-    </div>
-
-    <div
-      v-if="linkHandler.isEditorOpen.value"
-      class="link-editor-popover-wrapper"
-      :class="{ 'has-overlay': linkHandler.isEditorCentered.value }"
-      :style="linkHandler.isEditorCentered.value ? {} : linkHandler.popoverStyle.value"
-      @click.self="linkHandler.closeLinkEditor"
-    >
-      <LinkEditor
-        :style="linkHandler.isEditorCentered.value ? linkHandler.popoverStyle.value : {}"
-        :mode="linkHandler.editorMode.value"
-        :initial-state="linkHandler.editorInitialState.value"
-        @save="linkHandler.saveLink"
-        @remove="linkHandler.removeLink"
-        @close="linkHandler.closeLinkEditor"
       />
     </div>
 
@@ -92,6 +65,7 @@
     </div>
 
     <EditorContentWrapper
+      :padding="padding"
       :inert="editorMode === 'view'"
       @drop.native.prevent="handleDrop"
       @dragover.native.prevent
@@ -110,29 +84,19 @@
 
 <script>
 
-  import {
-    defineComponent,
-    provide,
-    watch,
-    computed,
-    ref,
-    nextTick,
-    onMounted,
-    onUnmounted,
-  } from 'vue';
+  import { defineComponent, provide, watch, computed, ref, toRef, nextTick } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
+  import { useClickOutside } from './composables/useClickOutside';
   import ImageUploadModal from './components/image/ImageUploadModal.vue';
   import { useImageHandling } from './composables/useImageHandling';
   import '../assets/styles/code-theme-dark.css';
-  import { useLinkHandling } from './composables/useLinkHandling';
-  import LinkBubbleMenu from './components/link/LinkBubbleMenu.vue';
-  import LinkEditor from './components/link/LinkEditor.vue';
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
   import { resolveImageSrcs, toStoredImageSrcs } from './utils/imageSrc';
+  import { toInlineHTML } from './utils/inlineContent';
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
   import { getTipTapEditorStrings } from './TipTapEditorStrings';
@@ -144,20 +108,22 @@
       EditorToolbar,
       EditorContentWrapper,
       ImageUploadModal,
-      LinkBubbleMenu,
-      LinkEditor,
       FormulasMenu,
       MobileTopBar,
       MobileFormattingBar,
     },
     setup(props, { emit }) {
       const editorContainer = ref(null);
-      const { editor, isReady, isFocused, initializeEditor } = useEditor();
+      const { editor, isReady, isFocused, insertContext, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
-
-      const linkHandler = useLinkHandling(editor);
-      provide('linkHandler', linkHandler);
+      provide('insertContext', insertContext);
+      provide('insertActions', toRef(props, 'insertActions'));
+      // Read once: the schema is fixed when the editor is created.
+      const { inlineOnly } = props;
+      provide('inlineOnly', inlineOnly);
+      // The markdown serializer writes each inline child of an inline-only doc as a block.
+      const isHTML = computed(() => props.format === 'html' || inlineOnly);
 
       // The anchored modals are measured and hit-tested through these refs, so that several
       // editors mounted at once each work with their own modal.
@@ -176,7 +142,6 @@
 
       const sharedEventHandlers = computed(() => ({
         'insert-image': target => imageHandler.openCreateModal({ targetElement: target }),
-        'insert-link': () => linkHandler.openLinkEditor(),
         'insert-math': target => mathHandler.openCreateMathModal({ targetElement: target }),
       }));
 
@@ -191,36 +156,18 @@
 
       const handleDrop = event => {
         const file = event.dataTransfer.files[0];
-        if (file) {
+        // An inline-only schema has no image node to insert.
+        if (file && !inlineOnly) {
           imageHandler.openCreateModal({ file });
         }
       };
-
-      // Handle click outside to minimize
-      const handleClickOutside = event => {
-        if (props.mode !== 'edit') {
-          return;
-        }
-
-        if (editorContainer.value && !editorContainer.value.contains(event.target)) {
-          emit('minimize');
-        }
-      };
-
-      onMounted(() => {
-        document.addEventListener('click', handleClickOutside);
-      });
-
-      onUnmounted(() => {
-        document.removeEventListener('click', handleClickOutside);
-      });
 
       const getContent = () => {
         if (!editor.value || !isReady.value) return '';
         // Image srcs are resolved for display on the way in, so they are reduced
         // back to their stored form here — leaving this the one place that reads
         // content out, whichever form the editor happens to be holding.
-        if (props.format === 'html') return toStoredImageSrcs(editor.value.getHTML());
+        if (isHTML.value) return toStoredImageSrcs(editor.value.getHTML());
         if (!editor.value.storage?.markdown) return '';
         return editor.value.storage.markdown.getMarkdown();
       };
@@ -255,12 +202,16 @@
             return;
           }
 
-          const processedContent =
-            props.format === 'html' ? resolveImageSrcs(newValue) : preprocessMarkdown(newValue);
+          let processedContent;
+          if (inlineOnly) processedContent = toInlineHTML(newValue);
+          else if (isHTML.value) processedContent = resolveImageSrcs(newValue);
+          else processedContent = preprocessMarkdown(newValue);
 
           if (!editor.value) {
             initializeEditor(processedContent, props.mode, {
               autofocus: props.autofocus,
+              extensions: props.extensions,
+              inlineOnly,
             });
             return;
           }
@@ -285,11 +236,30 @@
         }
       };
 
-      // Emit the content update only when the editor loses focus (blur).
-      watch(isFocused, (focused, wasFocused) => {
-        if (wasFocused && !focused) {
-          emitContentUpdate();
+      /**
+       * `ready`: emitted once, with the tiptap `Editor`, when commands can be issued.
+       */
+      watch(isReady, ready => {
+        if (ready) {
+          emit('ready', editor.value);
         }
+      });
+
+      const minimize = () => {
+        // Toolbar buttons suppress blur to keep the caret, so content written since
+        // the last blur is still unsynced. Flush it first: a parent acting on the
+        // close would otherwise read the content as it stood before that edit.
+        emitContentUpdate();
+        emit('minimize');
+      };
+
+      // The content is emitted only when the editor loses focus (blur) or closes.
+      useClickOutside({
+        container: editorContainer,
+        isFocused,
+        isEditing: () => props.mode === 'edit',
+        syncContent: emitContentUpdate,
+        close: minimize,
       });
 
       const handleContainerKeydown = event => {
@@ -304,24 +274,15 @@
         editorContainer,
         imageUploadModal,
         formulasMenu,
-        isReady,
         hasFocusWithin,
         handleFocusout,
         handleDrop,
-        linkHandler,
-        editor,
         mathHandler,
         isTouchDevice,
         imageHandler,
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
-        emitMinimize: () => {
-          // Toolbar buttons suppress blur to keep the caret, so content written since
-          // the last blur is still unsynced. Flush it first: a parent acting on the
-          // close would otherwise read the content as it stood before that edit.
-          emitContentUpdate();
-          emit('minimize');
-        },
+        emitMinimize: minimize,
         handleContainerKeydown,
         TipTapEditorLabel$,
         TipTapViewerLabel$,
@@ -348,6 +309,43 @@
         type: Object,
         default: () => ({}),
       },
+      /**
+       * tiptap extensions (`Node`, `Mark` or `Extension`), registered after the
+       * built-in ones. Read once, when the editor is created.
+       * @type {import('@tiptap/core').AnyExtension[]}
+       */
+      extensions: {
+        type: Array,
+        default: () => [],
+      },
+      /**
+       * Holds one line of inline content; blocks and line breaks in the value become
+       * spaces. Read once, when the editor is created. Reads and writes HTML, whatever
+       * `format` says.
+       */
+      inlineOnly: {
+        type: Boolean,
+        default: false,
+      },
+      /**
+       * Actions appended to the insert tools of every toolbar. Each is
+       * `{ name, title, icon, handler, isActive?, isAvailable?, prominent? }`:
+       * - `name` {string}: unique among the insert tools.
+       * - `title` {string}: translated label and accessible name.
+       * - `icon` {string}: a KDS icon name, rendered with `KIcon`.
+       * - `handler` {(context) => void}: runs on click; not called while unavailable.
+       * - `isActive`, `isAvailable` {boolean | (context) => boolean}: re-evaluated on
+       *   every transaction.
+       * - `prominent` {boolean}: on desktop, a labelled button before minimize that
+       *   never moves into More.
+       * `context` is `{ editor, selection: { empty, spansLines, hasCursor },
+       * canInsertNode(typeName) }`; see docs/rich_text_editor.md.
+       * @type {Object[]}
+       */
+      insertActions: {
+        type: Array,
+        default: () => [],
+      },
       minHeight: {
         type: String,
         default: null,
@@ -357,8 +355,17 @@
         default: 'markdown',
         validator: v => ['markdown', 'html'].includes(v),
       },
+      /**
+       * Space around the content: 'default', 'small' (8px) or 'none', for cards
+       * and chips. Below default, view mode also drops paragraph margins.
+       */
+      padding: {
+        type: String,
+        default: 'default',
+        validator: v => ['default', 'small', 'none'].includes(v),
+      },
     },
-    emits: ['update', 'minimize', 'open-editor'],
+    emits: ['update', 'minimize', 'open-editor', 'ready'],
   });
 
 </script>
@@ -395,7 +402,6 @@
     outline-color: #007bff;
   }
 
-  .link-editor-popover-wrapper,
   .image-upload-popover-wrapper,
   .math-modal-popover-wrapper {
     position: fixed;
@@ -410,7 +416,6 @@
     pointer-events: none;
   }
 
-  .link-editor-popover-wrapper > *,
   .image-upload-popover-wrapper > *,
   .math-modal-popover-wrapper > * {
     pointer-events: auto;
@@ -485,6 +490,12 @@
 
   .editor-container li {
     margin: 4px 0;
+  }
+
+  /* A card or chip with reduced padding shows its content as one line, which
+     paragraph margins would push past that padding. */
+  .editor-container.view-mode:not(.is-padded) p {
+    margin: 0;
   }
 
 </style>

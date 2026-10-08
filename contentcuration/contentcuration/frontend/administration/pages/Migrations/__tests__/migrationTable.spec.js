@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import MigrationTable from '../MigrationTable.vue';
 import { Invitation } from 'shared/data/resources';
+import { migrationTableStrings as strings } from 'shared/strings/organizationStrings';
 
 jest.mock('shared/data/resources', () => ({
   Invitation: { fetchCollection: jest.fn(), accept: jest.fn(), decline: jest.fn() },
@@ -22,41 +23,31 @@ describe('MigrationTable', () => {
     Invitation.fetchCollection.mockResolvedValue([migration]);
   });
 
-  it.each([
-    ['Accept', 'accept'],
-    ['Decline', 'decline'],
-  ])('can %s a pending migration', async (label, method) => {
+  it.each(['accept', 'decline'])('can %s a pending migration', async method => {
     Invitation[method].mockResolvedValue();
     render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
-    expect(await screen.findByText('Example channel')).toBeInTheDocument();
-    expect(screen.getByText('Destination')).toBeInTheDocument();
-    expect(screen.getByText('requestor@example.com')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Options' }));
-    await userEvent.click(await screen.findByText(label));
+    await screen.findByRole('heading', { name: strings.count$({ count: 1 }) });
+    await userEvent.click(screen.getByRole('button', { name: strings.options$() }));
+    await userEvent.click(await screen.findByText(strings[`${method}$`]()));
     await waitFor(() => expect(Invitation[method]).toHaveBeenCalledWith('request'));
-    expect(await screen.findByText('No contested migrations')).toBeInTheDocument();
+    expect(await screen.findByText(strings.empty$())).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('heading')).toHaveFocus());
-    expect(screen.getByRole('status')).toHaveTextContent('Example channel');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      strings[method === 'accept' ? 'accepted$' : 'declined$']({ channel: migration.channel_name }),
+    );
   });
 
-  it('uses the singular heading for one request', async () => {
-    render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
-    expect(
-      await screen.findByRole('heading', { name: '1 contested migration' }),
-    ).toBeInTheDocument();
-  });
-
-  it.each(['Accept', 'Decline'])('focuses the next row after keyboard %s', async label => {
+  it.each(['accept', 'decline'])('focuses the next row after keyboard %s', async method => {
     const user = userEvent.setup();
     Invitation.fetchCollection.mockResolvedValue([
       migration,
       { ...migration, id: 'second', channel_name: 'Next channel' },
     ]);
     render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
-    const buttons = await screen.findAllByRole('button', { name: 'Options' });
+    const buttons = await screen.findAllByRole('button', { name: strings.options$() });
     buttons[0].focus();
     await user.keyboard('{Enter}');
-    const accept = (await screen.findByText('Accept')).closest('li');
+    const accept = (await screen.findByText(strings.accept$())).closest('li');
     // JSDOM has no layout; KDropdownMenu checks these dimensions before
     // handling arrow keys in an open popover.
     const popover = accept.closest('.ui-popover');
@@ -65,33 +56,43 @@ describe('MigrationTable', () => {
       clientHeight: { value: 100 },
     });
     await waitFor(() => expect(accept).toHaveFocus());
-    if (label === 'Decline') {
+    if (method === 'decline') {
       await user.keyboard('{ArrowDown}');
-      await waitFor(() => expect(screen.getByText('Decline').closest('li')).toHaveFocus());
+      await waitFor(() => expect(screen.getByText(strings.decline$()).closest('li')).toHaveFocus());
     }
     await user.keyboard('{Enter}');
-    await waitFor(() => expect(Invitation[label.toLowerCase()]).toHaveBeenCalledWith('request'));
-    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Options' })).toHaveLength(1));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Options' })).toHaveFocus());
-    expect(screen.getByRole('status')).toHaveTextContent('Example channel');
+    await waitFor(() => expect(Invitation[method]).toHaveBeenCalledWith('request'));
+    await waitFor(() =>
+      expect(screen.getAllByRole('button', { name: strings.options$() })).toHaveLength(1),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: strings.options$() })).toHaveFocus(),
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      strings[method === 'accept' ? 'accepted$' : 'declined$']({ channel: migration.channel_name }),
+    );
   });
 
-  it('uses the title when the initial list request fails', async () => {
-    Invitation.fetchCollection.mockRejectedValue(new Error('Network error'));
-    render(MigrationTable, { routes: [] });
+  it('recovers after the initial list request fails', async () => {
+    Invitation.fetchCollection.mockRejectedValueOnce(new Error('Network error'));
+    render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
     await screen.findByRole('alert');
-    expect(screen.getByRole('heading')).toHaveTextContent('Contested migrations');
-    expect(screen.queryByText('0 contested migrations')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading')).toHaveTextContent(strings.title$());
+    expect(screen.queryByText(strings.count$({ count: 0 }))).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: strings.retry$() }));
+    await screen.findByRole('button', { name: strings.options$() });
+    expect(Invitation.fetchCollection).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('shows a recoverable error when resolution fails', async () => {
     Invitation.accept.mockRejectedValue(new Error('Network error'));
     render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
-    await userEvent.click(await screen.findByRole('button', { name: 'Options' }));
-    await userEvent.click(await screen.findByText('Accept'));
+    await userEvent.click(await screen.findByRole('button', { name: strings.options$() }));
+    await userEvent.click(await screen.findByText(strings.accept$()));
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    expect(screen.getByRole('heading')).toHaveTextContent('Contested migrations');
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(screen.getByRole('heading')).toHaveTextContent(strings.title$());
+    await userEvent.click(screen.getByRole('button', { name: strings.retry$() }));
     expect(await screen.findByText('Example channel')).toBeInTheDocument();
   });
 });
