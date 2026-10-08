@@ -501,8 +501,10 @@ class ExerciseArchiveGenerator(ABC):
         processed_answers = []
 
         for answer in answer_data:
-            if answer["answer"]:
-                if isinstance(answer["answer"], str):
+            # A JSON 0 is a valid input answer; each format drops the blank
+            # ones itself.
+            if answer.get("answer") or assessment_item.type == exercises.INPUT_QUESTION:
+                if isinstance(answer.get("answer"), str):
                     (answer["answer"], answer_images,) = self._process_content(
                         answer["answer"],
                     )

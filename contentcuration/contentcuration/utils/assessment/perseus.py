@@ -1,7 +1,6 @@
 import copy
 import json
 import logging
-import math
 import re
 import zipfile
 
@@ -13,15 +12,21 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
+from contentcuration.utils.assessment.qti.convert import format_number
 from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
 from contentcuration.utils.assessment.qti.convert import is_answerless_input
 from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
-from contentcuration.utils.parser import extract_value
 
 
 logger = logging.getLogger(__name__)
 
 _DOUBLE_DOLLAR_RE = re.compile(r"\$\$(.+?)\$\$", flags=re.DOTALL)
+
+
+def _perseus_input_value(answer):
+    """The number a Perseus numeric-input renders for a legacy input answer, or None."""
+    number = format_number(str(answer).strip())
+    return float(number) if number else None
 
 
 def answerless_input_ids(ccnode):
@@ -109,15 +114,13 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
             assessment_item.assessment_id = hex_to_qti_id(assessment_item.assessment_id)
         return super().process_assessment_item(assessment_item)
 
-    def _process_input_answers(self, processed_data):
-        """Extract input answer processing logic"""
-        numeric_answers = []
-        for answer in processed_data["answers"]:
-            answer["answer"] = extract_value(answer["answer"])
-            if answer["answer"] is not None and math.isfinite(answer["answer"]):
-                numeric_answers.append(answer)
-
-        return {**processed_data, "answers": numeric_answers}
+    def _process_answers(self, assessment_item):
+        answers = super()._process_answers(assessment_item)
+        if assessment_item.type != exercises.INPUT_QUESTION:
+            return answers
+        # The template marks every rendered answer correct.
+        values = map(_perseus_input_value, accepted_answers(answers))
+        return [{"answer": value} for value in values if value is not None]
 
     def create_assessment_item(self, assessment_item, processed_data):
         template = self.TEMPLATE_MAP.get(assessment_item.type)
@@ -125,10 +128,6 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
             raise TypeError(
                 f"Unrecognized question type on item {assessment_item.assessment_id}: {assessment_item.type}"
             )
-
-        # Handle input question special case
-        if assessment_item.type == exercises.INPUT_QUESTION:
-            processed_data = self._process_input_answers(processed_data)
 
         filename = f"{assessment_item.assessment_id}.json"
         content = render_to_string(template, processed_data).encode("utf-8", "ignore")

@@ -217,19 +217,6 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             return None
         return super().process_assessment_item(assessment_item)
 
-    def _process_answers(self, assessment_item):
-        # The base drops every falsy answer, including a JSON 0; conversion
-        # drops the blank and false input answers itself.
-        if assessment_item.type != exercises.INPUT_QUESTION:
-            return super()._process_answers(assessment_item)
-        answers = json.loads(assessment_item.answers)
-        for answer in answers:
-            if isinstance(answer.get("answer"), str):
-                answer["answer"], answer["images"] = self._process_content(
-                    answer["answer"]
-                )
-        return self._sort_by_order(answers, "answers")
-
     def _create_perseus_custom_interaction(self, assessment_item) -> None:
         """Embed a raw Perseus question as a ``qti-custom-interaction``.
 
