@@ -48,6 +48,7 @@ export const CHANNEL_PAGE_SIZE = 25;
 
 export const OrganizationEditTabs = {
   DETAILS: 'details',
+  CHANNELS: 'channels',
   SHARING: 'sharing',
 };
 
