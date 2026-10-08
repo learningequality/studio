@@ -57,7 +57,6 @@
         <CountryField
           ref="locationDropdown"
           v-model="locationFilter"
-          :outline="false"
           :multiple="false"
           label="Target location"
         />

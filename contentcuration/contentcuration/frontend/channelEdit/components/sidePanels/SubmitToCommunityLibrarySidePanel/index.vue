@@ -204,7 +204,6 @@
                   :disabled="!canBeEdited"
                   :label="countryLabel$()"
                   fullWidth
-                  :hide-details="true"
                 />
               </KTransition>
             </div>
