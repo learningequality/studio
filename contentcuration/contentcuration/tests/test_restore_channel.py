@@ -16,6 +16,7 @@ from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from lxml import etree
 from mixer.backend.django import mixer
 from mock import MagicMock
 from mock import patch
@@ -219,6 +220,13 @@ ENCODED_ID = "850d3ff45bd6b85f883a5332835ee28f"  # KhQ0_9FvWuF-IOlMyg17ijw
 PERSEUS_ID = "fedcba0987654321fedcba0987654321"
 
 
+def _canonical_xml(data):
+    # Restore re-serializes items to rewrite media paths, so compare as XML.
+    if isinstance(data, str):
+        data = data.encode("utf-8")
+    return etree.tostring(etree.fromstring(data), method="c14n")
+
+
 class QTIRestoreTestCase(StudioTestCase):
     EDITOR_ITEM_XML = _item_xml(
         "{identifier}",
@@ -370,7 +378,9 @@ class QTIRestoreTestCase(StudioTestCase):
     def _package_contents(self, package):
         with zipfile.ZipFile(package) as zf:
             return {
-                name: zf.read(name)
+                name: _canonical_xml(zf.read(name))
+                if name.endswith(".xml")
+                else zf.read(name)
                 for name in zf.namelist()
                 # Its manifest identifier is the node's content_id.
                 if name != "imsmanifest.xml"
@@ -412,7 +422,13 @@ class QTIRestoreTestCase(StudioTestCase):
                 else:
                     # The package names this item only by its editor slug.
                     self.assertRegex(item.assessment_id, "^[0-9a-f]{32}$")
-                if source_item.type in (exercises.QTI, exercises.PERSEUS_QUESTION):
+                if source_item.type == exercises.QTI:
+                    self.assertEqual(item.type, source_item.type)
+                    self.assertEqual(
+                        _canonical_xml(item.raw_data),
+                        _canonical_xml(source_item.raw_data),
+                    )
+                elif source_item.type == exercises.PERSEUS_QUESTION:
                     self.assertEqual(item.type, source_item.type)
                     self.assertEqual(item.raw_data, source_item.raw_data)
                 else:
