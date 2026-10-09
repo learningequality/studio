@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import base64
 import json
-from io import BytesIO
 from uuid import uuid4
 
 import mock
@@ -13,7 +11,6 @@ from django.db.models import OuterRef
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from mock import patch
-from PIL import Image
 
 from .base import BaseAPITestCase
 from .base import StudioTestCase
@@ -38,20 +35,6 @@ pytestmark = pytest.mark.django_db
 
 
 class FileThumbnailTestCase(BaseAPITestCase):
-    def assert_thumbnail_encoding(self, encoding):
-        header, data = encoding.split(",", 1)
-        expected_header, expected_data = generated_base64encoding().split(",", 1)
-        self.assertEqual(header, expected_header)
-        # PNG compression can vary without changing the decoded image.
-        with Image.open(BytesIO(base64.b64decode(data, validate=True))) as actual:
-            with Image.open(
-                BytesIO(base64.b64decode(expected_data, validate=True))
-            ) as expected:
-                self.assertEqual(actual.format, expected.format)
-                self.assertEqual(actual.size, expected.size)
-                self.assertEqual(actual.mode, expected.mode)
-                self.assertEqual(actual.tobytes(), expected.tobytes())
-
     def setUp(self):
         super(FileThumbnailTestCase, self).setUp()
         self.thumbnail_fobj = create_thumbnail_from_base64(base64encoding())
@@ -63,7 +46,7 @@ class FileThumbnailTestCase(BaseAPITestCase):
 
     def test_get_thumbnail_encoding(self):
         encoding = get_thumbnail_encoding(str(self.thumbnail_fobj))
-        self.assert_thumbnail_encoding(encoding)
+        self.assertEqual(encoding, generated_base64encoding())
 
     @patch("contentcuration.api.default_storage.save")
     @patch("contentcuration.api.default_storage.exists", return_value=True)
@@ -90,7 +73,7 @@ class FileThumbnailTestCase(BaseAPITestCase):
         map_files_to_node(self.user, node, file_data)
         self.assertTrue(isinstance(node.thumbnail_encoding, str))
         thumbnail_data = json.loads(node.thumbnail_encoding)
-        self.assert_thumbnail_encoding(thumbnail_data["base64"])
+        self.assertEqual(thumbnail_data["base64"], generated_base64encoding())
 
     def test_exportchannel_thumbnail(self):
         node = ContentNode(title="Test Node", kind_id=content_kinds.VIDEO)
@@ -98,7 +81,7 @@ class FileThumbnailTestCase(BaseAPITestCase):
         newfile = create_associated_thumbnail(node, self.thumbnail_fobj)
         self.assertTrue(isinstance(newfile, File))
         thumbnail_data = json.loads(node.thumbnail_encoding)
-        self.assert_thumbnail_encoding(thumbnail_data["base64"])
+        self.assertEqual(thumbnail_data["base64"], generated_base64encoding())
 
 
 class NodeFileDeletionTestCase(StudioTestCase):
