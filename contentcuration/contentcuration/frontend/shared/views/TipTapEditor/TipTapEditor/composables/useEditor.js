@@ -30,6 +30,39 @@ const INLINE_ONLY_STARTER_KIT = {
   trailingNode: false,
 };
 
+export function editorExtensions({ inlineOnly = false } = {}) {
+  return [
+    StarterKitExtension.configure({
+      codeBlock: false, // Disable default code block to use the extended version
+      // A link has nothing to navigate to on a device with no internet access, so
+      // the editor offers none and the legacy conversion unwraps the ones it finds
+      // (utils/assessment/qti/convert.py). Dropping the mark rather than only the
+      // toolbar button is what keeps a pasted anchor from arriving as one.
+      link: false,
+      // Replaced by the versions in extensions/TextDecoration.js, which write the
+      // decoration as a style on a <span> — the QTI 3.0 HTML profile has no <u> or <s>.
+      strike: false,
+      underline: false,
+      ...(inlineOnly && INLINE_ONLY_STARTER_KIT),
+    }),
+    ...(inlineOnly
+      ? [InlineDocument]
+      : [
+          CodeBlockSyntaxHighlight,
+          Small,
+          Image,
+          TextAlign.configure({
+            types: ['heading', 'paragraph', 'image', 'small'],
+          }),
+        ]),
+    StyledStrike,
+    StyledUnderline,
+    Superscript,
+    Subscript,
+    Math,
+  ];
+}
+
 // Whether replacing the selection would delete a line break, welding two lines.
 function spansLines({ doc, selection }) {
   if (selection.empty) return false;
@@ -64,37 +97,7 @@ export function useEditor() {
     editor.value = new Editor({
       autofocus,
       editable: mode === 'edit',
-      extensions: [
-        StarterKitExtension.configure({
-          codeBlock: false, // Disable default code block to use the extended version
-          // A link has nothing to navigate to on a device with no internet access, so
-          // the editor offers none and the legacy conversion unwraps the ones it finds
-          // (utils/assessment/qti/convert.py). Dropping the mark rather than only the
-          // toolbar button is what keeps a pasted anchor from arriving as one.
-          link: false,
-          // Replaced by the versions in extensions/TextDecoration.js, which write the
-          // decoration as a style on a <span> — the QTI 3.0 HTML profile has no <u> or <s>.
-          strike: false,
-          underline: false,
-          ...(inlineOnly && INLINE_ONLY_STARTER_KIT),
-        }),
-        ...(inlineOnly
-          ? [InlineDocument]
-          : [
-              CodeBlockSyntaxHighlight,
-              Small,
-              Image,
-              TextAlign.configure({
-                types: ['heading', 'paragraph', 'image', 'small'],
-              }),
-            ]),
-        StyledStrike,
-        StyledUnderline,
-        Superscript,
-        Subscript,
-        Math,
-        ...extensions,
-      ],
+      extensions: [...editorExtensions({ inlineOnly }), ...extensions],
       content: content || '<p></p>',
       editorProps: {
         attributes: {

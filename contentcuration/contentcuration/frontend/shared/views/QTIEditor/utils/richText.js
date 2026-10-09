@@ -49,21 +49,3 @@ export function hasRichTextContent(content) {
     Boolean(parseXML(content ?? '', 'text/html').querySelector(EMBEDDED_MEDIA))
   );
 }
-
-/**
- * A key two fragments can be compared on to tell whether they say the same thing.
- *
- * Text is what an author reads, so text is what duplicates are judged on — two choices
- * that read the same are the same choice however differently they are marked up. A
- * fragment with no text has only its markup to go on, which keeps two different images
- * apart while still catching the same image offered twice — read back out of stored XML
- * it arrives pretty-printed, so the markup is compared with its layout normalised away.
- *
- * Only meaningful for a fragment that `hasRichTextContent`; an empty one keys to ''.
- *
- * @param {string} content - HTML fragment from a TipTap editor
- * @returns {string}
- */
-export function richTextComparisonKey(content) {
-  return toText(content) || (content ?? '').replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim();
-}
