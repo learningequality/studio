@@ -373,6 +373,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Only one correct answer is allowed for single-choice questions.',
     context: 'Validation error when multiple choices are marked correct for single-select',
   },
+  warningSingleChoice: {
+    message: 'This question has only one answer option. Did you mean to add more?',
+    context:
+      'Warning shown when a single-choice or multiple-select question has only one answer option. It does not block saving the question.',
+  },
   errorEmptyChoiceContent: {
     message: 'Answer cannot be blank',
     context: 'Validation error when an answer option is empty',
