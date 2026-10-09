@@ -32,10 +32,10 @@ const renderEditor = (props = {}) =>
 // The mock TipTapEditor renders a <textarea> only for the editor that is open.
 const openTextarea = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
 
-describe('TextEntryEditor — numeric', () => {
-  const answerInputs = () =>
-    screen.queryAllByRole('textbox', { name: tr.$tr('answerValuePlaceholder') });
+const answerInputs = () =>
+  screen.queryAllByRole('textbox', { name: tr.$tr('answerValuePlaceholder') });
 
+describe('TextEntryEditor — numeric', () => {
   it('opens the question for editing when it is already written', () => {
     renderEditor({
       interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
@@ -161,6 +161,56 @@ describe('TextEntryEditor — numeric', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
 
+    it('gives example numbers in the exercise language', async () => {
+      renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+        questionType: QuestionType.NUMERIC,
+        language: 'fr',
+      });
+      await fireEvent.input(answerInputs()[0], { target: { value: 'abc' } });
+
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        tr.errorInvalidNumericValue$({ integer: '12', decimal: '0,5', negative: '-3,14' }),
+      );
+    });
+
+    it.each([
+      ['fr', '1234.5', '1234,5'],
+      ['en', '1234.5', '1234.5'],
+      ['en', '1.50', '1.50'],
+      ['fr', '1.50', '1,50'],
+      ['de', '1.234', '1,234'],
+      ['ar-EG', '30', '٣٠'],
+      ['en', '6.022e23', '6.022e23'],
+      ['ar-EG', '3e8', '3e8'],
+    ])('shows a stored answer in %s (%s) as %s', (language, stored, shown) => {
+      renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+      expect(answerInputs()[0]).toHaveValue(shown);
+    });
+
+    it.each([
+      ['de', '123.456,78', '123456,78'],
+      ['en', '1,234.5', '1234.5'],
+      ['fr', ' 1 234,5 ', '1234,5'],
+      ['ar-EG', '٣٠٫٥', '٣٠٫٥'],
+      ['fr', 'abc', 'abc'],
+    ])('shows an answer typed in %s as %s as %s on leaving it', async (language, typed, shown) => {
+      renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+      const input = answerInputs()[0];
+      await fireEvent.input(input, { target: { value: typed } });
+      await fireEvent.blur(input);
+
+      expect(input).toHaveValue(shown);
+    });
+
     it('shows validation errors as soon as the state changes', async () => {
       renderEditor({
         interaction: block(TEXT_ENTRY_BODY_XML),
@@ -239,6 +289,338 @@ describe('TextEntryEditor — emits', () => {
     expect(typeof payload.bodyXml).toBe('string');
     expect(Array.isArray(payload.responseDeclarations)).toBe(true);
   });
+
+  it('stores a numeric answer typed in the exercise language as xsd:double', async () => {
+    const { emitted } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+      questionType: QuestionType.NUMERIC,
+      language: 'fr',
+    });
+    const [input] = answerInputs();
+    await fireEvent.input(input, { target: { value: '1,5' } });
+
+    const [latest] = emitted()['update:interaction'].at(-1);
+    expect(latest.responseDeclarations[0]).toContain('<qti-value>1.5</qti-value>');
+  });
+
+  it.each([
+    ['de', '1.5'],
+    ['de', '1.234'],
+    ['fr', '1234.5'],
+    ['hi', '1e+21'],
+    ['ar-EG', '-0.5'],
+  ])('emits a stored numeric answer unchanged when opened in %s (%s)', (language, stored) => {
+    const { emitted } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+      questionType: QuestionType.NUMERIC,
+      language,
+    });
+
+    const [latest] = emitted()['update:interaction'].at(-1);
+    expect(latest.responseDeclarations[0]).toContain(`<qti-value>${stored}</qti-value>`);
+  });
+
+  it.each(
+    ['en', 'fr', 'de', 'ar-EG'].flatMap(language =>
+      ['1.50', '+5', '5.', '1E3', '0012', '-0', '1e21', '12345678901234567890'].map(stored => [
+        language,
+        stored,
+      ]),
+    ),
+  )('keeps a stored xsd:double in its form when opened in %s (%s)', async (language, stored) => {
+    const { emitted, updateProps } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+      questionType: QuestionType.NUMERIC,
+      language,
+    });
+    await updateProps({ mode: 'view' });
+    await updateProps({ mode: 'edit' });
+
+    for (const [payload] of emitted()['update:interaction']) {
+      expect(payload.responseDeclarations[0]).toContain(`<qti-value>${stored}</qti-value>`);
+    }
+  });
+
+  it.each([
+    ['en', '-0', '-0'],
+    ['fr', '0.0000001', '0,0000001'],
+    ['ar-EG', '-0.000000123', '-٠٫٠٠٠٠٠٠١٢٣'],
+  ])('shows a stored answer in %s (%s) the same after opening', async (language, stored, shown) => {
+    const { updateProps } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+      questionType: QuestionType.NUMERIC,
+      language,
+      mode: 'view',
+      showAnswers: true,
+    });
+    expect(answerInputs()[0]).toHaveValue(shown);
+    await updateProps({ mode: 'edit' });
+
+    expect(answerInputs()[0]).toHaveValue(shown);
+  });
+
+  it('shows a typed answer without an exponent on leaving it', async () => {
+    const { emitted } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+      questionType: QuestionType.NUMERIC,
+      language: 'fr',
+    });
+    const [input] = answerInputs();
+    await fireEvent.input(input, { target: { value: '0,0000001' } });
+    await fireEvent.blur(input);
+
+    expect(input).toHaveValue('0,0000001');
+    const [latest] = emitted()['update:interaction'].at(-1);
+    expect(latest.responseDeclarations[0]).toContain('<qti-value>0.0000001</qti-value>');
+  });
+
+  it.each([
+    ['fr', '1.50', '1,50'],
+    ['fr', '.5', ',5'],
+    ['de', '0.50', '0,50'],
+    ['sv', '2.000', '2,000'],
+  ])(
+    'shows and stores an answer typed in %s as %s the same on each leaving',
+    async (language, typed, shown) => {
+      const { emitted } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+      const [input] = answerInputs();
+      await fireEvent.input(input, { target: { value: typed } });
+      await fireEvent.blur(input);
+      const emittedBeforeRefocus = emitted()['update:interaction'].length;
+      await fireEvent.focus(input);
+      await fireEvent.blur(input);
+
+      expect(input).toHaveValue(shown);
+      expect(emitted()['update:interaction']).toHaveLength(emittedBeforeRefocus);
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${typed}</qti-value>`);
+    },
+  );
+
+  it.each([
+    ['fr', '1,5', '1.5'],
+    ['en', '1,234', '1234'],
+    ['de', '1.234,5', '1234.5'],
+  ])(
+    'rewrites a stored answer in %s that is not xsd:double (%s) as the number it reads as',
+    (language, stored, expected) => {
+      const { emitted } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${expected}</qti-value>`);
+    },
+  );
+
+  it.each([
+    ['fr', '1234.5', '1234,5'],
+    ['en', '1.50', '1.50'],
+    ['en', '0012', '0012'],
+    ['ar-EG', '30', '٣٠'],
+    ['fr', '1.2.3', '1.2.3'],
+    ['he', '-0.5', '-0.5'],
+    ['sv', '-0.5', '-0,5'],
+    ['ar-EG', '-0.5', '-٠٫٥'],
+  ])(
+    'keeps a stored numeric answer as shown when switched to text entry in %s (%s)',
+    async (language, stored, shown) => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+      await updateProps({ questionType: QuestionType.TEXT_ENTRY });
+
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${shown}</qti-value>`);
+    },
+  );
+
+  it.each([
+    ['fr', '1,5', '1,5', '1.5'],
+    ['fr', '1 234,5', '1234,5', '1234.5'],
+  ])(
+    'reads a text entry answer in %s (%s) when switched to numeric',
+    async (language, text, shown, stored) => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, STRING_DECL.replace('H2O', text)),
+        questionType: QuestionType.TEXT_ENTRY,
+        language,
+      });
+      await updateProps({ questionType: QuestionType.NUMERIC });
+
+      expect(answerInputs()[0]).toHaveValue(shown);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${stored}</qti-value>`);
+    },
+  );
+
+  it('leaves a text entry answer as stored in any language', () => {
+    renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, STRING_DECL.replace('H2O', '1.5')),
+      questionType: QuestionType.TEXT_ENTRY,
+      language: 'fr',
+    });
+    expect(screen.getByRole('textbox', { name: tr.$tr('answerTextPlaceholder') })).toHaveValue(
+      '1.5',
+    );
+  });
+
+  it.each([
+    ['de', '1.5', '1,5'],
+    ['es', '1234.5', '1234,5'],
+    ['fr', '1234.5', '1234,5'],
+    ['ar-EG', '30', '٣٠'],
+  ])(
+    'shows a stored answer in %s again after switching to text entry and back (%s)',
+    async (language, stored, shown) => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+      await updateProps({ questionType: QuestionType.TEXT_ENTRY });
+      await updateProps({ questionType: QuestionType.NUMERIC });
+
+      expect(answerInputs()[0]).toHaveValue(shown);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${stored}</qti-value>`);
+    },
+  );
+
+  it.each([
+    ['fr', '1,5'],
+    ['en', '1,234'],
+    ['de', '1.500'],
+    ['', ' 5 '],
+    ['fa', 'می\u200cخواهم'],
+    ['en', 'a­b'],
+  ])(
+    'keeps a typed numeric answer as typed when switched to text entry in "%s" (%s)',
+    async (language, typed) => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+      const [input] = answerInputs();
+      await fireEvent.input(input, { target: { value: typed } });
+      await updateProps({ questionType: QuestionType.TEXT_ENTRY });
+
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${typed.trim()}</qti-value>`);
+    },
+  );
+
+  it.each([
+    ['', 'fr', '1,5', '1,5', '1.5'],
+    ['fr', 'en', '1,234.5', '1234.5', '1234.5'],
+    ['fr', 'de', '1.234,5', '1234,5', '1234.5'],
+  ])(
+    'reads an answer %s cannot read in %s after a language change (%s)',
+    async (from, to, typed, shown, stored) => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+        questionType: QuestionType.NUMERIC,
+        language: from,
+      });
+      const [input] = answerInputs();
+      await fireEvent.input(input, { target: { value: typed } });
+      await fireEvent.blur(input);
+      await updateProps({ language: to });
+
+      expect(input).toHaveValue(shown);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(emitted()['update:errors'].at(-1)).toEqual([[]]);
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${stored}</qti-value>`);
+    },
+  );
+
+  it.each([
+    ['fr', 'en', '1,234', '1.234', '1.234'],
+    ['en', 'fr', '1,234', '1234', '1234'],
+    ['de', 'fr', '1.234,5', '1234,5', '1234.5'],
+  ])(
+    'reads a stored answer in the old language after a language change (%s to %s, %s)',
+    async (from, to, stored, shown, saved) => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+        questionType: QuestionType.NUMERIC,
+        language: from,
+        mode: 'view',
+        showAnswers: true,
+      });
+      await updateProps({ language: to });
+      await updateProps({ mode: 'edit' });
+
+      expect(answerInputs()[0]).toHaveValue(shown);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${saved}</qti-value>`);
+    },
+  );
+
+  it.each([
+    ['fr', '1E3', '1000'],
+    ['en', '1E3', '1000'],
+    ['', '0.50', '0.5'],
+    ['', '0012', '12'],
+  ])(
+    'stores a retyped answer in %s (%s) as typed, not as stored (%s)',
+    async (language, stored, typed) => {
+      const { emitted } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
+        questionType: QuestionType.NUMERIC,
+        language,
+      });
+      const [input] = answerInputs();
+      await fireEvent.input(input, { target: { value: typed } });
+      await fireEvent.blur(input);
+
+      const [latest] = emitted()['update:interaction'].at(-1);
+      expect(latest.responseDeclarations[0]).toContain(`<qti-value>${typed}</qti-value>`);
+    },
+  );
+
+  it('does not emit on leaving an untouched stored answer that is not xsd:double', async () => {
+    const { emitted } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', '1,5')),
+      questionType: QuestionType.NUMERIC,
+      language: 'fr',
+    });
+    const before = emitted()['update:interaction'].length;
+    const [input] = answerInputs();
+    await fireEvent.focus(input);
+    await fireEvent.blur(input);
+
+    expect(emitted()['update:interaction']).toHaveLength(before);
+  });
+
+  it.each(['edit', 'view'])(
+    'shows a stored answer that is not xsd:double as stored on opening (mounted in %s)',
+    async mode => {
+      const { updateProps } = renderEditor({
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', '1,234')),
+        questionType: QuestionType.NUMERIC,
+        language: 'en',
+        mode,
+        showAnswers: true,
+      });
+      await updateProps({ mode: 'edit' });
+
+      expect(answerInputs()[0]).toHaveValue('1234');
+    },
+  );
 
   it('emits update:interaction after adding an answer row', async () => {
     const { emitted } = renderEditor({

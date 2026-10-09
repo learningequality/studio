@@ -67,6 +67,7 @@
         :mode="mode"
         :showAnswers="showAnswers"
         :allowFreeResponse="allowFreeResponse"
+        :language="language"
         @update:questionType="type => (currentQuestionType = type)"
         @update:interaction="onUpdateInteraction"
         @update:errors="onUpdateErrors"
@@ -115,10 +116,11 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
-  import { validateItemShape, validateQtiItem } from '../../validateItem';
+  import { validateItemShape } from '../../validateItem';
   import { isSupportedItem } from '../../interactions/resolveDescriptor';
   import InteractionSection from '../InteractionSection/index.vue';
   import HintsSection from '../HintsSection/index.vue';
+  import { getAssessmentItemErrors } from 'shared/utils/validation';
 
   export default {
     name: 'QTIItemEditor',
@@ -319,17 +321,15 @@
         errors.value = newErrors;
       }
 
+      const storedErrors = computed(() =>
+        getAssessmentItemErrors(props.item, { allowFreeResponse: props.allowFreeResponse }),
+      );
+
       /**
        * Unreadable or empty QTI can't be fixed here and blocks publishing; other unsupported
        * items are publishable.
        */
-      const isUnfixable = computed(
-        () =>
-          isUnsupported.value &&
-          isQti.value &&
-          validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })
-            .length > 0,
-      );
+      const isUnfixable = computed(() => isUnsupported.value && storedErrors.value.length > 0);
 
       const unsupportedMessage = computed(() =>
         isUnfixable.value && props.canDelete
@@ -349,7 +349,15 @@
           questionTypes: [currentQuestionType.value],
           allowFreeResponse: props.allowFreeResponse,
         });
-        return itemErrors.length > 0 || errors.value.length > 0;
+        // Publishing reads the stored XML, which the editor reads Numeric answers from in the
+        // exercise language. Skipped while open: each edit is stored as the editor validates it.
+        return (
+          itemErrors.length > 0 ||
+          errors.value.length > 0 ||
+          (props.mode !== 'edit' &&
+            currentQuestionType.value === QuestionType.NUMERIC &&
+            storedErrors.value.length > 0)
+        );
       });
 
       return {
@@ -417,6 +425,14 @@
       canDelete: {
         type: Boolean,
         default: false,
+      },
+      /**
+       * The exercise's language, which numeric answers are read and shown in. Empty means
+       * they are read and shown as stored.
+       */
+      language: {
+        type: String,
+        default: '',
       },
     },
 
