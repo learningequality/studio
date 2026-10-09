@@ -43,8 +43,8 @@
   import isEqual from 'lodash/isEqual';
   import shuffle from 'lodash/shuffle';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
-  import { richTextComparisonKey } from '../../utils/richText';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
+  import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   export default {

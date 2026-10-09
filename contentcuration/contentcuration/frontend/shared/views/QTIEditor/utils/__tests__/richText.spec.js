@@ -1,4 +1,4 @@
-import { hasRichTextContent, richTextComparisonKey } from '../richText';
+import { hasRichTextContent } from '../richText';
 
 describe('hasRichTextContent', () => {
   it.each([
@@ -30,31 +30,5 @@ describe('hasRichTextContent', () => {
     ['![](abc123.png =550x364)', true],
   ])('%s -> %s', (content, expected) => {
     expect(hasRichTextContent(content)).toBe(expected);
-  });
-});
-
-describe('richTextComparisonKey', () => {
-  it('reads through markup, so the same words marked up differently are one key', () => {
-    expect(richTextComparisonKey('<p><strong>Paris</strong></p>')).toBe(
-      richTextComparisonKey('<p>Paris</p>'),
-    );
-  });
-
-  it('keeps two different formulas apart when there is no text to compare', () => {
-    expect(richTextComparisonKey('<p><span data-latex="x^2"></span></p>')).not.toBe(
-      richTextComparisonKey('<p><span data-latex="y^2"></span></p>'),
-    );
-  });
-
-  it('keeps two different images apart when there is no text to compare', () => {
-    expect(richTextComparisonKey('<p><img src="a.png"/></p>')).not.toBe(
-      richTextComparisonKey('<p><img src="b.png"/></p>'),
-    );
-  });
-
-  it('still matches the same image offered twice', () => {
-    expect(richTextComparisonKey('<p><img src="a.png"/></p>')).toBe(
-      richTextComparisonKey('<p>\n  <img src="a.png"/>\n</p>'),
-    );
   });
 });

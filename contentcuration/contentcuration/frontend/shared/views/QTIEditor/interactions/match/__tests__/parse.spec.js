@@ -23,6 +23,9 @@ const declaration = (...values) =>
     <qti-correct-response>${values.map(v => `<qti-value>${v}</qti-value>`).join('')}</qti-correct-response>
   </qti-response-declaration>`;
 
+const SOLVE_X2 = '<p>Solve <span data-latex="x^2"></span> for x</p>';
+const SOLVE_Y3 = '<p>Solve <span data-latex="y^3"></span> for x</p>';
+
 const ROWS = matchSet(choice('row_dog', 'Dog') + choice('row_eagle', 'Eagle'));
 const RESPONSES = matchSet(
   choice('choice_mammal', 'Mammal') + choice('choice_bird', 'Bird') + choice('choice_fur', 'Fur'),
@@ -482,6 +485,27 @@ describe('parse → buildXML → parse round-trip', () => {
       ],
     };
     expect(roundTrip(state)).toEqual(state);
+  });
+
+  it.each([
+    ['formulas', SOLVE_X2, SOLVE_Y3],
+    [
+      'SVGs',
+      '<p><svg><circle r="1"></circle></svg></p>',
+      '<p><svg><rect width="2"></rect></svg></p>',
+    ],
+    ['scripts', '<p>x<sup>2</sup></p>', '<p>x<sub>2</sub></p>'],
+  ])('preserves answers that differ only in their %s', (_, first, second) => {
+    const state = {
+      responseIdentifier: 'RESPONSE',
+      prompt: '',
+      rows: [
+        { id: 'row_dog', content: 'Dog', matches: [{ id: 'choice_a', content: first }] },
+        { id: 'row_eagle', content: 'Eagle', matches: [{ id: 'choice_b', content: second }] },
+      ],
+      distractors: [],
+    };
+    expect(matchContents(roundTrip(state).rows)).toEqual([[first], [second]]);
   });
 
   it('preserves the default state', () => {
