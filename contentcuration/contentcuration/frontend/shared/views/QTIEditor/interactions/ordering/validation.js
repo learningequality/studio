@@ -1,5 +1,6 @@
 import { ValidationError } from '../../constants';
-import { hasRichTextContent, richTextComparisonKey } from '../../utils/richText';
+import { hasRichTextContent } from '../../utils/richText';
+import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Validate OrderingState → ValidationError[].

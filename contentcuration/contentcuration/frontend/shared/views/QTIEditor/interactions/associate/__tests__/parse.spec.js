@@ -13,6 +13,9 @@ const contentsOf = pairs => pairs.map(pair => pair.map(choice => choice.content)
 
 const SCHEMA = { baseType: BaseType.PAIR, cardinality: Cardinality.MULTIPLE };
 
+const SOLVE_X2 = '<p>Solve <span data-latex="x^2"></span> for x</p>';
+const SOLVE_Y3 = '<p>Solve <span data-latex="y^3"></span> for x</p>';
+
 const parseXmlString = xml => parseXML(xml).documentElement;
 
 describe('parse()', () => {
@@ -428,6 +431,21 @@ describe('parse → buildXML → parse round-trip', () => {
       ['', ''],
       ['Capulet', 'Montague'],
     ]);
+  });
+
+  it('preserves two choices with the same text but different formulas', () => {
+    const state = {
+      responseIdentifier: 'RESPONSE',
+      prompt: '',
+      pairs: [
+        [
+          { id: 'choice_aaa11111', content: SOLVE_X2 },
+          { id: 'choice_bbb22222', content: SOLVE_Y3 },
+        ],
+      ],
+      distractors: [],
+    };
+    expect(contentsOf(roundTrip(state).pairs)).toEqual([[SOLVE_X2, SOLVE_Y3]]);
   });
 
   it('preserves the default state as one pair of two blank choices', () => {
