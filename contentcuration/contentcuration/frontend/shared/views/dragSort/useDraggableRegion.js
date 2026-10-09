@@ -196,6 +196,11 @@ export default function useDraggableRegion(props, emit, getRootEl) {
       if (!rootEl || !document.hasFocus() || rootEl.contains(document.activeElement)) {
         return;
       }
+      // The focused row was removed (e.g. deleted): focus was dropped, not moved out of
+      // the list, and announcing would overwrite whatever the removal itself announced.
+      if (!event.target.isConnected) {
+        return;
+      }
       announceOrder();
     });
   }
