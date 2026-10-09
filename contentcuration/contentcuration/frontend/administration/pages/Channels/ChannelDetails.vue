@@ -59,6 +59,10 @@
             flat
             class="px-5"
           >
+            <ChannelOrganization
+              :channelId="channelId"
+              standalone
+            />
             <StudioDetailsPanel
               v-if="channel && details"
               :details="channelWithDetails"
@@ -86,6 +90,7 @@
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
+  import ChannelOrganization from 'shared/views/channel/ChannelOrganization.vue';
   import ChannelSharing from 'shared/views/channel/ChannelSharing';
   import StudioDetailsPanel from 'shared/views/details/StudioDetailsPanel';
   import { routerMixin } from 'shared/mixins';
@@ -96,6 +101,7 @@
   export default {
     name: 'ChannelDetails',
     components: {
+      ChannelOrganization,
       StudioDetailsPanel,
       LoadingText,
       FullscreenModal,

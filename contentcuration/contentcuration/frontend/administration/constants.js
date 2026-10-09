@@ -1,4 +1,5 @@
 export const RouteNames = {
+  MIGRATIONS: 'MIGRATIONS',
   CHANNELS: 'CHANNELS',
   CHANNEL: 'CHANNEL',
   USERS: 'USERS',
