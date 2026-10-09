@@ -82,8 +82,10 @@ describe('validateQtiItem', () => {
     expect(validateQtiItem(xml, { allowFreeResponse: false })).toEqual([]);
   });
 
-  it('does not apply the editor rules to an interaction with no editor', () => {
-    expect(validateQtiItem(INLINE_CHOICE_ITEM_DOCUMENT)).toEqual([]);
+  it('runs the inline choice validator', () => {
+    expect(validateQtiItem(INLINE_CHOICE_ITEM_DOCUMENT)).toEqual([
+      { code: ValidationError.NO_CORRECT_ANSWER, id: 'RESPONSE_2' },
+    ]);
   });
 
   it('reports an item with no raw data at all', () => {

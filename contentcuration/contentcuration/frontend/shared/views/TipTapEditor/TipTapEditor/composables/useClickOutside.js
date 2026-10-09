@@ -1,9 +1,11 @@
 import { onBeforeUnmount, watch } from 'vue';
 
-// The toolbar's menus render in an overlay outside the editor; while one is open, a click
-// is either on it or dismisses it. KDropdownMenu emits no open or close, so its trigger's
-// ARIA state is the only signal: KDropdownMenu sets both attributes on its trigger.
-const hasOpenMenu = container =>
+// A popup can render outside the editor: the toolbar's menus in an overlay, or a panel a node
+// view opens beside the editor, such as an inline choice chip's options. While one is open, a
+// click is either on it or dismisses it. KDropdownMenu emits no open or close, so its
+// trigger's ARIA state is the only signal, and any trigger inside the editor that sets both
+// attributes keeps it open the same way; docs/rich_text_editor.md states this for consumers.
+const hasOpenPopup = container =>
   Boolean(container.querySelector('[aria-haspopup][aria-expanded="true"]'));
 
 /**
@@ -51,7 +53,7 @@ export function useClickOutside({ container, isFocused, isEditing, syncContent, 
   // still count, and so this runs before the click's own handlers.
   const handleClick = event => {
     const root = container.value;
-    const isOutside = isEditing() && root && !root.contains(event.target) && !hasOpenMenu(root);
+    const isOutside = isEditing() && root && !root.contains(event.target) && !hasOpenPopup(root);
     if (isOutside) {
       // `close` syncs the content itself.
       hasHeldSync = false;

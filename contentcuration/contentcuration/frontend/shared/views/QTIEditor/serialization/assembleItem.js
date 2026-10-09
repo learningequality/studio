@@ -119,23 +119,17 @@ function buildScoringNodes(declNodes) {
     return { outcomeDeclarations, responseProcessing: rule ? buildRulesNode(SCORE, [rule]) : null };
   }
 
-  const scored = declNodes.map(node => ({
-    identifier: node.getAttribute('identifier'),
-    rule: readDeclaration(node)?.getScoringRule(RAW_SCORE) ?? null,
-  }));
-  const unscorable = scored.filter(({ rule }) => !rule).map(({ identifier }) => identifier);
-  if (unscorable.length) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `[QTI Editor] Writing no response processing: cannot score ${unscorable.join(', ')}`,
-    );
+  const rules = declNodes.map(node => readDeclaration(node)?.getScoringRule(RAW_SCORE) ?? null);
+  // Expected while an item is still being written, such as an inline choice dropdown with no
+  // correct answer yet; validation reports that to the author, so it is not logged here.
+  if (rules.includes(null)) {
     return { outcomeDeclarations, responseProcessing: null };
   }
 
   return {
     outcomeDeclarations: [...outcomeDeclarations, buildOutcomeDeclarationNode(RAW_SCORE)],
     responseProcessing: buildRulesNode(RAW_SCORE, [
-      ...scored.map(({ rule }) => rule),
+      ...rules,
       buildXmlNode({
         tag: 'qti-set-outcome-value',
         attrs: { identifier: SCORE },

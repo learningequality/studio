@@ -213,6 +213,7 @@
           [QuestionType.ORDERING]: qtiEditorStrings.orderingLabel$,
           [QuestionType.ASSOCIATE]: qtiEditorStrings.associateLabel$,
           [QuestionType.MATCH]: qtiEditorStrings.matchLabel$,
+          [QuestionType.INLINE_CHOICE]: qtiEditorStrings.inlineChoiceLabel$,
         };
         return (QUESTION_TYPE_LABELS[type] ?? unknownTypeLabel$)();
       });

@@ -33,3 +33,6 @@ Prompts, choices, items and hints are edited in `TipTapEditor` with `format="htm
 > In `parse`, read any field TipTap loads as HTML with `getContentHTML` (or `getPromptHTML`) from `serialization/xml.js`, never `innerHTML` or `XMLSerializer`. XML serialization self-closes empty elements (`<span data-latex="…"/>`); the HTML parser doesn't treat `/>` as closing, so everything after it is nested inside and lost.
 >
 > On build, pass the HTML to `buildXmlNode({ innerHTML })`, which parses it as HTML and re-creates it as XML.
+
+> [!NOTE]
+> A node view that shows itself as selected, like the inline choice chip, uses `--selection-background-color` and `--selection-color`, the colours of Studio's `::selection` (`shared/styles/vuetify.scss`), not a theme colour. KDS's global styles select with `$themeBrand.secondary.v_100`, but Studio doesn't load them as of KDS 5.9.0. When it does, point those variables at KDS's colour.

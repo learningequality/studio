@@ -81,3 +81,14 @@ export function toStoredImageSrcs(html) {
     return CHECKSUM_FILENAME.test(filename) ? filename : src;
   });
 }
+
+/**
+ * An editor's content as HTML, in the form it is stored. `TipTapEditor` reads its content out
+ * through this, and so must anything else that reads an editor directly.
+ *
+ * @param {import('@tiptap/core').Editor} editor
+ * @returns {string}
+ */
+export function storedHTML(editor) {
+  return toStoredImageSrcs(editor.getHTML());
+}

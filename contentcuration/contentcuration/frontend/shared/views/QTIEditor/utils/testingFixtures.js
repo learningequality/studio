@@ -450,8 +450,8 @@ export const UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encod
 </qti-assessment-item>`;
 
 /**
- * Inline choice dropdowns, which have a descriptor but no editor yet. The second dropdown
- * has no correct answer, which the editor's rules would report.
+ * Inline choice dropdowns. The second dropdown has no correct answer, which the editor's
+ * rules report.
  */
 export const INLINE_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item

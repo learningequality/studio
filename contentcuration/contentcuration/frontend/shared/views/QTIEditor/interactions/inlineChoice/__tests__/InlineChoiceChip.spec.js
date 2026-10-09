@@ -1,6 +1,9 @@
 import { nextTick, ref } from 'vue';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
+// The resolver does not read package `exports` subpaths.
+// eslint-disable-next-line import/no-unresolved
+import { NodeSelection } from '@tiptap/pm/state';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { CHIP, chip, findChip, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
@@ -122,39 +125,166 @@ describe('InlineChoiceChip', () => {
     fireEvent.keyDown(editor.view.dom, { key, keyCode, ...init });
 
   it.each([
-    ['ArrowRight', 39, 2],
-    ['ArrowLeft', 37, 3],
-  ])('does not open a chip reached with %s', async (key, keyCode, cursor) => {
-    const { editor, openResponseIdentifier } = await renderPassage({
+    ['Backspace', 8, 3],
+    ['Delete', 46, 2],
+  ])('removes the chip beside the caret with %s', async (key, keyCode, cursor) => {
+    const { editor } = await renderPassage({
       value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
     });
     editor.commands.setTextSelection(cursor);
     press(editor, key, keyCode);
-    expect(editor.state.selection.node).toBeDefined();
-    await nextTick();
-    expect(openResponseIdentifier.value).toBeNull();
-    expect(getChip()).toHaveAttribute('aria-expanded', 'false');
+    expect(editor.getHTML()).toBe('<p>ab</p>');
   });
 
-  it.each([
-    ['Enter', 13],
-    [' ', 32],
-  ])('does not open a chip the caret is on when %p is pressed', async (key, keyCode) => {
-    const { editor, openResponseIdentifier } = await renderPassage({
-      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
-    });
-    editor.commands.setNodeSelection(chipPos(editor, 'r1'));
-    press(editor, key, keyCode);
-    await nextTick();
-    expect(openResponseIdentifier.value).toBeNull();
-  });
-
-  it('deletes a keyboard-selected chip with Backspace and restores it with undo', async () => {
+  // ProseMirror moves the caret past an inline node it cannot select, rather than onto it.
+  it('cannot be selected on its own, so the caret moves past it', async () => {
     const { editor } = await renderPassage({
       value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
     });
+    expect(NodeSelection.isSelectable(findChip(editor, 'r1').node)).toBe(false);
+
     editor.commands.setTextSelection(2);
     press(editor, 'ArrowRight', 39);
+    expect(editor.state.selection.empty).toBe(true);
+    expect(editor.state.selection.head).toBe(3);
+  });
+
+  it.each([
+    ['{ArrowRight}', 3],
+    ['{ArrowLeft}', 2],
+  ])('puts the caret beside a focused chip with %s', async (key, caret) => {
+    const user = userEvent.setup();
+    const { editor, openResponseIdentifier } = await renderPassage({
+      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
+    });
+    getChip().focus();
+    await user.keyboard(key);
+
+    await waitFor(() => expect(editor.view.dom).toHaveFocus());
+    expect(editor.state.selection.empty).toBe(true);
+    expect(editor.state.selection.head).toBe(caret);
+    expect(openResponseIdentifier.value).toBeNull();
+  });
+
+  it('puts the caret by the text direction in right-to-left text', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({
+      value: `<p dir="rtl">a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
+    });
+    const chipEl = getChip();
+    const { getComputedStyle } = window;
+    const spy = jest
+      .spyOn(window, 'getComputedStyle')
+      .mockImplementation((el, ...rest) =>
+        el === chipEl ? { direction: 'rtl' } : getComputedStyle.call(window, el, ...rest),
+      );
+    try {
+      chipEl.focus();
+      await user.keyboard('{ArrowLeft}');
+    } finally {
+      spy.mockRestore();
+    }
+
+    await waitFor(() => expect(editor.view.dom).toHaveFocus());
+    expect(editor.state.selection.head).toBe(3);
+  });
+
+  it('leaves a focused chip with a modified arrow key alone', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({
+      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
+    });
+    getChip().focus();
+    await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
+    expect(getChip()).toHaveFocus();
+    expect(editor.view.dom).not.toHaveFocus();
+  });
+
+  // The chip keeps its keys from ProseMirror, so it runs the passage's history shortcuts itself.
+  it.each([
+    ['Ctrl+Shift+Z', '{Control>}{Shift>}z{/Shift}{/Control}'],
+    ['Ctrl+Y', '{Control>}y{/Control}'],
+  ])('undoes with Ctrl+Z and redoes with %s while focused', async (_, redoKeys) => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({ value: `<p>${chip('r1', [['a', 'x']], 'a')}</p>` });
+    editor.commands.updateInlineChoice('r1', {
+      options: [
+        { id: 'a', text: 'x' },
+        { id: 'b', text: 'y' },
+      ],
+      correctId: 'b',
+    });
+    await waitFor(() => expect(getChip()).toHaveTextContent('2 y'));
+    getChip().focus();
+
+    await user.keyboard('{Control>}z{/Control}');
+    await waitFor(() => expect(getChip()).toHaveTextContent('1 x'));
+    expect(getChip()).toHaveFocus();
+
+    await user.keyboard(redoKeys);
+    await waitFor(() => expect(getChip()).toHaveTextContent('2 y'));
+    expect(getChip()).toHaveFocus();
+  });
+
+  // As the passage's keymap does, by the key's place when the layout gives a non-Latin letter.
+  it('undoes and redoes by the key’s place on a non-Latin keyboard layout', async () => {
+    const { editor } = await renderPassage({ value: `<p>${chip('r1', [['a', 'x']], 'a')}</p>` });
+    editor.commands.updateInlineChoice('r1', { correctId: null });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+    const press = init => fireEvent.keyDown(getChip(), { ctrlKey: true, ...init });
+
+    await press({ key: 'я', keyCode: 90 });
+    await waitFor(() => expect(getChip()).toHaveTextContent('x'));
+    await press({ key: 'Я', keyCode: 90, shiftKey: true });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+    await press({ key: 'я', keyCode: 90 });
+    await waitFor(() => expect(getChip()).toHaveTextContent('x'));
+    await press({ key: 'н', keyCode: 89 });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+  });
+
+  // jsdom is no Mac, so the passage's `Mod` is Ctrl, and Cmd+Z is no shortcut there.
+  it('leaves alone a history key the passage would not take', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({ value: `<p>${chip('r1', [['a', 'x']], 'a')}</p>` });
+    editor.commands.updateInlineChoice('r1', { correctId: null });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+    getChip().focus();
+
+    await user.keyboard('{Meta>}z{/Meta}');
+    expect(editor.can().undo()).toBe(true);
+    expect(getChip()).not.toHaveTextContent('x');
+  });
+
+  it('puts focus in the passage when an undo takes the focused chip away', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({ value: '<p>ab</p>' });
+    editor.chain().setTextSelection(2).insertInlineChoice('r1').run();
+    getChip().focus();
+
+    await user.keyboard('{Control>}z{/Control}');
+    expect(screen.queryByRole('button', CHIP)).not.toBeInTheDocument();
+    await waitFor(() => expect(editor.view.dom).toHaveFocus());
+  });
+
+  it('marks the chips a text selection covers, so the highlight can cover them', async () => {
+    const { editor } = await renderPassage({
+      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b${chip('r2', [['c2', 'y']], 'c2')}</p>`,
+    });
+    editor.commands.setTextSelection({ from: 1, to: 4 });
+    const [first, second] = getChips();
+    await waitFor(() => expect(first).toHaveClass('is-selected'));
+    expect(second).not.toHaveClass('is-selected');
+
+    editor.commands.setTextSelection(1);
+    await waitFor(() => expect(first).not.toHaveClass('is-selected'));
+  });
+
+  it('deletes a chip with Backspace and restores it with undo', async () => {
+    const { editor } = await renderPassage({
+      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
+    });
+    editor.commands.setTextSelection(3);
     press(editor, 'Backspace', 8);
     await waitFor(() => expect(screen.queryByRole('button', CHIP)).not.toBeInTheDocument());
     press(editor, 'z', 90, { ctrlKey: true });
@@ -180,20 +310,9 @@ describe('InlineChoiceChip', () => {
     expect(() => focusChip('gone')).not.toThrow();
   });
 
-  it('outlines a node-selected chip without opening it', async () => {
-    const { editor, openResponseIdentifier } = await renderPassage({
-      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
-    });
-    editor.commands.setNodeSelection(chipPos(editor, 'r1'));
-    await waitFor(() => expect(getChip()).toHaveClass('is-selected'));
-    expect(openResponseIdentifier.value).toBeNull();
-
-    editor.commands.setTextSelection(1);
-    await waitFor(() => expect(getChip()).not.toHaveClass('is-selected'));
-  });
-
   // The open chip's panel (#6182) sits outside the editor; using it must not close the editor.
-  // Relies on `useClickOutside`'s `hasOpenMenu` matching the chip's `aria-expanded` button.
+  // The editor stays open while a trigger inside it has an expanded popup; see "Popups outside
+  // the editor" in docs/rich_text_editor.md.
   it('keeps the editor open on a click outside it while a chip is open', async () => {
     const { onMinimize } = await renderPassage({
       value: `<p>${chip('r1', [['a', 'x']], 'a')}</p>`,

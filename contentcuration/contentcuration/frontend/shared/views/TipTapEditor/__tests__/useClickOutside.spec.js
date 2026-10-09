@@ -6,7 +6,8 @@ import { useClickOutside } from '../TipTapEditor/composables/useClickOutside';
 
 /**
  * Stands in for the editor: `isFocused` plays the editor content's focus, which the
- * tests move by hand, and the menu trigger marks itself open the way KDropdownMenu does.
+ * tests move by hand, and the menu trigger marks itself open the way KDropdownMenu does. The
+ * dialog trigger stands in for content, such as a node view, whose popup renders outside.
  */
 function renderHarness({ editing = true } = {}) {
   const isFocused = ref(false);
@@ -31,11 +32,14 @@ function renderHarness({ editing = true } = {}) {
         editing: { type: Boolean, default: true },
         // eslint-disable-next-line vue/no-unused-properties
         menuOpen: { type: Boolean, default: false },
+        // eslint-disable-next-line vue/no-unused-properties
+        dialogOpen: { type: Boolean, default: false },
       },
       template: `<div>
         <div ref="container">
           <button>Inside</button>
           <button aria-haspopup="menu" :aria-expanded="String(menuOpen)">Menu</button>
+          <p><button aria-haspopup="dialog" :aria-expanded="String(dialogOpen)">Chip</button></p>
         </div>
         <button>Outside</button>
         <div @click.stop><button>Stopped</button></div>
@@ -93,6 +97,19 @@ describe('useClickOutside', () => {
       await user.click(button('Outside'));
 
       expect(close).not.toHaveBeenCalled();
+    });
+
+    it('stays open on a click outside while a popup its content opened is open', async () => {
+      const user = userEvent.setup();
+      const { close, updateProps } = renderHarness();
+      await updateProps({ dialogOpen: true });
+
+      await user.click(button('Outside'));
+      expect(close).not.toHaveBeenCalled();
+
+      await updateProps({ dialogOpen: false });
+      await user.click(button('Outside'));
+      expect(close).toHaveBeenCalledTimes(1);
     });
 
     it('does not listen while not open for editing', async () => {
