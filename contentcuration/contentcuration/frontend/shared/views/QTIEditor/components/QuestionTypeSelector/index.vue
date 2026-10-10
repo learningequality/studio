@@ -19,6 +19,7 @@
 
       <div class="type-selector-control-row">
         <KSelect
+          ref="select"
           :value="selectedOption"
           :options="questionTypeOptions"
           :disabled="questionTypeOptions.length <= 1"
@@ -117,6 +118,13 @@
 
       const showTypeInfoModal = ref(false);
 
+      const select = ref(null);
+
+      /** Focus the select, so a dialog the author opens by picking a type returns to it. */
+      function focus() {
+        select.value?.focus();
+      }
+
       const labelId = generateRandomSlug('type-selector');
 
       /** Whether the question already is a free response, whatever the consumer allows. */
@@ -150,6 +158,10 @@
       );
 
       return {
+        select,
+        // Public: lets the parent focus the select.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus,
         windowIsSmall,
         typeLabel$,
         responseTypeLabel$,

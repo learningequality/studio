@@ -13,7 +13,9 @@ import { useInteraction } from './useInteraction';
  * numeric acceptable-answer lists or textEntry correct-answer lists.
  *
  * Numeric answers are shown as the value they are stored as, written in `language`: on
- * opening, on switching to Numeric, on a language change, and when the author leaves an answer.
+ * opening, on a language change, and when the author leaves an answer. Changing the question
+ * type remounts the editor on the converted question, so switching to Numeric is an opening
+ * too, and leaving it starts the next editor from the values stored.
  *
  * @param {{ bodyXml: string, responseDeclarations: string[] }} interactionBlock
  * @param {import('vue').Ref<string|null>} questionType
@@ -49,20 +51,6 @@ export function useTextEntryInteraction(interactionBlock, questionType, { langua
     const read = readLocaleNumber(value, from) ?? readLocaleNumber(value, options.language);
     return read === null ? value : formatLocaleNumber(read, options.language);
   }
-
-  watch(
-    questionType,
-    (type, oldType) => {
-      if (type === QuestionType.NUMERIC) {
-        // Read as xsd:double first: leaving Numeric stores 1.5 as `1.5`, which German reads as 15.
-        replaceAnswers(value => showStored(value));
-      } else if (oldType === QuestionType.NUMERIC) {
-        // Keeps the value stored, not the language's display of it, which learners may not type.
-        replaceAnswers(value => readLocaleNumber(value, options.language) ?? value);
-      }
-    },
-    { flush: 'sync' },
-  );
 
   watch(
     () => options.language,
