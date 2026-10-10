@@ -3,7 +3,16 @@ import { resolveDescriptor } from '../../interactions/resolveDescriptor';
 import { convertInteraction } from '../index';
 import { QUESTION_TYPES, blankInteraction, descriptorFor, filledInteraction } from './questions';
 
-const { SINGLE_SELECT, MULTI_SELECT, NUMERIC, TEXT_ENTRY, FREE_RESPONSE, ORDERING } = QuestionType;
+const {
+  SINGLE_SELECT,
+  MULTI_SELECT,
+  NUMERIC,
+  TEXT_ENTRY,
+  FREE_RESPONSE,
+  ORDERING,
+  ASSOCIATE,
+  MATCH,
+} = QuestionType;
 const {
   ANSWERS_REMOVED,
   INCORRECT_ANSWERS_REMOVED,
@@ -24,6 +33,8 @@ const EXPECTED_LOSSES = {
     [TEXT_ENTRY]: [INCORRECT_ANSWERS_REMOVED],
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
     [ORDERING]: [CORRECT_ANSWERS_NOT_KEPT, ORDER_BECOMES_ANSWER],
+    [ASSOCIATE]: [ANSWERS_REMOVED],
+    [MATCH]: [ANSWERS_REMOVED],
   },
   [MULTI_SELECT]: {
     [SINGLE_SELECT]: [CORRECT_ANSWERS_REDUCED],
@@ -31,6 +42,8 @@ const EXPECTED_LOSSES = {
     [TEXT_ENTRY]: [INCORRECT_ANSWERS_REMOVED],
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
     [ORDERING]: [CORRECT_ANSWERS_NOT_KEPT, ORDER_BECOMES_ANSWER],
+    [ASSOCIATE]: [ANSWERS_REMOVED],
+    [MATCH]: [ANSWERS_REMOVED],
   },
   [NUMERIC]: {
     [SINGLE_SELECT]: [CORRECT_ANSWERS_REDUCED],
@@ -38,6 +51,8 @@ const EXPECTED_LOSSES = {
     [TEXT_ENTRY]: [],
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
     [ORDERING]: [ORDER_BECOMES_ANSWER],
+    [ASSOCIATE]: [ANSWERS_REMOVED],
+    [MATCH]: [ANSWERS_REMOVED],
   },
   [TEXT_ENTRY]: {
     [SINGLE_SELECT]: [CORRECT_ANSWERS_REDUCED],
@@ -46,6 +61,8 @@ const EXPECTED_LOSSES = {
     [NUMERIC]: [],
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
     [ORDERING]: [ORDER_BECOMES_ANSWER],
+    [ASSOCIATE]: [ANSWERS_REMOVED],
+    [MATCH]: [ANSWERS_REMOVED],
   },
   [FREE_RESPONSE]: {
     [SINGLE_SELECT]: [],
@@ -53,6 +70,8 @@ const EXPECTED_LOSSES = {
     [NUMERIC]: [],
     [TEXT_ENTRY]: [],
     [ORDERING]: [],
+    [ASSOCIATE]: [],
+    [MATCH]: [],
   },
   [ORDERING]: {
     [SINGLE_SELECT]: [ORDER_NOT_KEPT],
@@ -60,6 +79,26 @@ const EXPECTED_LOSSES = {
     [NUMERIC]: [ANSWERS_REMOVED],
     [TEXT_ENTRY]: [ANSWERS_REMOVED],
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
+    [ASSOCIATE]: [ANSWERS_REMOVED],
+    [MATCH]: [ANSWERS_REMOVED],
+  },
+  [ASSOCIATE]: {
+    [SINGLE_SELECT]: [ANSWERS_REMOVED],
+    [MULTI_SELECT]: [ANSWERS_REMOVED],
+    [NUMERIC]: [ANSWERS_REMOVED],
+    [TEXT_ENTRY]: [ANSWERS_REMOVED],
+    [FREE_RESPONSE]: [ANSWERS_REMOVED],
+    [ORDERING]: [ANSWERS_REMOVED],
+    [MATCH]: [],
+  },
+  [MATCH]: {
+    [SINGLE_SELECT]: [ANSWERS_REMOVED],
+    [MULTI_SELECT]: [ANSWERS_REMOVED],
+    [NUMERIC]: [ANSWERS_REMOVED],
+    [TEXT_ENTRY]: [ANSWERS_REMOVED],
+    [FREE_RESPONSE]: [ANSWERS_REMOVED],
+    [ORDERING]: [ANSWERS_REMOVED],
+    [ASSOCIATE]: [],
   },
 };
 
@@ -199,5 +238,41 @@ describe('convertInteraction', () => {
     const { interaction } = convert(filledInteraction(TEXT_ENTRY), TEXT_ENTRY, FREE_RESPONSE);
     const back = convert(interaction, FREE_RESPONSE, TEXT_ENTRY).interaction;
     expect(answersOf(back, TEXT_ENTRY)).toEqual(['']);
+  });
+
+  it('turns each associate pair into a match row, and keeps the distractors', () => {
+    const { interaction } = convert(filledInteraction(ASSOCIATE), ASSOCIATE, MATCH);
+    const { rows, distractors } = reopen(interaction, MATCH);
+    expect(rows.map(({ content, matches }) => [content, matches.map(m => m.content)])).toEqual([
+      ['<p>Antonio</p>', ['<p>Prospero</p>']],
+      ['<p>Capulet</p>', ['<p>Montague</p>']],
+    ]);
+    expect(distractors.map(({ content }) => content)).toEqual(['<p>Lysander</p>']);
+  });
+
+  it('turns each match into an associate pair, a row with two matches giving two', () => {
+    const { interaction } = convert(filledInteraction(MATCH), MATCH, ASSOCIATE);
+    const { pairs, distractors } = reopen(interaction, ASSOCIATE);
+    expect(pairs.map(pair => pair.map(({ content }) => content))).toEqual([
+      ['<p>Dog</p>', '<p>Mammal</p>'],
+      ['<p>Bat</p>', '<p>Mammal</p>'],
+      ['<p>Bat</p>', '<p>Flyer</p>'],
+    ]);
+    expect(distractors.map(({ content }) => content)).toEqual(['<p>Reptile</p>']);
+  });
+
+  it('gives back the match question it started from after a round trip through associate', () => {
+    const toAssociate = convert(filledInteraction(MATCH), MATCH, ASSOCIATE).interaction;
+    const back = convert(toAssociate, ASSOCIATE, MATCH);
+    expect(back.losses).toEqual([]);
+    const summary = interaction =>
+      reopen(interaction, MATCH).rows.map(({ content, matches }) => [
+        content,
+        matches.map(m => m.content),
+      ]);
+    expect(summary(back.interaction)).toEqual(summary(filledInteraction(MATCH)));
+    expect(descriptorFor(MATCH).validate(reopen(back.interaction, MATCH))).toEqual(
+      descriptorFor(MATCH).validate(reopen(filledInteraction(MATCH), MATCH)),
+    );
   });
 });

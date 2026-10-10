@@ -8,6 +8,7 @@ import { descriptors } from '../../interactions/descriptors';
  */
 
 const choice = (content, correct = false) => ({ id: `choice_${content}`, content, correct });
+const associable = (id, content) => ({ id, content });
 
 const FILLED = {
   [QuestionType.SINGLE_SELECT]: {
@@ -54,6 +55,26 @@ const FILLED = {
     ],
     orientation: Orientation.VERTICAL,
     shuffle: true,
+  },
+  [QuestionType.ASSOCIATE]: {
+    prompt: '<p>Match each character to their adversary.</p>',
+    pairs: [
+      [associable('choice_a', '<p>Antonio</p>'), associable('choice_b', '<p>Prospero</p>')],
+      [associable('choice_c', '<p>Capulet</p>'), associable('choice_d', '<p>Montague</p>')],
+    ],
+    distractors: [associable('choice_e', '<p>Lysander</p>')],
+  },
+  [QuestionType.MATCH]: {
+    prompt: '<p>Match each animal to what it is.</p>',
+    rows: [
+      { id: 'row_dog', content: '<p>Dog</p>', matches: [associable('choice_m', '<p>Mammal</p>')] },
+      {
+        id: 'row_bat',
+        content: '<p>Bat</p>',
+        matches: [associable('choice_m2', '<p>Mammal</p>'), associable('choice_f', '<p>Flyer</p>')],
+      },
+    ],
+    distractors: [associable('choice_r', '<p>Reptile</p>')],
   },
 };
 
