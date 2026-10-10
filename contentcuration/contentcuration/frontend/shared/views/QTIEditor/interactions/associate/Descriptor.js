@@ -12,7 +12,6 @@ export class AssociateInteractionDescriptor extends InteractionDescriptor {
       type: QtiInteraction.ASSOCIATE,
       questionTypes: [QuestionType.ASSOCIATE],
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {

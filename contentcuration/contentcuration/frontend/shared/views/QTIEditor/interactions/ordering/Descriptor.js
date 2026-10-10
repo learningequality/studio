@@ -12,7 +12,6 @@ export class OrderingInteractionDescriptor extends InteractionDescriptor {
       type: QtiInteraction.ORDER,
       questionTypes: [QuestionType.ORDERING],
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {

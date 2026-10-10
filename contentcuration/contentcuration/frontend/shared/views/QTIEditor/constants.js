@@ -133,6 +133,44 @@ export const ValidationError = Object.freeze({
   DUPLICATE_MATCH_CONTENT: 'DUPLICATE_MATCH_CONTENT',
 });
 
+/**
+ * What makes an answer correct, for the question types whose answers are a list
+ * (conversion/answerKeys.js translates one into another).
+ */
+export const AnswerKey = Object.freeze({
+  // The answers marked correct (single and multi select)
+  SELECTED: 'selected',
+  // Every answer (numeric and text entry)
+  ACCEPTED: 'accepted',
+  // The order of the answers (ordering)
+  ORDERED: 'ordered',
+});
+
+/** What a field can hold, from most to least. */
+export const ContentLevel = Object.freeze({
+  // Blocks, images and formulas, as a rich text editor writes them
+  RICH: 'rich',
+  // Text, inline formatting and formulas, with no blocks
+  INLINE: 'inline',
+  // Text only
+  PLAIN: 'plain',
+});
+
+/**
+ * What changing a question's type would remove or change in a way validation can't catch,
+ * so the author confirms it first. In the order the author is told about them.
+ */
+export const ConversionLoss = Object.freeze({
+  ANSWERS_REMOVED: 'ANSWERS_REMOVED',
+  INCORRECT_ANSWERS_REMOVED: 'INCORRECT_ANSWERS_REMOVED',
+  CORRECT_ANSWERS_REDUCED: 'CORRECT_ANSWERS_REDUCED',
+  CORRECT_ANSWERS_NOT_KEPT: 'CORRECT_ANSWERS_NOT_KEPT',
+  ORDER_BECOMES_ANSWER: 'ORDER_BECOMES_ANSWER',
+  ORDER_NOT_KEPT: 'ORDER_NOT_KEPT',
+  FORMATTING_REMOVED: 'FORMATTING_REMOVED',
+  PASSAGE_ADDED_TO_QUESTION: 'PASSAGE_ADDED_TO_QUESTION',
+});
+
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
 
 /**
