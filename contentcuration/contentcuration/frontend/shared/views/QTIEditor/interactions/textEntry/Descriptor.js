@@ -6,6 +6,11 @@ import {
   buildTextEntryInteractionXML,
   isSupportedTextEntryBody,
 } from './parse';
+import {
+  exportTextEntryContent,
+  getTextEntryConversionFormat,
+  importTextEntryContent,
+} from './convert';
 import { validateTextEntryInteraction } from './validation';
 
 /**
@@ -125,6 +130,32 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state, questionType, options) {
     return validateTextEntryInteraction(state, questionType, options);
+  }
+
+  /**
+   * @param {string} questionType
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat(questionType) {
+    return getTextEntryConversionFormat(questionType);
+  }
+
+  /**
+   * @param {object} state - TextEntryState
+   * @param {string} questionType
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state, questionType) {
+    return exportTextEntryContent(state, questionType);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @param {string} questionType
+   * @returns {object} TextEntryState
+   */
+  importContent(content, questionType) {
+    return importTextEntryContent(content, questionType);
   }
 }
 
