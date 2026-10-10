@@ -12,8 +12,11 @@ import { carryPassage, foldPassage, passageHasContent } from './passage';
  * Each descriptor exports its state into neutral *facets* and imports from them; nothing
  * here knows any interaction's state. A facet only moves between types that take it, so
  * content only moves within a family of similar types: answer lists, pairs, or passages.
- * Everything a type doesn't take is a loss, so a new interaction that implements none of
- * this still keeps the question and warns before anything else goes.
+ * Everything the new type doesn't take is reported as a loss, so converting *to* an
+ * interaction that implements none of this keeps the question and warns before anything
+ * else goes. Converting *from* one is not safe: it exports only the question, so the rest
+ * is lost without a warning. conversion/__tests__/exportsEverything.spec.js
+ * fails for such an interaction.
  */
 
 /**
