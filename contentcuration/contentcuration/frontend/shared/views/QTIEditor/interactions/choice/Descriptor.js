@@ -2,6 +2,7 @@ import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../const
 import { parseXML } from '../../serialization/xml';
 import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseChoiceInteraction, buildChoiceInteractionXML } from './parse';
+import { exportChoiceContent, getChoiceConversionFormat, importChoiceContent } from './convert';
 import { validateChoiceInteraction } from './validation';
 
 /**
@@ -99,6 +100,31 @@ export class ChoiceInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state, questionType) {
     return validateChoiceInteraction(state, questionType);
+  }
+
+  /**
+   * @param {string} questionType
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat(questionType) {
+    return getChoiceConversionFormat(questionType);
+  }
+
+  /**
+   * @param {object} state - ChoiceState
+   * @param {string} questionType
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state, questionType) {
+    return exportChoiceContent(state, questionType);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @returns {object} ChoiceState
+   */
+  importContent(content) {
+    return importChoiceContent(content);
   }
 }
 

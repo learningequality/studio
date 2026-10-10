@@ -23,11 +23,24 @@ import { Orientation, QuestionType, RESPONSE_IDENTIFIER } from '../../constants'
 
 const serializer = new XMLSerializer();
 
+/**
+ * A new choice, with a fresh identifier.
+ *
+ * @param {Partial<ChoiceAnswer>} [fields]
+ * @returns {ChoiceAnswer}
+ */
+export const newChoice = (fields = {}) => ({
+  id: generateRandomSlug('choice'),
+  content: '',
+  correct: false,
+  ...fields,
+});
+
 export function _defaultState() {
   return {
     responseIdentifier: RESPONSE_IDENTIFIER,
     prompt: '',
-    choices: [{ id: generateRandomSlug('choice'), content: '', correct: false }],
+    choices: [newChoice()],
     showAnswerCount: true,
     shuffle: false,
     orientation: Orientation.VERTICAL,

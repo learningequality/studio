@@ -1,6 +1,11 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality, Placement } from '../../constants';
 import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseInlineChoiceInteraction, buildInlineChoiceInteractionXML } from './parse';
+import {
+  exportInlineChoiceContent,
+  getInlineChoiceConversionFormat,
+  importInlineChoiceContent,
+} from './convert';
 import { validateInlineChoiceInteraction } from './validation';
 
 /**
@@ -81,6 +86,29 @@ class InlineChoiceInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state) {
     return validateInlineChoiceInteraction(state);
+  }
+
+  /**
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat() {
+    return getInlineChoiceConversionFormat();
+  }
+
+  /**
+   * @param {InlineChoiceState} state
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state) {
+    return exportInlineChoiceContent(state);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @returns {InlineChoiceState}
+   */
+  importContent(content) {
+    return importInlineChoiceContent(content);
   }
 }
 

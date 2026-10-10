@@ -24,11 +24,23 @@ import { Orientation, RESPONSE_IDENTIFIER } from '../../constants';
 
 const serializer = new XMLSerializer();
 
+/**
+ * A new item, with a fresh identifier.
+ *
+ * @param {Partial<OrderingItem>} [fields]
+ * @returns {OrderingItem}
+ */
+export const newItem = (fields = {}) => ({
+  id: generateRandomSlug('order'),
+  content: '',
+  ...fields,
+});
+
 export function _defaultState() {
   return {
     responseIdentifier: RESPONSE_IDENTIFIER,
     prompt: '',
-    items: [{ id: generateRandomSlug('order'), content: '' }],
+    items: [newItem()],
     orientation: Orientation.VERTICAL,
     shuffle: true,
   };

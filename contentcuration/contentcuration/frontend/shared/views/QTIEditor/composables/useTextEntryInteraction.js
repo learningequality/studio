@@ -1,8 +1,8 @@
 import { reactive, readonly, watch } from 'vue';
 import { QuestionType } from '../constants';
 import { formatLocaleNumber, readLocaleNumber } from '../utils/localeNumbers';
-import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { textEntryInteractionDescriptor } from '../interactions/textEntry/Descriptor';
+import { newAnswer } from '../interactions/textEntry/parse';
 import { useInteraction } from './useInteraction';
 
 /**
@@ -79,12 +79,9 @@ export function useTextEntryInteraction(interactionBlock, questionType, { langua
   // Answer list mutations
 
   function addAnswer() {
-    const newId = generateRandomSlug('answer');
-    state.value = {
-      ...state.value,
-      answers: [...state.value.answers, { id: newId, value: '', caseSensitive: false }],
-    };
-    return newId;
+    const answer = newAnswer();
+    state.value = { ...state.value, answers: [...state.value.answers, answer] };
+    return answer.id;
   }
 
   /**
