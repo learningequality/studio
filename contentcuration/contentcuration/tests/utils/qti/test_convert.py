@@ -680,6 +680,20 @@ class CatalogInfoConversionTests(unittest.TestCase):
         self.assertNotIn("<qti-catalog-info", result.xml)
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
+    def test_single_selection_with_hints(self):
+        item = self._item_with_hints(
+            [
+                {"hint": "Count on your fingers", "order": 1},
+                {"hint": "See ![diagram](images/hint123.png)", "order": 2},
+            ]
+        )
+        result = convert_legacy_assessment_item_to_qti(item)
+        self.assertEqual(
+            _normalize_xml(_load_fixture("single_selection_with_hints.xml")),
+            _normalize_xml(result.xml),
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
     def test_multi_hint_ordering_is_independent_of_input_list_order(self):
         item = self._item_with_hints(
             [

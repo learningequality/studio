@@ -360,4 +360,23 @@ describe('assembleItemXml', () => {
       expect(parseXML(xml).querySelectorAll('qti-response-processing')).toHaveLength(1);
     });
   });
+
+  describe('root metadata', () => {
+    const rootOf = params =>
+      parseXML(
+        assembleItemXml({
+          identifier: 'item-1',
+          title: 'T',
+          language: 'en',
+          bodyXml: '<qti-item-body/>',
+          responseDeclarations: [],
+          ...params,
+        }),
+      ).documentElement;
+
+    it('writes a label only when given one', () => {
+      expect(rootOf({ label: 'L' }).getAttribute('label')).toBe('L');
+      expect(rootOf().hasAttribute('label')).toBe(false);
+    });
+  });
 });

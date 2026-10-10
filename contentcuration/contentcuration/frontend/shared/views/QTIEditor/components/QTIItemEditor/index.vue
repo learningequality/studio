@@ -115,8 +115,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
-  import { validateItemShape, validateQtiItem } from '../../validateItem';
-  import { isSupportedItem } from '../../interactions/resolveDescriptor';
+  import { isEditableItem, validateItemShape, validateQtiItem } from '../../validateItem';
   import InteractionSection from '../InteractionSection/index.vue';
   import HintsSection from '../HintsSection/index.vue';
 
@@ -159,12 +158,17 @@
       /**
        * Whether this editor can edit the item's XML faithfully: it is readable, and it is
        * either blank or holds exactly one interaction this editor knows, in the body shape its
-       * builder writes.
+       * builder writes, and nothing outside the body that an edit would drop.
        */
-      const isBlank = !props.item.raw_data;
+      const sourceXml = props.item.raw_data;
       const isEditableQti = computed(
         () =>
-          !parseError.value && (isBlank || isSupportedItem(interactions.value, itemBodyXml.value)),
+          !parseError.value &&
+          (!sourceXml ||
+            isEditableItem(
+              { interactions: interactions.value, itemBodyXml: itemBodyXml.value },
+              sourceXml,
+            )),
       );
 
       /**
