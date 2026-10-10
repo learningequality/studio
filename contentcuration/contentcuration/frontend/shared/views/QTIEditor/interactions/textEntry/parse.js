@@ -1,6 +1,7 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import {
   buildXmlNode,
+  contentChildrenOf,
   hasNonNamespaceAttributes,
   isContentNode,
   parseXML,
@@ -52,10 +53,6 @@ export function _defaultState() {
   };
 }
 
-function contentOf(el) {
-  return [...el.childNodes].filter(isContentNode);
-}
-
 function hasContentAfter(node) {
   for (let sibling = node.nextSibling; sibling; sibling = sibling.nextSibling) {
     if (isContentNode(sibling)) {
@@ -79,7 +76,7 @@ export function isSupportedTextEntryBody(bodyEl) {
   if (
     paragraph.localName !== 'p' ||
     hasNonNamespaceAttributes(paragraph) ||
-    contentOf(paragraph).length > 1 ||
+    contentChildrenOf(paragraph).length > 1 ||
     hasContentAfter(paragraph)
   ) {
     return false;
@@ -90,7 +87,7 @@ export function isSupportedTextEntryBody(bodyEl) {
     (container.localName === 'div' &&
       !hasNonNamespaceAttributes(container) &&
       container.parentElement === bodyEl &&
-      contentOf(bodyEl).length === 1)
+      contentChildrenOf(bodyEl).length === 1)
   );
 }
 

@@ -13,31 +13,53 @@ import fs from 'fs';
 import path from 'path';
 import { parseItem } from '../parseItem';
 import { assembleItemXml } from '../assembleItem';
-import { isSupportedItem } from '../../interactions/resolveDescriptor';
+import { isEditableItem } from '../../validateItem';
 
 const FIXTURES = path.join(__dirname, '../../../../../../tests/utils/qti/fixtures');
 
 const read = name => fs.readFileSync(path.join(FIXTURES, `${name}.xml`), 'utf8');
 
-const rebuild = item =>
-  assembleItemXml({
+const rebuild = original => {
+  const item = parseItem(original);
+  return assembleItemXml({
     identifier: item.identifier,
     title: item.title,
+    label: item.label,
     language: item.language,
     bodyXml: item.interactions[0].bodyXml,
     responseDeclarations: item.interactions[0].responseDeclarations,
     hints: item.hints,
   });
+};
+
+const FIXTURE_NAMES = fs
+  .readdirSync(FIXTURES)
+  .filter(file => file.endsWith('.xml'))
+  .map(file => path.basename(file, '.xml'));
 
 describe('converted items the editor opens', () => {
-  it.each(
-    fs
-      .readdirSync(FIXTURES)
-      .filter(file => file.endsWith('.xml'))
-      .map(file => path.basename(file, '.xml')),
-  )('%s', name => {
-    const { interactions, itemBodyXml } = parseItem(read(name));
-    expect(isSupportedItem(interactions, itemBodyXml)).toBe(true);
+  it.each(FIXTURE_NAMES)('%s', name => {
+    const xml = read(name);
+    expect(isEditableItem(parseItem(xml), xml)).toBe(true);
+  });
+
+  // Before c51c5e035 the converter wrote the root language as `language`.
+  it('single_selection, as converted before c51c5e035', () => {
+    const stored = read('single_selection').replace(' xml:lang="', ' language="');
+    expect(isEditableItem(parseItem(stored), stored)).toBe(true);
+  });
+});
+
+// Keyed by namespace, since jsdom writes `xsi:` back under another prefix.
+const rootAttributes = xml =>
+  [...new DOMParser().parseFromString(xml, 'text/xml').documentElement.attributes]
+    .filter(attr => attr.prefix !== 'xmlns' && attr.name !== 'xmlns')
+    .map(attr => `{${attr.namespaceURI ?? ''}}${attr.localName}=${attr.value}`);
+
+describe('converted items, once edited', () => {
+  it.each(FIXTURE_NAMES)('%s keeps every root attribute', name => {
+    const xml = read(name);
+    expect(rootAttributes(rebuild(xml))).toEqual(expect.arrayContaining(rootAttributes(xml)));
   });
 });
 
@@ -49,13 +71,19 @@ describe('a converted single-selection item', () => {
   });
 
   it('writes the language back as xml:lang, the attribute QTI declares', () => {
-    const xml = rebuild(parseItem(original));
+    const xml = rebuild(original);
+    expect(xml).toContain('xml:lang="en-US"');
+    expect(xml).not.toContain(' language="');
+  });
+
+  it('writes a root language as converted before c51c5e035 back as xml:lang', () => {
+    const xml = rebuild(original.replace(' xml:lang="', ' language="'));
     expect(xml).toContain('xml:lang="en-US"');
     expect(xml).not.toContain(' language="');
   });
 
   it('keeps its scoring outcome and response processing', () => {
-    const xml = rebuild(parseItem(original));
+    const xml = rebuild(original);
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     expect(doc.querySelector('parsererror')).toBeNull();
     expect(doc.querySelector('qti-outcome-declaration').getAttribute('identifier')).toBe('SCORE');
@@ -65,7 +93,7 @@ describe('a converted single-selection item', () => {
   });
 
   it('puts the children in the order the schema fixes', () => {
-    const xml = rebuild(parseItem(original));
+    const xml = rebuild(original);
     const order = [...xml.matchAll(/<(qti-[a-z-]+)/g)]
       .map(m => m[1])
       .filter(tag =>

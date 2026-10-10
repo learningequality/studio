@@ -133,6 +133,22 @@ function adoptNode(node, doc = xmlDoc, plainNamespace = XHTML_NS) {
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 
+export const XSI_NS = 'http://www.w3.org/2001/XMLSchema-instance';
+
+/** The `xsi:schemaLocation` the converter writes on an item. */
+export const QTI_SCHEMA_LOCATION =
+  'http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd';
+
+export const XML_NS = 'http://www.w3.org/XML/1998/namespace';
+
+/**
+ * @param {Element} el
+ * @returns {Attr[]} The element's attributes, less namespace declarations
+ */
+export function attributesOf(el) {
+  return [...el.attributes].filter(attr => attr.namespaceURI !== XMLNS_NS);
+}
+
 /**
  * Whether an element has attributes beyond namespace declarations.
  *
@@ -140,7 +156,7 @@ const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
  * @returns {boolean}
  */
 export function hasNonNamespaceAttributes(el) {
-  return [...el.attributes].some(attr => attr.namespaceURI !== XMLNS_NS);
+  return attributesOf(el).length > 0;
 }
 
 /**
@@ -156,6 +172,16 @@ export function isContentNode(node) {
     ((node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE) &&
       /[^ \t\r\n]/.test(node.nodeValue))
   );
+}
+
+/** @returns {boolean} Whether the node is this element, in its parent's namespace */
+export function isChildElement(node, localName) {
+  return node.localName === localName && node.namespaceURI === node.parentNode.namespaceURI;
+}
+
+/** @returns {Node[]} The node's children that isContentNode counts */
+export function contentChildrenOf(node) {
+  return [...node.childNodes].filter(isContentNode);
 }
 
 /**
