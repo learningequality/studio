@@ -1,4 +1,4 @@
-import { validateItemShape, validateQtiItem } from '../validateItem';
+import { isEditableItem, validateItemShape, validateQtiItem } from '../validateItem';
 import { QuestionType, ValidationError } from '../constants';
 import { assembleItemXml } from '../serialization/assembleItem';
 import { parseItem } from '../serialization/parseItem';
@@ -9,6 +9,9 @@ import {
   CHOICE_ITEM_DOCUMENT_NO_PROMPT,
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS,
+  CHOICE_ITEM_DOCUMENT_WITH_HINTS,
+  CHOICE_ITEM_DOCUMENT_WITH_SCHEMA_LOCATION,
+  STYLESHEET_ITEM_DOCUMENT_NO_PROMPT,
   NO_INTERACTION_ITEM_DOCUMENT,
   INLINE_CHOICE_ITEM_DOCUMENT,
   VALID_MATCH_ITEM_DOCUMENT,
@@ -51,6 +54,25 @@ describe('validateQtiItem', () => {
     );
     expect(validateQtiItem(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS)).toEqual([]);
     expect(validateQtiItem(noPrompt, { allowFreeResponse: false })).toEqual([]);
+  });
+
+  it('applies editor rules to an item with content an edit would drop', () => {
+    expect(codesOf(validateQtiItem(STYLESHEET_ITEM_DOCUMENT_NO_PROMPT))).toContain(
+      ValidationError.PROMPT_REQUIRED,
+    );
+    const templatedAnswer = CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+      /<qti-correct-response>[\s\S]*<\/qti-correct-response>/,
+      '',
+    ).replace(
+      '  <qti-item-body>',
+      `  <qti-template-processing>
+    <qti-set-correct-response identifier="RESPONSE">
+      <qti-base-value base-type="identifier">choice-a</qti-base-value>
+    </qti-set-correct-response>
+  </qti-template-processing>
+  <qti-item-body>`,
+    );
+    expect(codesOf(validateQtiItem(templatedAnswer))).toContain(ValidationError.NO_CORRECT_ANSWER);
   });
 
   it('reports an item whose body holds no interaction', () => {
@@ -244,6 +266,185 @@ describe('validateQtiItem', () => {
     expect(validateQtiItem('<qti-assessment-item><oops>')).toEqual([
       { code: ValidationError.PARSE_ERROR },
     ]);
+  });
+});
+
+describe('isEditableItem', () => {
+  const isEditable = xml => isEditableItem(parseItem(xml), xml);
+  const withRoot = attrs =>
+    CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace('xml:lang="en"', `xml:lang="en" ${attrs}`);
+  const withScoring = (outcomeDeclarations, responseProcessing = '') =>
+    CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+      '\n\n  <qti-item-body>',
+      `\n  ${outcomeDeclarations}\n  <qti-item-body>`,
+    ).replace('\n</qti-assessment-item>', `\n  ${responseProcessing}\n</qti-assessment-item>`);
+  const FEEDBACK_OUTCOME =
+    '<qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>';
+  const withHintCard = card =>
+    CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+      '<qti-catalog id="kolibri-hints">',
+      `<qti-catalog id="kolibri-hints">\n      ${card}`,
+    );
+
+  it.each([
+    ['hints', CHOICE_ITEM_DOCUMENT_WITH_HINTS],
+    ['xsi:schemaLocation', CHOICE_ITEM_DOCUMENT_WITH_SCHEMA_LOCATION],
+    ['converter metadata', withRoot('label="L" tool-name="other" tool-version="2"')],
+    ['adaptive="0"', CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace('adaptive="false"', 'adaptive="0"')],
+    [
+      'time-dependent="0"',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace('time-dependent="false"', 'time-dependent="0"'),
+    ],
+    [
+      'explicit match_correct rules',
+      withScoring(
+        '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>',
+        `<qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match>
+        <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>`,
+      ),
+    ],
+    [
+      'a non-zero default SCORE',
+      withScoring(`<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>1</qti-value></qti-default-value>
+  </qti-outcome-declaration>`),
+    ],
+    [
+      'a score maximum and a MAXSCORE outcome',
+      withScoring(
+        `<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" normal-maximum="1"/>
+  <qti-outcome-declaration identifier="MAXSCORE" cardinality="single" base-type="float"/>`,
+      ),
+    ],
+    [
+      'a response declaration no interaction uses',
+      withScoring(
+        '<qti-response-declaration identifier="UNUSED" cardinality="single" base-type="identifier"/>',
+      ),
+    ],
+    [
+      'a pretty-printed bare-text hint',
+      withHintCard(`<qti-card support="ext:kolibri-hint">
+        <qti-html-content>
+          Try halving it first
+        </qti-html-content>
+      </qti-card>`),
+    ],
+    [
+      'an empty hint card',
+      withHintCard('<qti-card support="ext:kolibri-hint"><qti-html-content/></qti-card>'),
+    ],
+  ])('is true for an item with %s', (_, xml) => {
+    expect(isEditable(xml)).toBe(true);
+  });
+
+  it.each([
+    [
+      'hint cards in a catalog by another id',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+        '<qti-catalog id="kolibri-hints">',
+        '<qti-catalog id="g1">',
+      ),
+    ],
+    [
+      'an attribute on the catalog info',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+        '<qti-catalog-info>',
+        '<qti-catalog-info data-x="1">',
+      ),
+    ],
+    [
+      'a non-hint card in the hint catalog',
+      withHintCard(
+        '<qti-card support="glossary-on-screen"><qti-html-content><p>Term</p></qti-html-content></qti-card>',
+      ),
+    ],
+    [
+      'a hint card in two languages',
+      withHintCard(`<qti-card support="ext:kolibri-hint">
+        <qti-card-entry xml:lang="en"><qti-html-content><p>Hi</p></qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="es"><qti-html-content><p>Hola</p></qti-html-content></qti-card-entry>
+      </qti-card>`),
+    ],
+    [
+      'a hint card pointing at a file',
+      withHintCard(
+        '<qti-card support="ext:kolibri-hint"><qti-file-href mime-type="text/html">hint.html</qti-file-href></qti-card>',
+      ),
+    ],
+    [
+      'a language on a hint card',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replaceAll(
+        '<qti-card support="ext:kolibri-hint">',
+        '<qti-card support="ext:kolibri-hint" xml:lang="es">',
+      ),
+    ],
+    [
+      'a language on hint content',
+      withHintCard(
+        '<qti-card support="ext:kolibri-hint"><qti-html-content xml:lang="es"><p>Hola</p></qti-html-content></qti-card>',
+      ),
+    ],
+    ['an unknown root attribute', withRoot('foo="bar"')],
+    ['a root attribute in another namespace', withRoot('xmlns:x="urn:x" x:label="L"')],
+    [
+      'adaptive="true"',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace('adaptive="false"', 'adaptive="true"'),
+    ],
+    [
+      'time-dependent="true"',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace('time-dependent="false"', 'time-dependent="true"'),
+    ],
+    [
+      'a known child in another namespace',
+      withScoring('<x:qti-outcome-declaration xmlns:x="urn:x" identifier="X"/>'),
+    ],
+    ['text outside the body', withScoring('Stray text')],
+    [
+      'a root language xml:lang does not accept',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace('xml:lang="en"', 'language="en_US"'),
+    ],
+    [
+      'feedback on an outcome an edit drops',
+      withScoring(FEEDBACK_OUTCOME).replace(
+        '>A</qti-simple-choice>',
+        '>A<qti-feedback-inline outcome-identifier="FEEDBACK" identifier="choice-a" show-hide="show">Yes</qti-feedback-inline></qti-simple-choice>',
+      ),
+    ],
+    [
+      'a printed outcome an edit drops',
+      withScoring(FEEDBACK_OUTCOME).replace(
+        'Pick one.',
+        'Pick one. <qti-printed-variable identifier="FEEDBACK"/>',
+      ),
+    ],
+    [
+      'a printed SCORE',
+      withScoring(
+        '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>',
+      ).replace('Pick one.', 'Pick one. <qti-printed-variable identifier="SCORE"/>'),
+    ],
+    [
+      'feedback on SCORE',
+      CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+        '>A</qti-simple-choice>',
+        '>A<qti-feedback-inline outcome-identifier="SCORE" identifier="choice-a" show-hide="show">Yes</qti-feedback-inline></qti-simple-choice>',
+      ),
+    ],
+    [
+      'a hint card in another namespace',
+      withHintCard(
+        '<x:qti-card xmlns:x="urn:x" support="ext:kolibri-hint"><qti-html-content><p>hidden</p></qti-html-content></x:qti-card>',
+      ),
+    ],
+  ])('is false for an item with %s', (_, xml) => {
+    expect(isEditable(xml)).toBe(false);
   });
 });
 

@@ -11,7 +11,7 @@
  */
 
 import { Placement } from '../constants';
-import { isContentNode } from '../serialization/xml';
+import { contentChildrenOf } from '../serialization/xml';
 
 /**
  * Methods a subclass has to implement. `matches` and `getTypeOptions` are not listed
@@ -78,7 +78,7 @@ export class InteractionDescriptor {
    * @returns {boolean}
    */
   isSupportedBody(bodyEl) {
-    const content = [...bodyEl.childNodes].filter(isContentNode);
+    const content = contentChildrenOf(bodyEl);
     return content.length === 1 && this.matches(content[0]);
   }
 

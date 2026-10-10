@@ -5,7 +5,7 @@
 
 import { HINT_CATALOG_ID, HINT_SUPPORT, hintHasContent } from './hints';
 import { QTIDeclaration } from './qti/QTIDeclaration';
-import { buildFloatNode, buildXmlNode, parseXML } from './xml';
+import { QTI_SCHEMA_LOCATION, XSI_NS, buildFloatNode, buildXmlNode, parseXML } from './xml';
 
 const serializer = new XMLSerializer();
 
@@ -164,6 +164,7 @@ function buildScoringNodes(declNodes) {
  * @param {object}   params
  * @param {string}   params.identifier            - Item identifier attribute
  * @param {string}   params.title                 - Item title attribute
+ * @param {string}   [params.label]               - Item label attribute, or '' to omit it
  * @param {string}   params.language              - Language tag, or '' to omit it
  * @param {string}   params.bodyXml               - Serialized interaction element XML string
  * @param {string[]} params.responseDeclarations  - Array of serialized declaration XML strings
@@ -173,6 +174,7 @@ function buildScoringNodes(declNodes) {
 export function assembleItemXml({
   identifier,
   title,
+  label,
   language,
   bodyXml,
   responseDeclarations,
@@ -206,11 +208,15 @@ export function assembleItemXml({
       // only cover items assembled from XML that never carried them.
       identifier: identifier || 'item',
       title: title || '',
+      label: label || null,
       adaptive: 'false',
       'time-dependent': 'false',
       // Omitted rather than guessed when the item has no language: the schema allows an
       // item without one.
       'xml:lang': language || null,
+      // As the converter writes them (utils/assessment/qti/assessment_item.py).
+      'tool-name': 'kolibri',
+      'tool-version': '0.1',
     },
     // The schema fixes this order: declarations, the body, the catalog, the processing.
     children: [
@@ -221,6 +227,8 @@ export function assembleItemXml({
       ...(responseProcessing ? [responseProcessing] : []),
     ],
   });
+  // As the converter writes it; setAttribute would leave it outside the xsi namespace.
+  assessmentItemNode.setAttributeNS(XSI_NS, 'xsi:schemaLocation', QTI_SCHEMA_LOCATION);
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n${serializer.serializeToString(assessmentItemNode)}`;
 }

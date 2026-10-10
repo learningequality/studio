@@ -7,7 +7,7 @@ Edits an exercise's assessment items stored as [QTI 3](https://www.imsglobal.org
 2. `composables/useQtiItem.js` parses `raw_data` with `serialization/parseItem.js` into interaction blocks (`bodyXml` + `responseDeclarations`), hints and item metadata.
 3. `components/InteractionSection` resolves each block's descriptor and question type with `composables/useInteractionDescriptor.js`.
 4. The interaction's `Editor.vue` (`interactions/index.js`) edits a plain state object through `composables/useInteraction.js`: `descriptor.parse` → state → `descriptor.buildXML` → `descriptor.validate`.
-5. `useQtiItem` rebuilds the full item with `serialization/assembleItem.js`; `QTIItemEditor` emits `update:rawData`.
+5. `useQtiItem` rebuilds the full item with `serialization/assembleItem.js`; `QTIItemEditor` emits `update:rawData`. `validateItem.js` `isEditableItem` shows read-only any item holding content outside the body that this rebuild doesn't write or regenerate.
 
 `validateItem.js` `validateQtiItem` runs the same parse and validation headless, without the Vue editors.
 

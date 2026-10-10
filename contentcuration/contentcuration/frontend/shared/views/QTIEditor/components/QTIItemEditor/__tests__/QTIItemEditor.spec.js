@@ -14,6 +14,11 @@ import {
   FREE_RESPONSE_ITEM_DOCUMENT,
   NO_INTERACTION_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
+  CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_GLOSSARY,
+  CHOICE_ITEM_DOCUMENT_WITH_MODAL_FEEDBACK,
+  CHOICE_ITEM_DOCUMENT_WITH_SCHEMA_LOCATION,
+  CHOICE_ITEM_DOCUMENT_WITH_STYLESHEET,
+  STYLESHEET_ITEM_DOCUMENT_NO_PROMPT,
   VALID_ASSOCIATE_ITEM_DOCUMENT,
   VALID_MATCH_ITEM_DOCUMENT,
   MATCH_THREE_SETS_XML,
@@ -25,6 +30,7 @@ import {
   UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
   INLINE_CHOICE_ITEM_DOCUMENT,
 } from '../../../utils/testingFixtures';
+import { QTI_SCHEMA_LOCATION, XSI_NS } from '../../../serialization/xml';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
@@ -47,6 +53,7 @@ const {
   questionNumberAndTypeLabel$,
   unknownTypeLabel$,
   responsePoolLabel$,
+  deleteHintBtn$,
 } = qtiEditorStrings;
 
 const defaultProps = {
@@ -252,10 +259,14 @@ describe('QTIItemEditor', () => {
           CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_STIMULUS,
         'text sharing the text entry paragraph': TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH,
         'content after the text entry paragraph': TEXT_ENTRY_ITEM_DOCUMENT_TRAILING_CONTENT,
+        'a stylesheet': CHOICE_ITEM_DOCUMENT_WITH_STYLESHEET,
+        'modal feedback': CHOICE_ITEM_DOCUMENT_WITH_MODAL_FEEDBACK,
+        'a catalog beside the hints': CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_GLOSSARY,
       };
       const documents = {
         ...publishableDocuments,
         'no interaction': NO_INTERACTION_ITEM_DOCUMENT,
+        'a stylesheet and no prompt': STYLESHEET_ITEM_DOCUMENT_NO_PROMPT,
       };
 
       test.each(Object.entries(publishableDocuments))(
@@ -308,6 +319,7 @@ describe('QTIItemEditor', () => {
         'a match interaction that cannot be read',
         VALID_MATCH_ITEM_DOCUMENT.replace(MATCH_XML, MATCH_THREE_SETS_XML),
       ],
+      ['a stylesheet and no prompt', STYLESHEET_ITEM_DOCUMENT_NO_PROMPT],
     ])(
       'asks the author to delete a question with %s instead of only saying it cannot be edited',
       (_, raw_data) => {
@@ -530,6 +542,37 @@ describe('QTIItemEditor', () => {
       expect(xml).toContain('<p>test2 2</p>');
       expect(xml).not.toContain('<p>test</p>');
     });
+  });
+
+  test('keeps xsi:schemaLocation through an edit', async () => {
+    const { emitted } = renderComponent({
+      item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_SCHEMA_LOCATION },
+      mode: 'edit',
+    });
+    await fireEvent.click(screen.getByRole('button', { name: hintsLabel$() }));
+    await fireEvent.click(screen.getAllByRole('button', { name: deleteHintBtn$() })[0]);
+    await nextTick();
+    const [xml] = emitted()['update:rawData'].at(-1);
+    const root = new DOMParser().parseFromString(xml, 'text/xml').documentElement;
+    expect(root.getAttributeNS(XSI_NS, 'schemaLocation')).toBe(QTI_SCHEMA_LOCATION);
+  });
+
+  test('keeps the label through an edit', async () => {
+    const { emitted } = renderComponent({
+      item: {
+        ...defaultProps.item,
+        raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+          'xml:lang="en"',
+          'xml:lang="en" label="L"',
+        ),
+      },
+      mode: 'edit',
+    });
+    await fireEvent.click(screen.getByRole('button', { name: hintsLabel$() }));
+    await fireEvent.click(screen.getAllByRole('button', { name: deleteHintBtn$() })[0]);
+    await nextTick();
+    const [xml] = emitted()['update:rawData'].at(-1);
+    expect(xml).toContain(' label="L"');
   });
 
   describe('associate interaction', () => {
