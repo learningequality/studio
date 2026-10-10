@@ -10,6 +10,18 @@ import { descriptors } from '../../interactions/descriptors';
 const choice = (content, correct = false) => ({ id: `choice_${content}`, content, correct });
 const associable = (id, content) => ({ id, content });
 
+/** A dropdown as the inline choice passage holds it, its first option correct. */
+function dropdown(name, options) {
+  const ids = options.map(text => `choice_${name}_${text}`);
+  const optionsHTML = options
+    .map((text, i) => `<qti-inline-choice identifier="${ids[i]}">${text}</qti-inline-choice>`)
+    .join('');
+  return (
+    `<qti-inline-choice-interaction response-identifier="response_${name}" ` +
+    `data-studio-correct="${ids[0]}">${optionsHTML}</qti-inline-choice-interaction>`
+  );
+}
+
 const FILLED = {
   [QuestionType.SINGLE_SELECT]: {
     prompt: '<p>Which planet is closest to the Sun?</p>',
@@ -75,6 +87,14 @@ const FILLED = {
       },
     ],
     distractors: [associable('choice_r', '<p>Reptile</p>')],
+  },
+  [QuestionType.INLINE_CHOICE]: {
+    prompt: '<p>Fill in the blanks.</p>',
+    passage: `<p>The ${dropdown('moon', ['Moon', 'Sun'])} orbits the Earth, under a ${dropdown(
+      'sky',
+      ['blue', 'green'],
+    )} sky.</p>`,
+    shuffle: true,
   },
 };
 

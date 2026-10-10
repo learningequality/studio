@@ -12,6 +12,7 @@ const {
   ORDERING,
   ASSOCIATE,
   MATCH,
+  INLINE_CHOICE,
 } = QuestionType;
 const {
   ANSWERS_REMOVED,
@@ -20,6 +21,7 @@ const {
   CORRECT_ANSWERS_NOT_KEPT,
   ORDER_BECOMES_ANSWER,
   ORDER_NOT_KEPT,
+  PASSAGE_ADDED_TO_QUESTION,
 } = ConversionLoss;
 
 /**
@@ -35,6 +37,7 @@ const EXPECTED_LOSSES = {
     [ORDERING]: [CORRECT_ANSWERS_NOT_KEPT, ORDER_BECOMES_ANSWER],
     [ASSOCIATE]: [ANSWERS_REMOVED],
     [MATCH]: [ANSWERS_REMOVED],
+    [INLINE_CHOICE]: [ANSWERS_REMOVED],
   },
   [MULTI_SELECT]: {
     [SINGLE_SELECT]: [CORRECT_ANSWERS_REDUCED],
@@ -44,6 +47,7 @@ const EXPECTED_LOSSES = {
     [ORDERING]: [CORRECT_ANSWERS_NOT_KEPT, ORDER_BECOMES_ANSWER],
     [ASSOCIATE]: [ANSWERS_REMOVED],
     [MATCH]: [ANSWERS_REMOVED],
+    [INLINE_CHOICE]: [ANSWERS_REMOVED],
   },
   [NUMERIC]: {
     [SINGLE_SELECT]: [CORRECT_ANSWERS_REDUCED],
@@ -53,6 +57,7 @@ const EXPECTED_LOSSES = {
     [ORDERING]: [ORDER_BECOMES_ANSWER],
     [ASSOCIATE]: [ANSWERS_REMOVED],
     [MATCH]: [ANSWERS_REMOVED],
+    [INLINE_CHOICE]: [ANSWERS_REMOVED],
   },
   [TEXT_ENTRY]: {
     [SINGLE_SELECT]: [CORRECT_ANSWERS_REDUCED],
@@ -63,6 +68,7 @@ const EXPECTED_LOSSES = {
     [ORDERING]: [ORDER_BECOMES_ANSWER],
     [ASSOCIATE]: [ANSWERS_REMOVED],
     [MATCH]: [ANSWERS_REMOVED],
+    [INLINE_CHOICE]: [ANSWERS_REMOVED],
   },
   [FREE_RESPONSE]: {
     [SINGLE_SELECT]: [],
@@ -72,6 +78,7 @@ const EXPECTED_LOSSES = {
     [ORDERING]: [],
     [ASSOCIATE]: [],
     [MATCH]: [],
+    [INLINE_CHOICE]: [],
   },
   [ORDERING]: {
     [SINGLE_SELECT]: [ORDER_NOT_KEPT],
@@ -81,6 +88,7 @@ const EXPECTED_LOSSES = {
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
     [ASSOCIATE]: [ANSWERS_REMOVED],
     [MATCH]: [ANSWERS_REMOVED],
+    [INLINE_CHOICE]: [ANSWERS_REMOVED],
   },
   [ASSOCIATE]: {
     [SINGLE_SELECT]: [ANSWERS_REMOVED],
@@ -90,6 +98,7 @@ const EXPECTED_LOSSES = {
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
     [ORDERING]: [ANSWERS_REMOVED],
     [MATCH]: [],
+    [INLINE_CHOICE]: [ANSWERS_REMOVED],
   },
   [MATCH]: {
     [SINGLE_SELECT]: [ANSWERS_REMOVED],
@@ -99,6 +108,18 @@ const EXPECTED_LOSSES = {
     [FREE_RESPONSE]: [ANSWERS_REMOVED],
     [ORDERING]: [ANSWERS_REMOVED],
     [ASSOCIATE]: [],
+    [INLINE_CHOICE]: [ANSWERS_REMOVED],
+  },
+  // The passage is folded into the question for every type without one.
+  [INLINE_CHOICE]: {
+    [SINGLE_SELECT]: [PASSAGE_ADDED_TO_QUESTION],
+    [MULTI_SELECT]: [PASSAGE_ADDED_TO_QUESTION],
+    [NUMERIC]: [PASSAGE_ADDED_TO_QUESTION],
+    [TEXT_ENTRY]: [PASSAGE_ADDED_TO_QUESTION],
+    [FREE_RESPONSE]: [PASSAGE_ADDED_TO_QUESTION],
+    [ORDERING]: [PASSAGE_ADDED_TO_QUESTION],
+    [ASSOCIATE]: [PASSAGE_ADDED_TO_QUESTION],
+    [MATCH]: [PASSAGE_ADDED_TO_QUESTION],
   },
 };
 
@@ -131,7 +152,8 @@ describe('convertInteraction', () => {
       expect(error).toBeNull();
       expect(questionType).toBe(toType);
       const { prompt } = reopen(filledInteraction(fromType), fromType);
-      expect(reopen(interaction, toType).prompt).toBe(prompt);
+      // A passage folded into the question comes after it.
+      expect(reopen(interaction, toType).prompt.startsWith(prompt)).toBe(true);
     });
 
     it('loses nothing from a question nobody has filled in', () => {
@@ -273,6 +295,13 @@ describe('convertInteraction', () => {
     expect(summary(back.interaction)).toEqual(summary(filledInteraction(MATCH)));
     expect(descriptorFor(MATCH).validate(reopen(back.interaction, MATCH))).toEqual(
       descriptorFor(MATCH).validate(reopen(filledInteraction(MATCH), MATCH)),
+    );
+  });
+
+  it('folds the inline choice passage into the question, each dropdown shown as a blank', () => {
+    const { interaction } = convert(filledInteraction(INLINE_CHOICE), INLINE_CHOICE, SINGLE_SELECT);
+    expect(reopen(interaction, SINGLE_SELECT).prompt).toBe(
+      '<p>Fill in the blanks.</p><p>The _____ orbits the Earth, under a _____ sky.</p>',
     );
   });
 });
