@@ -1,6 +1,11 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
 import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseAssociateInteraction, buildAssociateInteractionXML } from './parse';
+import {
+  exportAssociateContent,
+  getAssociateConversionFormat,
+  importAssociateContent,
+} from './convert';
 import { validateAssociateInteraction } from './validation';
 
 /**
@@ -73,6 +78,29 @@ export class AssociateInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state) {
     return validateAssociateInteraction(state);
+  }
+
+  /**
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat() {
+    return getAssociateConversionFormat();
+  }
+
+  /**
+   * @param {object} state - AssociateState
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state) {
+    return exportAssociateContent(state);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @returns {object} AssociateState
+   */
+  importContent(content) {
+    return importAssociateContent(content);
   }
 }
 
