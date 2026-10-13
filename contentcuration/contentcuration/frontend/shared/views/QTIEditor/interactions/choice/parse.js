@@ -1,5 +1,5 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { buildXmlNode, getPromptHTML, parseXML } from '../../serialization/xml';
+import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { Orientation, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
@@ -90,7 +90,7 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
 
   const choices = [...root.querySelectorAll('qti-simple-choice')].map(el => ({
     id: el.getAttribute('identifier') || generateRandomSlug('choice'),
-    content: el.innerHTML,
+    content: getContentHTML(el),
     correct: correctIds.has(el.getAttribute('identifier') ?? ''),
     fixed: el.getAttribute('fixed') === 'true',
   }));

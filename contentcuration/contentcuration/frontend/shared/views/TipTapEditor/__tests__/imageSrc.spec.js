@@ -17,6 +17,20 @@ describe('resolveImageSrcs', () => {
     );
   });
 
+  it('resolves a src that follows an attribute value containing >', () => {
+    expect(resolveImageSrcs(`<img alt="a > b" src="${FILENAME}">`)).toBe(
+      `<img alt="a > b" src="${STORAGE_URL}">`,
+    );
+  });
+
+  it('resolves the src attribute, not src= inside another attribute', () => {
+    expect(
+      resolveImageSrcs(
+        `<img alt='see src="${FILENAME}"' data-src="${FILENAME}" src="${FILENAME}">`,
+      ),
+    ).toBe(`<img alt='see src="${FILENAME}"' data-src="${FILENAME}" src="${STORAGE_URL}">`);
+  });
+
   it('resolves every image in the content', () => {
     const html = `<img src="${FILENAME}"><img src="${FILENAME}">`;
     expect(resolveImageSrcs(html)).toBe(`<img src="${STORAGE_URL}"><img src="${STORAGE_URL}">`);

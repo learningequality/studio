@@ -145,6 +145,22 @@ def test_text_input_derivation():
     assert answers == [{"answer": "42", "correct": True, "order": 0}]
 
 
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("+5", "5"),
+        ("1E3", "1e3"),
+        (" +5 ", "5"),
+        ("+0", "0"),
+    ],
+)
+def test_text_input_normalises_xsd_double_answers(value, expected):
+    result = derive_perseus_item(_Item(_text_item("single", [value])))
+    assert json.loads(result.answers) == [
+        {"answer": expected, "correct": True, "order": 0}
+    ]
+
+
 def test_text_input_multiple_correct_values():
     item = _Item(_text_item("multiple", ["1", "2"]))
     result = derive_perseus_item(item)
@@ -167,6 +183,7 @@ def test_integer_text_input_derivation():
         pytest.param([("41", "0.5")], ["42"], id="partial_credit_key"),
         pytest.param([("0", "0.0")], ["42"], id="zero_mapped_key"),
         pytest.param([("13", "1.0")], ["42", "13"], id="full_credit_key"),
+        pytest.param([("1e400", "1.0")], ["42"], id="overflowing_key"),
     ],
 )
 def test_text_input_mapping_keeps_correct_response(map_entries, expected):
@@ -175,6 +192,34 @@ def test_text_input_mapping_keeps_correct_response(map_entries, expected):
     answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
     assert [a["answer"] for a in answers] == expected
     assert all(a["correct"] for a in answers)
+
+
+@pytest.mark.parametrize(
+    "map_key",
+    [
+        pytest.param("42", id="trimmed_key"),
+        pytest.param(" 42 ", id="padded_key"),
+    ],
+)
+def test_text_input_padded_values_dedupe(map_key):
+    raw_data = _text_item("single", [" 42 "], map_entries=[(map_key, "1.0")])
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
+
+
+def test_choice_padded_correct_value_matches_identifier():
+    raw_data = _choice_item(
+        "single", [" choice_0 "], [("choice_0", "A"), ("choice_1", "B")]
+    )
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["correct"] for a in answers] == [True, False]
+
+
+def test_overflowing_correct_value_is_dropped():
+    raw_data = _text_item("single", ["42", "1e400"])
+    assert is_perseus_derivable(raw_data) is True
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
 
 
 def test_answerless_float_entry_is_skipped_but_node_stays_derivable(caplog):
@@ -477,6 +522,10 @@ def test_comment_inside_prompt_markup_does_not_change_question(prompt):
         ),
         pytest.param(_text_item("single", ["0"]), False, id="float_zero_answer"),
         pytest.param(_text_item("single", ["False"]), True, id="float_non_number"),
+        pytest.param(_text_item("single", ["1e400"]), True, id="float_overflow"),
+        pytest.param(
+            _text_item("single", ["1" + "0" * 400]), True, id="float_overflow_integer"
+        ),
         pytest.param(
             _text_item("single", [], map_entries=[("13", "1.0"), ("12", "1.0")]),
             False,

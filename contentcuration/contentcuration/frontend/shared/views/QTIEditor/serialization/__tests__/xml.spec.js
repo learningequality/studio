@@ -338,6 +338,27 @@ describe('serializeAsHtml', () => {
     expect(math.namespaceURI).toBe(MATHML_NS);
   });
 
+  const breakout = tag => `&lt;/${tag}&gt;&lt;img src="x"/&gt;`;
+
+  it.each(['noscript', 'script', 'style'])('drops a <%s>', tag => {
+    const html = serializeAsHtml(
+      children(`<root><p><${tag}>${breakout(tag)}</${tag}>after</p></root>`),
+    );
+    expect(html).toBe('<p>after</p>');
+    expect(parseXML(html, 'text/html').querySelector('img')).toBeNull();
+  });
+
+  it.each(['iframe', 'noembed', 'noframes', 'plaintext', 'xmp'])(
+    'keeps the text of a <%s> as escaped text, so markup in it does not come back live',
+    tag => {
+      const html = serializeAsHtml(
+        children(`<root><p>a<${tag}>${breakout(tag)}</${tag}>after</p></root>`),
+      );
+      expect(html).toBe(`<p>a${breakout(tag)}after</p>`);
+      expect(parseXML(html, 'text/html').querySelector('img')).toBeNull();
+    },
+  );
+
   it('skips comments', () => {
     expect(serializeAsHtml(children('<root><!-- note --><p>a</p></root>'))).toBe('<p>a</p>');
   });

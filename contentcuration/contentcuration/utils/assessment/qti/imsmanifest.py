@@ -2,6 +2,7 @@ import re
 import zipfile
 from typing import Annotated
 from typing import List
+from typing import NamedTuple
 from typing import Optional
 from xml.etree import ElementTree as ET
 
@@ -130,24 +131,26 @@ def _get_item_ids_from_assessment_test(zip_file, test_href):
 namespace_re = re.compile("\\{([^}]+)\\}")
 
 
+def _read_manifest_resources(zip_file):
+    """Raises ValueError for an invalid or missing manifest."""
+    try:
+        with zip_file.open("imsmanifest.xml") as manifest_file:
+            root = ET.fromstring(manifest_file.read())
+    except ET.ParseError:
+        raise ValueError("Invalid XML in manifest")
+    except KeyError:
+        raise ValueError("No IMS Manifest found in zip file")
+    namespace = namespace_re.search(root.tag)
+    if namespace is None:
+        raise ValueError("Manifest has no namespace")
+    namespaces = {"imscp": namespace.group(1)}
+    return root.findall(".//imscp:resource", namespaces), namespaces
+
+
 def get_assessment_ids_from_manifest(zip_file_handle):
     try:
         with zipfile.ZipFile(zip_file_handle, "r") as zip_file:
-
-            # Read and parse the manifest
-            with zip_file.open("imsmanifest.xml") as manifest_file:
-                manifest_content = manifest_file.read()
-
-            # Parse the XML
-            root = ET.fromstring(manifest_content)
-
-            namespace = namespace_re.search(root.tag).group(1)
-
-            # Define namespace map for IMS Content Packaging
-            namespaces = {"imscp": namespace}
-
-            # Find all resources
-            resources = root.findall(".//imscp:resource", namespaces)
+            resources, _ = _read_manifest_resources(zip_file)
 
             assessment_ids = []
 
@@ -169,9 +172,30 @@ def get_assessment_ids_from_manifest(zip_file_handle):
                     )
 
             return assessment_ids
-    except ET.ParseError:
-        raise ValueError("Invalid XML in manifest")
     except zipfile.BadZipFile:
         raise ValueError("File is not a valid zip archive")
-    except KeyError:
-        raise ValueError("No IMS Manifest found in zip file")
+
+
+class AssessmentItemResource(NamedTuple):
+    href: str
+    dependency_hrefs: List[str]
+
+
+def get_assessment_item_resources_from_manifest(zip_file):
+    """
+    Return the package's assessment item resources in manifest (item) order.
+    `dependency_hrefs` are the resource's files other than the item XML itself.
+    """
+    resources, namespaces = _read_manifest_resources(zip_file)
+    return [
+        AssessmentItemResource(
+            href=resource.get("href"),
+            dependency_hrefs=[
+                file.get("href")
+                for file in resource.findall("imscp:file", namespaces)
+                if file.get("href") != resource.get("href")
+            ],
+        )
+        for resource in resources
+        if resource.get("type") == ResourceType.ASSESSMENT_ITEM.value
+    ]

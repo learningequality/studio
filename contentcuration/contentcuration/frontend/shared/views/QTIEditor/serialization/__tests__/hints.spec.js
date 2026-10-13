@@ -117,7 +117,7 @@ describe('assembleItemXml with hints', () => {
       hints: [{ id: 'a', content: '<p><img src="abc123.png" alt=""/></p>' }],
     });
     expect(parseHints(parseXML(xml)).map(h => h.content)).toEqual([
-      '<p><img src="abc123.png" alt=""/></p>',
+      '<p><img src="abc123.png" alt=""></p>',
     ]);
   });
 

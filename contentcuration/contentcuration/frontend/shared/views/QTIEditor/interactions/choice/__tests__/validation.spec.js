@@ -102,6 +102,25 @@ describe('validate()', () => {
       expect(errorIds).not.toContain('e');
     });
 
+    it('flags a stored formula option and the same formula typed in again', () => {
+      const { choices } = choiceInteractionDescriptor.parse(
+        `<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+          <qti-simple-choice identifier="a"><p><span data-latex="x^2"/></p></qti-simple-choice>
+        </qti-choice-interaction>`,
+        [],
+      );
+      const state = makeState({
+        choices: [
+          ...choices,
+          makeAnswer({ id: 'z', content: '<p><span data-latex="x^2"></span></p>' }),
+        ],
+      });
+      const errors = validate(state, QuestionType.SINGLE_SELECT);
+      expect(
+        errors.filter(e => e.code === ValidationError.DUPLICATE_CHOICE_CONTENT).map(e => e.id),
+      ).toEqual(['a', 'z']);
+    });
+
     it('does not return error when choices have unique text content', () => {
       const state = makeState({
         choices: [

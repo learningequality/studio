@@ -249,6 +249,21 @@ describe('TextEntryEditor — emits', () => {
     await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addAnswerBtn') }));
     expect(emitted()['update:interaction'].length).toBeGreaterThan(before);
   });
+
+  it('keeps typed whitespace in the input but emits the answer trimmed', async () => {
+    const { emitted } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, STRING_DECL),
+      questionType: QuestionType.TEXT_ENTRY,
+    });
+    const [input] = screen.getAllByRole('textbox', { name: tr.$tr('answerTextPlaceholder') });
+    await fireEvent.input(input, { target: { value: 'Paris ' } });
+    await nextTick();
+
+    expect(input).toHaveValue('Paris ');
+    const updates = emitted()['update:interaction'];
+    const [decl] = updates[updates.length - 1][0].responseDeclarations;
+    expect(decl).toContain('<qti-value>Paris</qti-value>');
+  });
 });
 
 describe('TextEntryEditor — accessibility', () => {

@@ -1,18 +1,21 @@
 import { validateItemShape, validateQtiItem } from '../validateItem';
 import { QuestionType, ValidationError } from '../constants';
 import { assembleItemXml } from '../serialization/assembleItem';
+import { parseItem } from '../serialization/parseItem';
 import { textEntryInteractionDescriptor } from '../interactions/textEntry/Descriptor';
 import { validateTextEntryInteraction } from '../interactions/textEntry/validation';
 import {
   VALID_CHOICE_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_NO_PROMPT,
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
+  CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS,
   NO_INTERACTION_ITEM_DOCUMENT,
   INLINE_CHOICE_ITEM_DOCUMENT,
   VALID_MATCH_ITEM_DOCUMENT,
   MATCH_THREE_SETS_XML,
   MATCH_XML,
   MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+  TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH,
   MULTI_INTERACTION_ITEM_DOCUMENT,
   UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
 } from '../utils/testingFixtures';
@@ -39,6 +42,15 @@ describe('validateQtiItem', () => {
   it('does not apply editor rules to an item with several text entries', () => {
     const xml = MULTI_TEXT_ENTRY_ITEM_DOCUMENT.replace(/>Sun</, '><').replace(/>Moon</, '><');
     expect(validateQtiItem(xml)).toEqual([]);
+  });
+
+  it('does not apply editor rules to an item whose body the editor cannot reproduce', () => {
+    const noPrompt = TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH.replace(
+      '<p>Tell us what you think.</p>',
+      '',
+    );
+    expect(validateQtiItem(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS)).toEqual([]);
+    expect(validateQtiItem(noPrompt, { allowFreeResponse: false })).toEqual([]);
   });
 
   it('reports an item whose body holds no interaction', () => {
@@ -95,6 +107,17 @@ describe('validateQtiItem', () => {
     });
   });
 
+  function expectSameCodesAsEditor(state, questionType, expected) {
+    const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
+      state,
+      questionType,
+    );
+    const xml = assembleItemXml({ identifier: 'item', title: '', bodyXml, responseDeclarations });
+
+    expect(codesOf(validateTextEntryInteraction(state, questionType))).toEqual(expected);
+    expect(codesOf(validateQtiItem(xml))).toEqual(expected);
+  }
+
   describe('numeric answers', () => {
     const { INVALID_NUMERIC_VALUE, DUPLICATE_ANSWER_CONTENT } = ValidationError;
 
@@ -143,14 +166,7 @@ describe('validateQtiItem', () => {
         answers: values.map((value, i) => ({ id: `a${i}`, value, caseSensitive: false })),
         expectedLength: 0,
       };
-      const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
-        state,
-        QuestionType.NUMERIC,
-      );
-      const xml = assembleItemXml({ identifier: 'item', title: '', bodyXml, responseDeclarations });
-
-      expect(codesOf(validateTextEntryInteraction(state, QuestionType.NUMERIC))).toEqual(expected);
-      expect(codesOf(validateQtiItem(xml))).toEqual(expected);
+      expectSameCodesAsEditor(state, QuestionType.NUMERIC, expected);
     });
 
     it('reports no correct answer past a non-numeric default value', () => {
@@ -172,6 +188,56 @@ describe('validateQtiItem', () => {
 
       expect(codesOf(validateQtiItem(xml))).toEqual([ValidationError.NO_CORRECT_ANSWER]);
     });
+  });
+
+  describe('text entry answers', () => {
+    it.each([false, true])('reopens and accepts NULL with caseSensitive %s', caseSensitive => {
+      const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
+        {
+          prompt: '<p>Which SQL keyword marks a missing value?</p>',
+          answers: [{ id: 'a0', value: 'NULL', caseSensitive }],
+          expectedLength: 0,
+        },
+        QuestionType.TEXT_ENTRY,
+      );
+      const xml = assembleItemXml({ identifier: 'item', title: '', bodyXml, responseDeclarations });
+      const [interaction] = parseItem(xml).interactions;
+
+      expect(validateQtiItem(xml)).toEqual([]);
+      expect(
+        textEntryInteractionDescriptor.parse(interaction.bodyXml, interaction.responseDeclarations)
+          .answers,
+      ).toEqual([{ id: expect.any(String), value: 'NULL', caseSensitive }]);
+    });
+
+    const { EMPTY_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT } = ValidationError;
+    const duplicates = [DUPLICATE_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT];
+
+    it.each([
+      [['Paris', 'Paris'], [false, false], duplicates],
+      [['Paris', ' Paris'], [false, false], duplicates],
+      [['Paris', 'paris'], [false, false], duplicates],
+      [['Paris', 'Paris'], [true, false], []],
+      [
+        ['', ''],
+        [false, false],
+        [EMPTY_ANSWER_CONTENT, EMPTY_ANSWER_CONTENT],
+      ],
+    ])(
+      'reports %j (case-sensitive %j) as %j, the same as the editor',
+      (values, flags, expected) => {
+        const state = {
+          prompt: '<p>Name the capital of France</p>',
+          answers: values.map((value, i) => ({
+            id: `a${i}`,
+            value,
+            caseSensitive: flags[i],
+          })),
+          expectedLength: 0,
+        };
+        expectSameCodesAsEditor(state, QuestionType.TEXT_ENTRY, expected);
+      },
+    );
   });
 
   it('reports unparseable XML', () => {

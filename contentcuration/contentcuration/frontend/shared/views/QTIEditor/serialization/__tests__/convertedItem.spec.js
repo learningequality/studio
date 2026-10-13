@@ -13,6 +13,7 @@ import fs from 'fs';
 import path from 'path';
 import { parseItem } from '../parseItem';
 import { assembleItemXml } from '../assembleItem';
+import { isSupportedItem } from '../../interactions/resolveDescriptor';
 
 const FIXTURES = path.join(__dirname, '../../../../../../tests/utils/qti/fixtures');
 
@@ -27,6 +28,18 @@ const rebuild = item =>
     responseDeclarations: item.interactions[0].responseDeclarations,
     hints: item.hints,
   });
+
+describe('converted items the editor opens', () => {
+  it.each(
+    fs
+      .readdirSync(FIXTURES)
+      .filter(file => file.endsWith('.xml'))
+      .map(file => path.basename(file, '.xml')),
+  )('%s', name => {
+    const { interactions, itemBodyXml } = parseItem(read(name));
+    expect(isSupportedItem(interactions, itemBodyXml)).toBe(true);
+  });
+});
 
 describe('a converted single-selection item', () => {
   const original = read('single_selection');

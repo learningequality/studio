@@ -19,6 +19,8 @@ describe('hasRichTextContent', () => {
     // item has been published — an item can be read from either side of that.
     ['<p><span data-latex="x^2"></span></p>', true],
     ['<p><span class="math" data-latex="E=mc^2"></span></p>', true],
+    // Content read from stored XML writes a `>` in an attribute value unescaped.
+    ['<p><span title="a > b" data-latex="x"></span></p>', true],
     ['<p><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math></p>', true],
     // The Math node writes no attribute for an empty formula, leaving nothing behind.
     ['<p><span></span></p>', false],

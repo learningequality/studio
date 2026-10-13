@@ -17,6 +17,7 @@ import { assembleItemXml } from '../serialization/assembleItem';
  *   identifier: import('vue').Ref<string>,
  *   title: import('vue').Ref<string>,
  *   language: import('vue').Ref<string>,
+ *   itemBodyXml: import('vue').Ref<string>,
  *   interactions: import('vue').Ref<Array<{ bodyXml: string, responseDeclarations: string[] }>>,
  *   hints: import('vue').Ref<Array<{ id: string, content: string }>>,
  *   parseError: import('vue').Ref<string | null>,
@@ -27,6 +28,7 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
   const identifier = ref('');
   const title = ref('');
   const language = ref('');
+  const itemBodyXml = ref('');
   const interactions = ref([]);
   /**
    * Hints belong to the item, not to any one interaction, so they live here beside
@@ -41,6 +43,7 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
       identifier.value = model.identifier;
       title.value = model.title;
       language.value = model.language;
+      itemBodyXml.value = model.itemBodyXml;
       interactions.value = model.interactions;
       hints.value = model.hints;
     } catch (e) {
@@ -68,6 +71,7 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
     identifier,
     title,
     language,
+    itemBodyXml,
     interactions,
     hints,
     parseError,

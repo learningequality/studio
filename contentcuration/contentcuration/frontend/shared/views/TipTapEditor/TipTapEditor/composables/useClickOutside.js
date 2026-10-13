@@ -2,8 +2,7 @@ import { onBeforeUnmount, watch } from 'vue';
 
 // The toolbar's menus render in an overlay outside the editor; while one is open, a click
 // is either on it or dismisses it. KDropdownMenu emits no open or close, so its trigger's
-// ARIA state is the only signal: KDropdownMenu sets both attributes on its trigger, and
-// FormatDropdown and PasteDropdown bind them by hand.
+// ARIA state is the only signal: KDropdownMenu sets both attributes on its trigger.
 const hasOpenMenu = container =>
   Boolean(container.querySelector('[aria-haspopup][aria-expanded="true"]'));
 

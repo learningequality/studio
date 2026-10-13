@@ -28,6 +28,21 @@ describe('StudioMyOrganizations', () => {
     jest.restoreAllMocks();
   });
 
+  it('requests accessible organizations, including public organizations outside the user membership', async () => {
+    jest.spyOn(Invitation, 'fetchCollection').mockResolvedValue([]);
+    const fetchCollection = jest
+      .spyOn(Organization, 'fetchCollection')
+      .mockResolvedValue([{ id: 'public-org', name: 'Public learning', public: true, role: null }]);
+    render(StudioMyOrganizations, {
+      localVue,
+      router: new VueRouter(),
+      store: createStore(),
+    });
+
+    expect(await screen.findByTestId('organization-card')).toHaveTextContent('Public learning');
+    expect(fetchCollection).toHaveBeenCalledWith({ page_size: 100 });
+  });
+
   it('renders pending organization invitations and lets the user accept them', async () => {
     jest.spyOn(Invitation, 'fetchCollection').mockResolvedValue([
       {

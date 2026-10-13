@@ -22,6 +22,7 @@ from contentcuration.utils.assessment.qti.catalog import KOLIBRI_HINT_SUPPORT
 from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.html_to_markdown import html_to_markdown
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
+from contentcuration.utils.parser import extract_value
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +121,7 @@ def _correct_values(declaration) -> List[str]:
     if not correct_responses:
         return []
     return [
-        value.text or ""
+        (value.text or "").strip()
         for value in _children_by_localname(correct_responses[0], "qti-value")
     ]
 
@@ -133,7 +134,7 @@ def _accepted_values(declaration) -> List[str]:
     mappings = _children_by_localname(declaration, "qti-mapping")
     if mappings:
         values += [
-            entry.get("map-key")
+            (entry.get("map-key") or "").strip()
             for entry in _children_by_localname(mappings[0], "qti-map-entry")
             if (_as_float(entry.get("mapped-value")) or 0) >= 1
         ]
@@ -194,10 +195,17 @@ def _derive_choice(interaction, item_body, declaration):
     return item_type, question, answers
 
 
+def _perseus_number(value):
+    """A leading "+" and capital "E" are valid xsd:double but not for
+    ``extract_value``."""
+    normalised = value.removeprefix("+").lower()
+    return normalised if extract_value(normalised) is not None else value
+
+
 def _derive_text(interaction, item_body, declaration):
     question = html_to_markdown([item_body])
     answers = [
-        {"answer": value, "correct": True, "order": order}
+        {"answer": _perseus_number(value), "correct": True, "order": order}
         for order, value in enumerate(_accepted_values(declaration))
     ]
     return exercises.INPUT_QUESTION, question, answers
@@ -214,7 +222,7 @@ _INTERACTION_DERIVERS = {
 def _parse(raw_data):
     """Parse untrusted XML; return the item-body element or ``None``."""
     try:
-        root = parse_qti_xml(raw_data.encode("utf-8")).getroot()
+        root = parse_qti_xml(raw_data).getroot()
     except etree.XMLSyntaxError:
         logger.warning("Unable to parse QTI item XML during Perseus derivation")
         return None, None

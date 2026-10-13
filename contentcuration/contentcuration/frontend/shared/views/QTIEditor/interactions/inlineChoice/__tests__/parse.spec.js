@@ -526,6 +526,23 @@ describe('buildInlineChoiceInteractionXML', () => {
       );
     });
 
+    it('writes option text trimmed', () => {
+      const padded = {
+        prompt: '',
+        passage: html(
+          p(
+            marked('r1', 'c1', [
+              { id: 'c1', text: 'b' },
+              { id: 'c2', text: '  a b  ' },
+            ]),
+          ),
+        ),
+        shuffle: false,
+      };
+      const options = [...bodyDoc(padded).querySelectorAll('qti-inline-choice')];
+      expect(options.map(o => o.textContent)).toEqual(['b', 'a b']);
+    });
+
     it('renames a repeated response identifier, writing one declaration each', () => {
       // A copy of a dropdown pasted into the passage repeats its response and choice ids.
       const copied = () => marked('r1', 'c1', [{ id: 'c1', text: 'x' }]);

@@ -449,33 +449,39 @@
 </style>
 
 
-<!-- Non-scoped styles for typography that apply to editor content -->
+<!-- Non-scoped styles for typography that apply to editor content, and to the format
+  menu's options, which preview it but render outside the editor -->
 <style>
 
-  .editor-container h1 {
+  .editor-container h1,
+  .tiptap-format-option h1 {
     margin: 24px 0 16px;
     font-size: 32px;
     font-weight: 600;
   }
 
-  .editor-container h2 {
+  .editor-container h2,
+  .tiptap-format-option h2 {
     margin: 8px 0;
     font-size: 24px;
     font-weight: 600;
   }
 
-  .editor-container h3 {
+  .editor-container h3,
+  .tiptap-format-option h3 {
     margin: 8px 0;
     font-size: 18px;
     font-weight: 600;
   }
 
-  .editor-container p {
+  .editor-container p,
+  .tiptap-format-option p {
     margin: 8px 0;
     font-size: 16px;
   }
 
-  .editor-container small {
+  .editor-container small,
+  .tiptap-format-option small {
     display: block;
     margin: 4px 0;
     font-size: 12px;
