@@ -18,6 +18,7 @@
 
       <component
         :is="editorComponent"
+        ref="editor"
         :key="descriptor.type"
         :questionType="questionType"
         :interaction="interaction"
@@ -36,7 +37,7 @@
 
 <script>
 
-  import { computed, watch } from 'vue';
+  import { computed, nextTick, ref, watch } from 'vue';
   import useInteractionDescriptor from '../../composables/useInteractionDescriptor';
   import QuestionTypeSelector from '../QuestionTypeSelector/index.vue';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
@@ -86,7 +87,22 @@
 
       const editorComponent = computed(() => editors[descriptor.value.type]);
 
+      const editor = ref(null);
+
+      /**
+       * Opens the question for editing, which focuses it. After this section's next render, so
+       * the editor has heard of a mode change the card made just before asking.
+       */
+      async function focus() {
+        await nextTick();
+        editor.value?.focus();
+      }
+
       return {
+        editor,
+        // Public: lets the card focus the question when it opens.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus,
         descriptor,
         editorComponent,
         questionType,

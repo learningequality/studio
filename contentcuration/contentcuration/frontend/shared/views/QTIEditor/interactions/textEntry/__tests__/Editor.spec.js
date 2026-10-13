@@ -1,7 +1,8 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import TextEntryEditor from '../Editor.vue';
+import { renderFocused } from '../../__tests__/renderFocused';
 
 import {
   TEXT_ENTRY_BODY_XML,
@@ -24,8 +25,9 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   };
 });
 
-const renderEditor = (props = {}) =>
-  render(TextEntryEditor, {
+// `focused` renders it as its card does when the card opens.
+const renderEditor = (props = {}, { focused = false } = {}) =>
+  (focused ? renderFocused : render)(TextEntryEditor, {
     props: { mode: 'edit', ...props },
     routes: new VueRouter(),
   });
@@ -37,15 +39,30 @@ const answerInputs = () =>
   screen.queryAllByRole('textbox', { name: tr.$tr('answerValuePlaceholder') });
 
 describe('TextEntryEditor — numeric', () => {
-  it('opens the question for editing when it is already written', () => {
-    renderEditor({
-      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
-      questionType: QuestionType.NUMERIC,
-    });
+  it('opens the question for editing, and focuses it, when its card opens', async () => {
+    renderEditor(
+      {
+        interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+        questionType: QuestionType.NUMERIC,
+      },
+      { focused: true },
+    );
+    await nextTick();
     expect(
       screen.queryByRole('button', { name: tr.$tr('editQuestionLabel') }),
     ).not.toBeInTheDocument();
     expect(openTextarea().value).toContain('What is H2O?');
+    await waitFor(() => expect(openTextarea()).toHaveFocus());
+  });
+
+  it('leaves the question closed, and focus where it was, when it only mounts', async () => {
+    renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+      questionType: QuestionType.NUMERIC,
+    });
+    await nextTick();
+    expect(screen.getByRole('button', { name: tr.$tr('editQuestionLabel') })).toBeInTheDocument();
+    expect(document.body).toHaveFocus();
   });
 
   describe('answer list', () => {
@@ -326,6 +343,7 @@ describe('TextEntryEditor — emits', () => {
       interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
       questionType: QuestionType.NUMERIC,
     });
+    await fireEvent.click(screen.getByRole('button', { name: tr.$tr('editQuestionLabel') }));
     await fireEvent.update(openTextarea(), openTextarea().value);
     expect(updates(emitted)).toHaveLength(0);
   });
