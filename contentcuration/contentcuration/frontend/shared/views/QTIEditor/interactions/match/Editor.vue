@@ -539,10 +539,7 @@
           if (newMode !== 'edit') {
             openTarget.value = null;
             releaseErrors();
-            return;
           }
-          // Open the question, the first thing in the card, so the card opens at its start.
-          openPrompt();
         },
         { immediate: true },
       );
@@ -678,6 +675,9 @@
       ]);
 
       return {
+        // Public: opens the question for editing, which focuses it.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus: openPrompt,
         EditorImageProcessor,
         OpenTarget,
         windowIsSmall,

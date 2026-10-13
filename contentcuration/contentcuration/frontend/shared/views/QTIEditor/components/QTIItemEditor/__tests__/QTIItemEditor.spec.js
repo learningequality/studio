@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import QTIItemEditor from '../index.vue';
@@ -212,6 +212,34 @@ describe('QTIItemEditor', () => {
     });
   });
 
+  describe('focusing an opened card', () => {
+    // The mock rich text editor renders a <textarea> only for the field that is open.
+    const openField = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
+
+    test('opens and focuses the question when the card opens', async () => {
+      const { updateProps } = renderDocument(VALID_CHOICE_ITEM_DOCUMENT, { mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+      expect(openField().value).toContain('Pick one.');
+    });
+
+    test('opens and focuses the question of a card created open', async () => {
+      renderDocument(VALID_CHOICE_ITEM_DOCUMENT, { mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+    });
+
+    // Associate and match open their question only once their own mode is edit, which they
+    // hear about a render after the card does.
+    test.each([
+      ['an associate', VALID_ASSOCIATE_ITEM_DOCUMENT],
+      ['a match', VALID_MATCH_ITEM_DOCUMENT],
+    ])('opens and focuses the question of %s card when it opens', async (_, document) => {
+      const { updateProps } = renderDocument(document, { mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+    });
+  });
+
   describe('edit mode', () => {
     test('shows the card body', () => {
       renderComponent({ mode: 'edit' });
@@ -276,6 +304,8 @@ describe('QTIItemEditor', () => {
       language: 'fr',
     });
     const input = await screen.findByRole('textbox', { name: answerValuePlaceholder$() });
+    // A card created open focuses its question; the author moves on from there.
+    await waitFor(() => expect(document.activeElement.tagName).toBe('TEXTAREA'));
     input.focus();
     await updateProps({ language: 'en' });
 
