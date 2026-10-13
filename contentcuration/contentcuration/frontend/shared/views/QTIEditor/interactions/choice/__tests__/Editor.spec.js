@@ -440,6 +440,23 @@ describe('ChoiceInteractionEditor', () => {
       expect(uncheckedRadio).not.toBeChecked();
     });
 
+    it('ignores native radio changes in view mode', async () => {
+      // Arrow keys make the browser check the next radio and fire `change`, which
+      // the readonly group does not cancel.
+      renderEditor({
+        interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
+        questionType: QuestionType.SINGLE_SELECT,
+        mode: 'view',
+        showAnswers: true,
+      });
+      const radios = screen.getAllByRole('radio');
+      const checkedIndex = radios.findIndex(r => r.checked);
+      const uncheckedRadio = radios.find(r => !r.checked);
+      await fireEvent.change(uncheckedRadio);
+      expect(radios[checkedIndex]).toBeChecked();
+      expect(uncheckedRadio).not.toBeChecked();
+    });
+
     it('makes the correct-choice checkboxes readonly in view mode', async () => {
       renderEditor({
         interaction: blockWithDecl(CHOICE_MULTI_SELECT_XML, MULTI_DECL),

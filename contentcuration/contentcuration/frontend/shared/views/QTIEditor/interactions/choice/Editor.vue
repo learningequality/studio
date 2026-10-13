@@ -439,6 +439,8 @@
           errorCodes.value.includes(ValidationError.TOO_MANY_CORRECT_ANSWERS),
       );
       function onToggleCorrect(id) {
+        // Readonly controls can still emit `change`, e.g. arrow keys on a radio
+        if (props.mode !== 'edit') return;
         toggleCorrectChoice(id);
       }
 
