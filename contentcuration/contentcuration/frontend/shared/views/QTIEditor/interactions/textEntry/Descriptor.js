@@ -143,10 +143,11 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
   /**
    * @param {object} state - TextEntryState
    * @param {string} questionType
+   * @param {{ language?: string }} [options]
    * @returns {import('../../conversion').ConvertibleContent}
    */
-  exportContent(state, questionType) {
-    return exportTextEntryContent(state, questionType);
+  exportContent(state, questionType, options) {
+    return exportTextEntryContent(state, questionType, options);
   }
 
   /**

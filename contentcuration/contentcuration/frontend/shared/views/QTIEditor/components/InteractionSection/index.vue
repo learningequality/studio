@@ -102,6 +102,7 @@
           interaction: props.interaction,
           fromType: questionType.value,
           toType,
+          language: props.language,
         });
 
       function changeType(newType) {
