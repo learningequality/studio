@@ -108,7 +108,8 @@ export class InteractionDescriptor {
 
   /**
    * The state as facets, for converting the question to another type. Subclasses are also
-   * passed the question type. Everything the state holds beyond the question must be
+   * passed the question type and `{ language }`, the exercise language, for content the
+   * author sees written in it. Everything the state holds beyond the question must be
    * exported: what isn't would be lost without a warning.
    *
    * @param {object} state
@@ -120,8 +121,9 @@ export class InteractionDescriptor {
 
   /**
    * A state holding the facets this type takes (getConversionFormat), already carried into
-   * its format. Subclasses are also passed the question type. The default is a new
-   * question with the question carried over.
+   * its format. Subclasses are also passed the question type and `{ language }`, the
+   * exercise language, which content the author saw written in it arrives in. The default
+   * is a new question with the question carried over.
    *
    * @param {import('../conversion').ConvertibleContent} content
    * @returns {object}

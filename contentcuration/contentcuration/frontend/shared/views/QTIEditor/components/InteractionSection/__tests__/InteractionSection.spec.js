@@ -350,32 +350,50 @@ describe('InteractionSection', () => {
       );
 
     it.each([
-      ['fr', '1234.5', '1234.5'],
-      ['en', '1.50', '1.5'],
-      ['en', '0012', '12'],
-      ['ar-EG', '30', '30'],
-      ['ar-EG', '-3.14', '-3.14'],
-      ['fr', '1.2.3', '1.2.3'],
-      ['he', '-0.5', '-0.5'],
-      ['sv', '-0.5', '-0.5'],
-      ['ar-EG', '-0.5', '-0.5'],
+      ['fr', '1234.5'],
+      ['en', '1.50'],
+      ['en', '0012'],
+      ['ar-EG', '30'],
+      ['ar-EG', '-3.14'],
+      ['fr', '1.2.3'],
+      ['he', '-0.5'],
+      ['sv', '-0.5'],
+      ['ar-EG', '-0.5'],
+    ])('gives text entry a numeric answer as it was shown in %s (%s)', async (language, stored) => {
+      const user = userEvent.setup();
+      const { emitted } = renderSwitchable(numeric(stored), { language });
+      await nextTick();
+      const shown = numericAnswers()[0].value;
+      await pickType(user, 'textEntryLabel');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(latestDeclaration(emitted)).toContain(`<qti-value>${shown}</qti-value>`);
+    });
+
+    it.each([
+      ['fr', '11,2'],
+      ['de', '1.234,5'],
+      ['en', '1.5'],
     ])(
-      'keeps a stored numeric answer as stored when switched to text entry in %s (%s)',
-      async (language, stored, expected) => {
+      'gives back a text entry answer in %s (%s) after switching to numeric and back',
+      async (language, text) => {
         const user = userEvent.setup();
-        const { emitted } = renderSwitchable(numeric(stored), { language });
+        const { emitted } = renderSwitchable(textEntry(text), { language });
         await nextTick();
+        await pickType(user, 'numericLabel');
+        await nextTick();
+        const shown = numericAnswers()[0].value;
         await pickType(user, 'textEntryLabel');
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-        expect(latestDeclaration(emitted)).toContain(`<qti-value>${expected}</qti-value>`);
+        expect(latestDeclaration(emitted)).toContain(`<qti-value>${shown}</qti-value>`);
       },
     );
 
     it.each([
       ['fr', '1,5', '1,5', '1.5'],
       ['fr', '1 234,5', '1234,5', '1234.5'],
-      // Read as xsd:double first, as German would read it as 15.
-      ['de', '1.5', '1,5', '1.5'],
+      // Read in the language, as typing it into the numeric field would: German groups
+      // thousands with a point.
+      ['de', '1.000', '1000', '1000'],
+      ['de', '1.5', '15', '15'],
     ])(
       'reads a text entry answer in %s (%s) when switched to numeric',
       async (language, text, shown, stored) => {
@@ -411,21 +429,25 @@ describe('InteractionSection', () => {
     );
 
     it.each([
-      ['fr', '1,5', '1.5'],
-      ['en', '1,234', '1234'],
-      ['de', '1.500', '1500'],
-      ['', ' 5 ', '5'],
+      ['fr', '1,5'],
+      ['en', '1,234'],
+      ['de', '1.500'],
+      ['', ' 5 '],
       ['fa', 'می\u200cخواهم'],
       ['en', 'a\u00adb'],
     ])(
-      'keeps a typed numeric answer as stored when switched to text entry in "%s" (%s)',
-      async (language, typed, expected = typed) => {
+      'gives text entry a typed numeric answer as it is shown in "%s" (%s)',
+      async (language, typed) => {
         const user = userEvent.setup();
         const { emitted } = renderSwitchable(numeric('42'), { language });
         await nextTick();
-        await fireEvent.input(numericAnswers()[0], { target: { value: typed } });
+        const [input] = numericAnswers();
+        await fireEvent.input(input, { target: { value: typed } });
+        // Leaving the answer shows it as stored, written in the language.
+        await fireEvent.blur(input);
+        const shown = input.value;
         await pickType(user, 'textEntryLabel');
-        expect(latestDeclaration(emitted)).toContain(`<qti-value>${expected}</qti-value>`);
+        expect(latestDeclaration(emitted)).toContain(`<qti-value>${shown.trim()}</qti-value>`);
       },
     );
   });
