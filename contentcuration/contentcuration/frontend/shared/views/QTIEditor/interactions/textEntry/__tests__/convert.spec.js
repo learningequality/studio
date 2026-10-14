@@ -47,6 +47,39 @@ describe('text entry conversion', () => {
     });
   });
 
+  describe('numeric answers', () => {
+    const numeric = values => ({
+      prompt: '',
+      answers: values.map((value, i) => ({ id: `answer_${i}`, value, caseSensitive: false })),
+      expectedLength: 80,
+    });
+    const exported = (values, options) =>
+      exportTextEntryContent(numeric(values), QuestionType.NUMERIC, options).answers.items.map(
+        ({ content }) => content,
+      );
+
+    it('exports them as the exercise language shows them', () => {
+      expect(exported(['1.5', '1234.5'], { language: 'de' })).toEqual(['1,5', '1234,5']);
+      expect(exported(['1.5'], { language: 'en' })).toEqual(['1.5']);
+    });
+
+    it('exports them as stored when the exercise has no language', () => {
+      expect(exported(['1.5', '1234.5'])).toEqual(['1.5', '1234.5']);
+    });
+
+    it('exports an answer that is not a number as it was written', () => {
+      expect(exported(['abc'], { language: 'de' })).toEqual(['abc']);
+    });
+  });
+
+  it('exports text entry answers as written, whatever the exercise language', () => {
+    const decimal = { ...state, answers: [{ id: 'answer_a', value: '1.5', caseSensitive: false }] };
+    const { items } = exportTextEntryContent(decimal, QuestionType.TEXT_ENTRY, {
+      language: 'de',
+    }).answers;
+    expect(items.map(({ content }) => content)).toEqual(['1.5']);
+  });
+
   it('imports the expected length that came with the answers', () => {
     const content = { prompt: '', answers: { items: [], expectedLength: 10 } };
     expect(importTextEntryContent(content, QuestionType.TEXT_ENTRY).expectedLength).toBe(10);

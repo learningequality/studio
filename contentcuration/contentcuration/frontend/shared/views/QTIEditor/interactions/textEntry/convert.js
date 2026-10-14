@@ -1,4 +1,5 @@
 import { CorrectCriterion, ContentLevel, QuestionType } from '../../constants';
+import { formatLocaleNumber } from '../../utils/localeNumbers';
 import { _defaultState, newAnswer } from './parse';
 
 // A free response has no answers to give or take.
@@ -20,9 +21,14 @@ export function getTextEntryConversionFormat(questionType) {
 /**
  * @param {import('./parse').TextEntryState} state
  * @param {string} questionType
+ * @param {{ language?: string }} [options] - The exercise language
  * @returns {import('../../conversion').ConvertibleContent}
  */
-export function exportTextEntryContent(state, questionType) {
+export function exportTextEntryContent(state, questionType, { language } = {}) {
+  // Numeric answers are stored as xsd:double but shown in the exercise language; they leave as
+  // the author saw them, which is also how learners of that language write them.
+  const shown = value =>
+    questionType === QuestionType.NUMERIC ? formatLocaleNumber(value, language) : value;
   return {
     prompt: state.prompt,
     answers: {
@@ -31,7 +37,7 @@ export function exportTextEntryContent(state, questionType) {
       // A free response saves no answers, so it has none to carry, whatever its state holds.
       items: takesAnswers(questionType)
         ? state.answers.map(({ value, caseSensitive }) => ({
-            content: value,
+            content: shown(value),
             correct: true,
             caseSensitive,
           }))

@@ -216,6 +216,24 @@ describe('convertInteraction', () => {
     expect(answersOf(interaction, QuestionType.NUMERIC)).toEqual(['Paris', 'City of Light']);
   });
 
+  it('gives numeric answers to another type as the exercise language shows them', () => {
+    const numeric = descriptorFor(QuestionType.NUMERIC).buildXML(
+      {
+        prompt: '<p>Q</p>',
+        answers: [{ id: 'answer_1', value: '1.5', caseSensitive: false }],
+        expectedLength: 50,
+      },
+      QuestionType.NUMERIC,
+    );
+    const { interaction } = convertInteraction({
+      interaction: numeric,
+      fromType: QuestionType.NUMERIC,
+      toType: QuestionType.TEXT_ENTRY,
+      language: 'de',
+    });
+    expect(answersOf(interaction, QuestionType.TEXT_ENTRY)).toEqual(['1,5']);
+  });
+
   it('resets case sensitivity after a trip through numeric', () => {
     const toNumeric = convert(
       filledInteraction(QuestionType.TEXT_ENTRY),

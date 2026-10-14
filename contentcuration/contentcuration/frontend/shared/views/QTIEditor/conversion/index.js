@@ -112,16 +112,18 @@ function descriptorFor(questionType) {
  * @param {{ bodyXml: string, responseDeclarations: string[] }} options.interaction
  * @param {string} options.fromType - The QuestionType the interaction is now
  * @param {string} options.toType - The QuestionType to convert it to
+ * @param {string} [options.language] - The exercise language, which answers the author sees
+ *   written in it (numeric ones) are exported in, as the author saw them
  * @returns {{
  *   interaction: { bodyXml: string, responseDeclarations: string[] },
  *   losses: string[],
  * }} `losses` are ConversionLoss codes, empty when nothing would be lost
  */
-export function convertInteraction({ interaction, fromType, toType }) {
+export function convertInteraction({ interaction, fromType, toType, language }) {
   const from = descriptorFor(fromType);
   const to = descriptorFor(toType);
   const state = from.parse(interaction.bodyXml, interaction.responseDeclarations);
-  const content = from.exportContent(state, fromType);
+  const content = from.exportContent(state, fromType, { language });
   const { carried, losses } = carryContent(content, to.getConversionFormat(toType));
   return {
     interaction: to.buildXML(to.importContent(carried, toType), toType),

@@ -113,6 +113,7 @@
           interaction: props.interaction,
           fromType: questionType.value,
           toType: newType,
+          language: props.language,
         });
         if (!losses.length) {
           changeType(newType, interaction);

@@ -108,7 +108,8 @@ export class InteractionDescriptor {
 
   /**
    * The state as facets, for converting the question to another type. Subclasses are also
-   * passed the question type. Everything the state holds beyond the question must be
+   * passed the question type and `{ language }`, the exercise language, for content the
+   * author sees written in it. Everything the state holds beyond the question must be
    * exported: what isn't would be lost without a warning.
    *
    * @param {object} state
