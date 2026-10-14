@@ -250,6 +250,65 @@ describe('convertInteraction', () => {
     expect(answersOf(interaction, QuestionType.NUMERIC)).toEqual(['Paris', 'City of Light']);
   });
 
+  it('gives numeric answers to another type as the exercise language shows them', () => {
+    const numeric = descriptorFor(QuestionType.NUMERIC).buildXML(
+      {
+        prompt: '<p>Q</p>',
+        answers: [{ id: 'answer_1', value: '1.5', caseSensitive: false }],
+        expectedLength: 50,
+      },
+      QuestionType.NUMERIC,
+    );
+    const { interaction } = convertInteraction({
+      interaction: numeric,
+      fromType: QuestionType.NUMERIC,
+      toType: QuestionType.TEXT_ENTRY,
+      language: 'de',
+    });
+    expect(answersOf(interaction, QuestionType.TEXT_ENTRY)).toEqual(['1,5']);
+  });
+
+  it('stores answers switching to numeric as the exercise language reads them', () => {
+    const textEntry = descriptorFor(QuestionType.TEXT_ENTRY).buildXML(
+      {
+        prompt: '<p>Q</p>',
+        answers: [
+          { id: 'answer_1', value: '1.000', caseSensitive: false },
+          { id: 'answer_2', value: '3,5', caseSensitive: false },
+        ],
+        expectedLength: 50,
+      },
+      QuestionType.TEXT_ENTRY,
+    );
+    const { interaction } = convertInteraction({
+      interaction: textEntry,
+      fromType: QuestionType.TEXT_ENTRY,
+      toType: QuestionType.NUMERIC,
+      language: 'de',
+    });
+    // German groups thousands with a point, so 1.000 is a thousand.
+    expect(answersOf(interaction, QuestionType.NUMERIC)).toEqual(['1000', '3.5']);
+  });
+
+  it('keeps a numeric answer through a trip to text entry and back', () => {
+    const numeric = descriptorFor(QuestionType.NUMERIC).buildXML(
+      {
+        prompt: '<p>Q</p>',
+        answers: [{ id: 'answer_1', value: '1.5', caseSensitive: false }],
+        expectedLength: 50,
+      },
+      QuestionType.NUMERIC,
+    );
+    const trip = (interaction, fromType, toType) =>
+      convertInteraction({ interaction, fromType, toType, language: 'de' }).interaction;
+    const back = trip(
+      trip(numeric, QuestionType.NUMERIC, QuestionType.TEXT_ENTRY),
+      QuestionType.TEXT_ENTRY,
+      QuestionType.NUMERIC,
+    );
+    expect(answersOf(back, QuestionType.NUMERIC)).toEqual(['1.5']);
+  });
+
   it('resets case sensitivity after a trip through numeric', () => {
     const toNumeric = convert(
       filledInteraction(QuestionType.TEXT_ENTRY),
