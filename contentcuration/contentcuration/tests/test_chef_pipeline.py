@@ -21,7 +21,7 @@ channel_metadata = {
 
 class EndpointNamesTestCase(BaseAPITestCase):
     """
-    Make sure the API endpoints defined in Ricecooker are the the expected ones.
+    Make sure the API endpoints defined in Ricecooker are the expected ones.
     """
 
     # checks
