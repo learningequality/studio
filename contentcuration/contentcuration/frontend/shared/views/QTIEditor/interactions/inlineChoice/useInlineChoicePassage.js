@@ -237,7 +237,7 @@ export function useInlineChoicePassage({
   const insertAction = {
     name: InlineChoiceNode.name,
     title: qtiEditorStrings.insertInlineChoice$(),
-    icon: 'add',
+    icon: 'insert',
     prominent: true,
     // Before focus, the chip goes at the end of the passage, which always takes one.
     // Replacing a multi-line selection with an inline node would join the lines.
