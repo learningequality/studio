@@ -266,6 +266,10 @@ def accepted_answers(answers: List[Dict[str, Any]]) -> List[str]:
     return accepted
 
 
+def is_answerless_input(item_type: str, answers: List[Dict[str, Any]]) -> bool:
+    return item_type == exercises.INPUT_QUESTION and not accepted_answers(answers)
+
+
 # Decimal literals Kolibri's Number() reads that extract_value does not, e.g. +3, 1E3.
 _JS_NUMBER = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?", re.ASCII)
 
