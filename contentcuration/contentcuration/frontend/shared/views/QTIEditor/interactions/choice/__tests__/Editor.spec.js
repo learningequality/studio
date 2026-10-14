@@ -433,11 +433,11 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-readonly', 'true');
       const radios = screen.getAllByRole('radio');
       radios.forEach(r => expect(r).toBeEnabled());
-      const checkedIndex = radios.findIndex(r => r.checked);
-      const uncheckedRadio = radios.find(r => !r.checked);
-      await fireEvent.click(uncheckedRadio);
-      expect(radios[checkedIndex]).toBeChecked();
-      expect(uncheckedRadio).not.toBeChecked();
+      const [mercury, venus] = radios;
+      expect(mercury).toBeChecked();
+      await fireEvent.click(venus);
+      expect(mercury).toBeChecked();
+      expect(venus).not.toBeChecked();
     });
 
     it('ignores native radio changes in view mode', async () => {
@@ -450,11 +450,11 @@ describe('ChoiceInteractionEditor', () => {
         showAnswers: true,
       });
       const radios = screen.getAllByRole('radio');
-      const checkedIndex = radios.findIndex(r => r.checked);
-      const uncheckedRadio = radios.find(r => !r.checked);
-      await fireEvent.change(uncheckedRadio);
-      expect(radios[checkedIndex]).toBeChecked();
-      expect(uncheckedRadio).not.toBeChecked();
+      const [mercury, venus] = radios;
+      expect(mercury).toBeChecked();
+      await fireEvent.change(venus);
+      expect(mercury).toBeChecked();
+      expect(venus).not.toBeChecked();
     });
 
     it('makes the correct-choice checkboxes readonly in view mode', async () => {
