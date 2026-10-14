@@ -32,6 +32,14 @@ def _perseus_input_value(answer):
     return float(number) if number else None
 
 
+def is_perseus_readable_input_item(assessment_item):
+    """Whether Perseus renders every accepted answer of a legacy input question."""
+    return all(
+        _perseus_input_value(answer) is not None
+        for answer in accepted_answers(packageable_answers(assessment_item))
+    )
+
+
 def answerless_input_ids(ccnode):
     """Input questions an exercise's Perseus archive leaves out, judged from
     stored answers, as exercise.json is written before any item is processed."""
