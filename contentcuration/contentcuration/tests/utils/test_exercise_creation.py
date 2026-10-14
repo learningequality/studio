@@ -38,6 +38,7 @@ from contentcuration.tests.utils.qti.test_perseus_derive import TOLERANCE_ITEM
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.base import resize_image
+from contentcuration.utils.assessment.perseus import answerless_input_ids
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
@@ -906,6 +907,41 @@ class TestPerseusExerciseCreation(StudioTestCase):
         image_file.save()
         zip_file = self._assert_only_perseus_item_packaged(perseus_item, answerless)
         self.assertNotIn(f"images/{image_file.filename()}", zip_file.namelist())
+
+    @mock.patch.dict(os.environ, {"BRANCH_ENVIRONMENT": ""})
+    def test_bad_checksum_image_input_answer_raises_outside_master(self):
+        perseus_item, _ = self._create_perseus_item()
+        image_only = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 2+3?",
+            [
+                {
+                    "answer": f"![]({exercises.CONTENT_STORAGE_FORMAT.format('nothex.png')})",
+                    "correct": True,
+                    "order": 1,
+                }
+            ],
+        )
+        with self.assertRaises(ValueError):
+            self._create_perseus_zip(_exercise_data([perseus_item, image_only]))
+
+    @mock.patch.dict(os.environ, {"BRANCH_ENVIRONMENT": ""})
+    def test_bad_checksum_image_input_answer_is_answerless_outside_master(self):
+        # Publish calls this on unchanged nodes too, so it must not raise.
+        image_only = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 2+3?",
+            [
+                {
+                    "answer": f"![]({exercises.CONTENT_STORAGE_FORMAT.format('nothex.png')})",
+                    "correct": True,
+                    "order": 1,
+                }
+            ],
+        )
+        self.assertEqual(
+            answerless_input_ids(self.exercise_node), {image_only.assessment_id}
+        )
 
     def test_unit_keeps_answerless_input_question(self):
         self.exercise_node.kind_id = content_kinds.TOPIC

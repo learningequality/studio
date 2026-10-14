@@ -87,6 +87,11 @@ UNSUPPORTED_QTI_ITEM = _item_xml(
 # Perseus input questions are numeric-only, so this publishes QTI only.
 STRING_ENTRY_QTI_ITEM = _text_item("single", ["cat"], base_type="string")
 
+# Publishing strips a zero-size image.
+ZERO_SIZE_IMAGE = (
+    f"![]({exercises.CONTENT_STORAGE_FORMAT.format('a' * 32 + '.png')} =0x0)"
+)
+
 
 # Larger than the signed 32-bit maximum (2_147_483_647); ~3 GB.
 LARGE_FILE_SIZE = 3 * 1024 ** 3
@@ -533,6 +538,19 @@ class ExportChannelTestCase(StudioTestCase):
             hints="[]",
             raw_data="{}",
             order=3,
+            randomize=False,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_answerless_input_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.INPUT_QUESTION,
+            question="What is 2+3?",
+            answers=json.dumps(
+                [{"answer": ZERO_SIZE_IMAGE, "correct": True, "order": 1}]
+            ),
+            hints="[]",
+            raw_data="{}",
+            order=4,
             randomize=False,
         )
 
@@ -1340,12 +1358,13 @@ class ExportChannelTestCase(StudioTestCase):
     def test_answerless_input_left_out_of_dual_published_archives(self):
         title = "Native QTI Answerless Input Exercise"
         node = cc.ContentNode.objects.get(title=title)
-        answerless_id = node.assessment_items.get(
-            type=exercises.INPUT_QUESTION, order=2
-        ).assessment_id
+        answerless_ids = node.assessment_items.filter(
+            type=exercises.INPUT_QUESTION, order__in=[2, 4]
+        ).values_list("assessment_id", flat=True)
         item_stems, exercise_data = self._read_perseus_archive(node)
         self.assertEqual(len(item_stems), 2)
-        self.assertNotIn(hex_to_qti_id(answerless_id), item_stems)
+        for answerless_id in answerless_ids:
+            self.assertNotIn(hex_to_qti_id(answerless_id), item_stems)
         self.assertEqual(set(exercise_data["all_assessment_items"]), item_stems)
 
         published_node = kolibri_models.ContentNode.objects.get(title=title)

@@ -12,6 +12,8 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
+from contentcuration.utils.assessment.base import image_filenames
+from contentcuration.utils.assessment.base import packageable_answers
 from contentcuration.utils.assessment.qti.convert import accepted_answers
 from contentcuration.utils.assessment.qti.convert import format_number
 from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
@@ -36,7 +38,7 @@ def answerless_input_ids(ccnode):
     return {
         item.assessment_id
         for item in ccnode.assessment_items.filter(type=exercises.INPUT_QUESTION)
-        if is_answerless_input(item.type, json.loads(item.answers))
+        if is_answerless_input(item.type, packageable_answers(item))
     }
 
 
@@ -84,9 +86,16 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         if self.ccnode.kind_id != content_kinds.EXERCISE:
             return set()
         answerless_ids = answerless_input_ids(self.ccnode)
-        for assessment_id in answerless_ids:
+        for item in self.ccnode.assessment_items.filter(
+            assessment_id__in=answerless_ids
+        ):
+            # Raise outside master on a bad answer image, as processing the item would.
+            for answer in json.loads(item.answers):
+                if isinstance(answer.get("answer"), str):
+                    for filename in image_filenames(answer["answer"]):
+                        self._is_valid_image_filename(filename)
             logger.warning(
-                f"Input question {assessment_id} on node {self.ccnode.pk} "
+                f"Input question {item.assessment_id} on node {self.ccnode.pk} "
                 f"has no correct answer and will be excluded from the Perseus archive"
             )
         return answerless_ids
