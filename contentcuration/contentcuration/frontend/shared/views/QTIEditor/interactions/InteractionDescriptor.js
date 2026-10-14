@@ -16,6 +16,9 @@ import { isContentNode } from '../serialization/xml';
 /**
  * Methods a subclass has to implement. `matches` and `getTypeOptions` are not listed
  * because this class provides usable defaults for them.
+ *
+ * `buildXML` and `validate` take a trailing `{ language }`: the exercise language
+ * answers are written in, for descriptors whose answers depend on it.
  */
 const REQUIRED_METHODS = [
   'getQuestionType',

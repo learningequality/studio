@@ -11,6 +11,9 @@ Edits an exercise's assessment items stored as [QTI 3](https://www.imsglobal.org
 
 `validateItem.js` `validateQtiItem` runs the same parse and validation headless, without the Vue editors.
 
+> [!IMPORTANT]
+> The editor is meant to be extractable, like `TipTapEditor`. Don't import Studio code from outside `QTIEditor/` and `TipTapEditor/` unless strictly necessary; take what it needs, such as the exercise language, as a prop.
+
 ### Layout
 - `interactions/<type>/` — one per QTI interaction:
   - `Descriptor.js` — subclass of `InteractionDescriptor`: matches the element, picks the question type, delegates to `parse.js` and `validation.js`.

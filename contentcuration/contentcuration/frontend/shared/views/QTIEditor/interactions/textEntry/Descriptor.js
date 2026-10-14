@@ -106,23 +106,26 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
   /**
    * @param {TextEntryState} state
    * @param {string} questionType
+   * @param {{ language?: string }} [options]
    * @returns {{ bodyXml: string, responseDeclarations: string[] }}
    */
-  buildXML(state, questionType) {
+  buildXML(state, questionType, options) {
     return buildTextEntryInteractionXML(
       state,
       questionType,
       this.getResponseDeclarationSchema(questionType),
+      options,
     );
   }
 
   /**
    * @param {TextEntryState} state
    * @param {string} questionType
+   * @param {{ language?: string }} [options]
    * @returns {Array<{ code: string, id?: string }>}
    */
-  validate(state, questionType) {
-    return validateTextEntryInteraction(state, questionType);
+  validate(state, questionType, options) {
+    return validateTextEntryInteraction(state, questionType, options);
   }
 }
 
