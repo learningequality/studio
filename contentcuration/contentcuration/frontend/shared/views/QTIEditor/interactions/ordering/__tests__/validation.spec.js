@@ -157,5 +157,19 @@ describe('validateOrderingInteraction()', () => {
         ValidationError.DUPLICATE_CHOICE_CONTENT,
       );
     });
+
+    it.each([
+      ['a formula', '<span data-latex="x^2"></span>', '<span data-latex="y^3"></span>'],
+      ['an image', '<img src="abc123.png"/>', '<img src="def456.png"/>'],
+      ['a script', '<sup>2</sup>', '<sub>2</sub>'],
+    ])('does not flag items with the same text but %s that differs', (_, first, second) => {
+      const state = makeState({
+        items: [
+          makeItem({ id: 'a', content: `<p>Solve ${first} for x</p>` }),
+          makeItem({ id: 'b', content: `<p>Solve ${second} for x</p>` }),
+        ],
+      });
+      expect(validateOrderingInteraction(state)).toEqual([]);
+    });
   });
 });

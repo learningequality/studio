@@ -1,6 +1,6 @@
 import { validateMatchInteraction as validate } from '../validation';
 import { ValidationError } from '../../../constants';
-import { richTextComparisonKey } from '../../../utils/richText';
+import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 const row = (index, content, matches) => ({ id: `row_${index}`, content, matches });
 const answer = (id, content) => ({ id, content });

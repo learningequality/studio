@@ -1,5 +1,6 @@
 import { validateAssociateInteraction } from '../validation';
 import { ValidationError } from '../../../constants';
+import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 function makeState(overrides = {}) {
   return {
@@ -136,7 +137,7 @@ describe('validateAssociateInteraction()', () => {
       const errors = validateAssociateInteraction(state);
       expect(errors).toContainEqual({
         code: ValidationError.DUPLICATE_DISTRACTOR_CONTENT,
-        text: 'Lysander',
+        text: richTextComparisonKey('Lysander'),
       });
       expect(
         errors.filter(e => e.code === ValidationError.DUPLICATE_DISTRACTOR_CONTENT),
@@ -147,7 +148,7 @@ describe('validateAssociateInteraction()', () => {
       const state = makeState({ distractors: [{ id: 'choice_eee55555', content: 'Antonio' }] });
       expect(validateAssociateInteraction(state)).toContainEqual({
         code: ValidationError.DUPLICATE_DISTRACTOR_CONTENT,
-        text: 'Antonio',
+        text: richTextComparisonKey('Antonio'),
       });
     });
 

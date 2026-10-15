@@ -2,9 +2,10 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { hasRichTextContent, richTextComparisonKey } from '../../utils/richText';
+import { hasRichTextContent } from '../../utils/richText';
 import { RESPONSE_IDENTIFIER } from '../../constants';
 import { _extractCorrectPairIds, newChoice } from '../associate/parse';
+import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 const serializer = new XMLSerializer();
 
