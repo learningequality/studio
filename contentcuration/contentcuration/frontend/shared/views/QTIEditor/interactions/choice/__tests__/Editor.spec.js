@@ -450,6 +450,106 @@ describe('ChoiceInteractionEditor', () => {
     });
   });
 
+  describe('single choice warning', () => {
+    const SINGLE_OPTION_XML = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Check the box to confirm.</qti-prompt>
+      <qti-simple-choice identifier="a">I confirm</qti-simple-choice>
+    </qti-choice-interaction>`;
+    const singleOptionDecl =
+      cardinality => `<qti-response-declaration identifier="RESPONSE" cardinality="${cardinality}" base-type="identifier">
+      <qti-correct-response><qti-value>a</qti-value></qti-correct-response>
+    </qti-response-declaration>`;
+    const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+    afterEach(() => {
+      if (jest.isMockFunction(document.hasFocus)) {
+        document.hasFocus.mockRestore();
+      }
+    });
+
+    it.each([
+      [QuestionType.SINGLE_SELECT, 'single'],
+      [QuestionType.MULTI_SELECT, 'multiple'],
+    ])(
+      'warns without reporting an error when a %s question has only one choice',
+      async (questionType, cardinality) => {
+        renderEditor({
+          interaction: blockWithDecl(SINGLE_OPTION_XML, singleOptionDecl(cardinality)),
+          questionType,
+        });
+        expect(screen.getByText(tr.$tr('warningSingleChoice'))).toBeInTheDocument();
+        expect(sendPoliteMessage).toHaveBeenCalledWith(tr.$tr('warningSingleChoice'));
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      },
+    );
+
+    it('warns once deleting choices leaves only one', async () => {
+      renderEditor({
+        interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      const deleteButtons = () =>
+        screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') });
+      // Delete Venus and Earth, keeping Mercury, the correct choice.
+      await fireEvent.click(deleteButtons()[2]);
+      const lastDeleteButton = deleteButtons()[1];
+      // Browsers fire focusout when the focused Delete button's row is removed, and keep the
+      // document focused; jsdom does neither.
+      jest.spyOn(document, 'hasFocus').mockReturnValue(true);
+      await fireEvent.focusOut(lastDeleteButton);
+      await fireEvent.click(lastDeleteButton);
+      expect(screen.getByText(tr.$tr('warningSingleChoice'))).toBeInTheDocument();
+      // Drag-sort reacts to that focusout a frame later; it must not talk over the warning.
+      await nextFrame();
+      expect(sendPoliteMessage).toHaveBeenLastCalledWith(tr.$tr('warningSingleChoice'));
+    });
+
+    it('announces the warning when it replaces the last error', async () => {
+      renderEditor({
+        interaction: block(SINGLE_OPTION_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      expect(screen.getByText(tr.errorNoCorrectAnswer$())).toBeInTheDocument();
+      await fireEvent.click(screen.getByRole('checkbox', { name: tr.$tr('markCorrectLabel') }));
+      expect(screen.getByText(tr.$tr('warningSingleChoice'))).toBeInTheDocument();
+      expect(sendPoliteMessage).toHaveBeenCalledWith(tr.$tr('warningSingleChoice'));
+    });
+
+    it('does not warn when a valid question has several choices', async () => {
+      renderEditor({
+        interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.queryByText(tr.$tr('warningSingleChoice'))).not.toBeInTheDocument();
+      expect(sendPoliteMessage).not.toHaveBeenCalledWith(tr.$tr('warningSingleChoice'));
+    });
+
+    it('does not warn while the question has validation errors', async () => {
+      const xml = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+        <qti-simple-choice identifier="a"></qti-simple-choice>
+      </qti-choice-interaction>`;
+      renderEditor({
+        interaction: block(xml),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
+      expect(screen.queryByText(tr.$tr('warningSingleChoice'))).not.toBeInTheDocument();
+      expect(sendPoliteMessage).not.toHaveBeenCalledWith(tr.$tr('warningSingleChoice'));
+    });
+
+    it('does not warn in view mode', async () => {
+      renderEditor({
+        interaction: blockWithDecl(SINGLE_OPTION_XML, singleOptionDecl('single')),
+        questionType: QuestionType.SINGLE_SELECT,
+        mode: 'view',
+        showAnswers: true,
+      });
+      expect(screen.queryByText(tr.$tr('warningSingleChoice'))).not.toBeInTheDocument();
+      expect(sendPoliteMessage).not.toHaveBeenCalledWith(tr.$tr('warningSingleChoice'));
+    });
+  });
+
   describe('validation', () => {
     it('reports what is missing as soon as it renders', () => {
       // Validation is not debounced, so errors describe the state on screen from the start:

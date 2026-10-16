@@ -40,6 +40,16 @@ describe('validate()', () => {
     expect(validate(state, QuestionType.MULTI_SELECT)).toEqual([]);
   });
 
+  it.each([QuestionType.SINGLE_SELECT, QuestionType.MULTI_SELECT])(
+    'returns an empty array for a %s state with a single correct choice',
+    questionType => {
+      const state = makeState({
+        choices: [makeAnswer({ id: 'a', content: 'I confirm', correct: true })],
+      });
+      expect(validate(state, questionType)).toEqual([]);
+    },
+  );
+
   describe('PROMPT_REQUIRED', () => {
     it('returns error when prompt is an empty string', () => {
       expect(errorCodes(validate(makeState({ prompt: '' }), QuestionType.SINGLE_SELECT))).toContain(

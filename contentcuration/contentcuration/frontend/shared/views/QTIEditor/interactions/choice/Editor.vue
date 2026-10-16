@@ -66,6 +66,14 @@
       <ValidationMessage v-if="tooManyCorrectError">
         {{ errorTooManyCorrectAnswers$() }}
       </ValidationMessage>
+      <!-- Keyed so Vue mounts a new instance (which announces) instead of reusing an error's -->
+      <ValidationMessage
+        v-if="singleChoiceWarning"
+        key="single-choice-warning"
+        warning
+      >
+        {{ warningSingleChoice$() }}
+      </ValidationMessage>
       <h4
         :id="answersHeaderId"
         class="answers-header field-label"
@@ -302,6 +310,7 @@
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
+        warningSingleChoice$,
         questionLabel$,
         answersLabel$,
         answersDescriptionSingleChoice$,
@@ -438,6 +447,12 @@
           errors.value.length > 0 &&
           errorCodes.value.includes(ValidationError.TOO_MANY_CORRECT_ANSWERS),
       );
+      // Not a validation error: a single choice is unusual but valid (e.g. a confirmation).
+      const singleChoiceWarning = computed(
+        () =>
+          props.mode === 'edit' && errors.value.length === 0 && state.value.choices.length === 1,
+      );
+
       function onToggleCorrect(id) {
         toggleCorrectChoice(id);
       }
@@ -539,6 +554,7 @@
         questionHasError,
         noCorrectAnswerError,
         tooManyCorrectError,
+        singleChoiceWarning,
         emptyChoiceIds,
         duplicateChoiceIds,
         choiceHasError,
@@ -567,6 +583,7 @@
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
+        warningSingleChoice$,
         questionLabel$,
         editQuestionLabel$,
         editAnswerOptionLabel$,
