@@ -1,55 +1,130 @@
-import { mount } from '@vue/test-utils';
+import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import CountryField from '../CountryField.vue';
 
-function makeWrapper() {
-  return mount(CountryField, {
-    propsData: {
-      required: true,
-    },
-  });
+function renderComponent(props = {}) {
+  return render(CountryField, { props, routes: new VueRouter() });
 }
 
-function runValidation(wrapper, value) {
-  return wrapper.vm.rules.every(rule => rule(value) === true);
+// Tabbing straight out of an open dropdown moves focus into its listbox,
+// so close it first to actually leave the field.
+async function leaveField() {
+  await userEvent.click(screen.getByRole('combobox'));
+  await userEvent.keyboard('{Escape}');
+  await userEvent.tab();
 }
 
-describe('countryField', () => {
-  let wrapper;
-  beforeEach(() => {
-    wrapper = makeWrapper();
-  });
-  it('should validate if no selections are made', () => {
-    expect(runValidation(wrapper, [])).toBe(false);
-    expect(runValidation(wrapper, ['item'])).toBe(true);
-  });
+function lastInput(emitted) {
+  const events = emitted().input;
+  return events[events.length - 1][0];
+}
 
-  it('in multiple selection mode, search input is cleared after selection', async () => {
-    await wrapper.setProps({ multiple: true });
-
-    const autocomplete = wrapper.findComponent({ name: 'VAutocomplete' });
-    wrapper.vm.searchInput = 'Czech';
-
-    // Handling selection change uses `setTimeout` so we need to fake the timer
-    jest.useFakeTimers();
-    autocomplete.vm.$emit('input', ['Czech Republic']);
-    jest.runAllTimers();
-    jest.useRealTimers();
-
-    expect(wrapper.vm.searchInput).toBe('');
+describe('CountryField', () => {
+  it('renders the default label', () => {
+    renderComponent();
+    expect(screen.getByRole('combobox', { name: 'Select all that apply' })).toBeInTheDocument();
   });
 
-  it('in single selection mode, search input is not cleared after selection', async () => {
-    await wrapper.setProps({ multiple: false });
+  it('renders a custom label', () => {
+    renderComponent({ label: 'Target location' });
+    expect(screen.getByRole('combobox', { name: 'Target location' })).toBeInTheDocument();
+  });
 
-    const autocomplete = wrapper.findComponent({ name: 'VAutocomplete' });
-    wrapper.vm.searchInput = 'Czech';
+  describe('in multiple selection mode', () => {
+    it('emits the selected countries as an array of English names', async () => {
+      const { emitted } = renderComponent({ value: ['Kenya'] });
 
-    // Handling selection change uses `setTimeout` so we need to fake the timer
-    jest.useFakeTimers();
-    autocomplete.vm.$emit('input', 'Czech Republic');
-    jest.runAllTimers();
-    jest.useRealTimers();
+      await userEvent.type(screen.getByRole('combobox'), 'Czech');
+      await userEvent.click(await screen.findByRole('option', { name: 'Czech Republic' }));
 
-    expect(wrapper.vm.searchInput).not.toBe('');
+      expect(lastInput(emitted)).toEqual(['Kenya', 'Czech Republic']);
+    });
+
+    it('clears the search text after a selection', async () => {
+      renderComponent();
+
+      const input = screen.getByRole('combobox');
+      await userEvent.type(input, 'Czech');
+      await userEvent.click(await screen.findByRole('option', { name: 'Czech Republic' }));
+
+      expect(input).toHaveValue('');
+    });
+  });
+
+  describe('in single selection mode', () => {
+    it('emits the selected country as an English name', async () => {
+      const { emitted } = renderComponent({ multiple: false });
+
+      await userEvent.type(screen.getByRole('combobox'), 'Czech');
+      await userEvent.click(await screen.findByRole('option', { name: 'Czech Republic' }));
+
+      expect(lastInput(emitted)).toBe('Czech Republic');
+    });
+
+    it('shows the selected country in the input', () => {
+      renderComponent({ multiple: false, value: 'Kenya' });
+      expect(screen.getByRole('combobox')).toHaveValue('Kenya');
+    });
+
+    it('renders with no selection when no value is given', () => {
+      renderComponent({ multiple: false });
+      expect(screen.getByRole('combobox')).toHaveValue('');
+    });
+  });
+
+  describe('with a non-English interface language', () => {
+    beforeEach(() => {
+      window.languageCode = 'es';
+    });
+
+    afterEach(() => {
+      delete window.languageCode;
+    });
+
+    it('shows translated country names but emits English names', async () => {
+      const { emitted } = renderComponent();
+
+      await userEvent.type(screen.getByRole('combobox'), 'Alemania');
+      await userEvent.click(await screen.findByRole('option', { name: 'Alemania' }));
+
+      expect(lastInput(emitted)).toEqual(['Germany']);
+    });
+  });
+
+  it('shows a message when no country matches the search', async () => {
+    renderComponent();
+
+    await userEvent.type(screen.getByRole('combobox'), 'zzzzz');
+
+    expect(await screen.findByText('No countries found')).toBeInTheDocument();
+  });
+
+  it('disables the input when disabled', () => {
+    renderComponent({ disabled: true });
+    expect(screen.getByRole('combobox')).toBeDisabled();
+  });
+
+  describe('when required', () => {
+    it('shows an error after leaving the field empty', async () => {
+      renderComponent({ required: true });
+
+      await leaveField();
+
+      expect(await screen.findByText('Field is required')).toBeInTheDocument();
+    });
+
+    it('does not show an error before the field is touched', () => {
+      renderComponent({ required: true });
+      expect(screen.queryByText('Field is required')).not.toBeInTheDocument();
+    });
+
+    it('does not show an error when a country is selected', async () => {
+      renderComponent({ required: true, value: ['Kenya'] });
+
+      await leaveField();
+
+      expect(screen.queryByText('Field is required')).not.toBeInTheDocument();
+    });
   });
 });

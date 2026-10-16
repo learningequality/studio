@@ -1,56 +1,43 @@
 <template>
 
-  <DropdownWrapper>
-    <template #default="{ attach, menuProps }">
-      <VAutocomplete
-        v-model="locations"
-        :items="options"
-        :label="label || $tr('locationLabel')"
-        :multiple="multiple"
-        :box="box"
-        item-value="id"
-        item-text="name"
-        :required="required"
-        :rules="rules"
-        :search-input.sync="searchInput"
-        :no-data-text="$tr('noCountriesFound')"
-        :chips="multiple"
-        :attach="attach"
-        :menuProps="menuProps"
-        clearable
-        v-bind="$attrs"
-      />
-    </template>
-  </DropdownWrapper>
+  <KMultiSelect
+    v-model="locations"
+    :options="options"
+    :label="label || $tr('locationLabel')"
+    :multiple="multiple"
+    itemValue="id"
+    itemText="name"
+    :disabled="disabled"
+    :invalid="invalid"
+    :invalidText="$tr('locationRequiredMessage')"
+    :noResultsText="$tr('noCountriesFound')"
+    :appearanceOverrides="{ maxWidth: fullWidth ? '100%' : '500px' }"
+    :messages="messages"
+    clearable
+    @blur="touched = true"
+  />
 
 </template>
 
 
 <script>
 
+  import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import countries from '../../utils/countries';
-
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { commonStrings } from 'shared/strings/commonStrings';
+  import { createMultiSelectMessages } from 'shared/utils/multiSelectMessages';
 
   export default {
     name: 'CountryField',
-    components: { DropdownWrapper },
-    // $attrs are rebound to a descendent component
-    inheritAttrs: false,
+    components: { KMultiSelect },
     props: {
       value: {
         type: [String, Array],
-        default() {
-          return [];
-        },
+        default: null,
       },
       required: {
         type: Boolean,
         default: false,
-      },
-      box: {
-        type: Boolean,
-        default: true,
       },
       multiple: {
         type: Boolean,
@@ -65,26 +52,27 @@
         type: Boolean,
         default: false,
       },
+      disabled: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
-        searchInput: '',
+        touched: false,
       };
     },
     computed: {
       locations: {
         get() {
-          return this.value;
+          // KMultiSelect expects an array in multiple mode and a string or null in single mode
+          if (this.multiple) {
+            return this.value || [];
+          }
+          return this.value || null;
         },
         set(value) {
           this.$emit('input', value);
-
-          // If selecting multiple countries, a chip is created for the selected item,
-          // so the input can be cleared. If selecting a single country, the search input
-          // becomes the selected country and should not be cleared to stay visible.
-          if (this.multiple) {
-            setTimeout(this.searchInputClear, 1);
-          }
         },
       },
       options() {
@@ -97,16 +85,26 @@
           };
         });
       },
-      rules() {
-        return [v => (!this.required || v.length ? true : this.$tr('locationRequiredMessage'))];
+      invalid() {
+        const hasSelection = this.multiple ? this.locations.length > 0 : Boolean(this.locations);
+        return this.required && this.touched && !hasSelection;
       },
-      autocompleteMaxWidth() {
-        return this.fullWidth ? '100%' : '500px';
-      },
-    },
-    methods: {
-      searchInputClear() {
-        this.searchInput = '';
+      messages() {
+        const {
+          clearAction$,
+          optionRemovedLabel$,
+          countryItemsSelectedLabel$,
+          countrySelectionsClearedLabel$,
+        } = commonStrings;
+        return createMultiSelectMessages({
+          clearText: clearAction$,
+          itemsSelected: countryItemsSelectedLabel$,
+          // KMultiSelect passes a label in single mode and a count in multiple mode
+          cleared: ({ label, count }) =>
+            this.multiple
+              ? countrySelectionsClearedLabel$({ count })
+              : optionRemovedLabel$({ label }),
+        });
       },
     },
     $trs: {
@@ -117,17 +115,3 @@
   };
 
 </script>
-
-
-<style lang="scss" scoped>
-
-  ::v-deep .v-select__selections {
-    width: calc(100% - 48px); // Account for clear icon
-    min-height: 0 !important;
-  }
-
-  .v-autocomplete {
-    max-width: v-bind('autocompleteMaxWidth');
-  }
-
-</style>
