@@ -276,3 +276,59 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
       'Fallback error message shown when accepting or declining an organization invitation fails',
   },
 });
+
+export const migrationTableStrings = createTranslator('MigrationTable', {
+  title: { message: 'Contested migrations', context: 'Administration migration table heading' },
+  count: {
+    message:
+      '{count, number} {count, plural, one {contested migration} other {contested migrations}}',
+    context: 'Number of pending migration requests',
+  },
+  channel: { message: 'Channel', context: 'Migration table column' },
+  organization: { message: 'Organization', context: 'Migration table column' },
+  user: { message: 'Requestor', context: 'Migration table column' },
+  options: { message: 'Options', context: 'Migration actions menu' },
+  accept: { message: 'Accept', context: 'Approve channel migration' },
+  decline: { message: 'Decline', context: 'Reject channel migration' },
+  accepted: {
+    message: 'Migration for {channel} accepted.',
+    context: 'Confirmation after approving a channel migration',
+  },
+  declined: {
+    message: 'Migration for {channel} declined.',
+    context: 'Confirmation after rejecting a channel migration',
+  },
+  empty: { message: 'No contested migrations', context: 'Empty migration table' },
+  error: {
+    message: 'Unable to load or resolve migrations. Please try again.',
+    context: 'Migration API request failed',
+  },
+  retry: { message: 'Retry', context: 'Reload migration table' },
+});
+
+export const channelOrganizationStrings = createTranslator('ChannelOrganization', {
+  label: { message: 'Channel organization', context: 'Organization selector label' },
+  select: { message: 'Select an organization', context: 'Organization selector placeholder' },
+  pending: {
+    message: 'Migration to {organization} is awaiting review.',
+    context: 'Pending channel migration notice',
+  },
+  declined: {
+    message: 'Migration request declined.',
+    context: 'Migration cancellation confirmation',
+  },
+  saved: { message: 'Channel organization saved.', context: 'Organization save confirmation' },
+  contested: {
+    message:
+      'Migration cannot be done automatically. Create a ticket with website administrators below.',
+    context: 'Contested channel migration notice',
+  },
+  createTicket: { message: 'Create ticket', context: 'Request a channel migration' },
+  decline: { message: 'Decline', context: 'Cancel a channel migration request' },
+  save: { message: 'Save organization', context: 'Save organization from administration' },
+  error: {
+    message: 'Unable to update the organization. Please try again.',
+    context: 'Organization request failed',
+  },
+  retry: { message: 'Retry', context: 'Reload organization choices' },
+});

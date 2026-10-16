@@ -1,4 +1,5 @@
 import VueRouter from 'vue-router';
+import MigrationTable from './pages/Migrations/MigrationTable.vue';
 import { RouteNames } from './constants';
 import ChannelTable from './pages/Channels/ChannelTable';
 import ChannelDetails from './pages/Channels/ChannelDetails';
@@ -8,6 +9,7 @@ import SubmissionDetailsModal from 'shared/views/communityLibrary/SubmissionDeta
 
 const router = new VueRouter({
   routes: [
+    { name: RouteNames.MIGRATIONS, path: '/migrations/', component: MigrationTable },
     {
       name: RouteNames.CHANNELS,
       path: '/channels/',

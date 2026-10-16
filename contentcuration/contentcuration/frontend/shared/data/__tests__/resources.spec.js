@@ -1,5 +1,5 @@
 import { UpdatedDescendantsChange } from '../changes';
-import { ViewerM2M, ChannelUser, Channel, ContentNode } from '../resources';
+import { ViewerM2M, ChannelUser, Channel, ContentNode, Invitation } from '../resources';
 import db from 'shared/data/db';
 import { CHANGE_TYPES, TABLE_NAMES } from 'shared/data/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -220,5 +220,35 @@ describe('Resources', () => {
         );
       });
     });
+  });
+});
+
+describe('Organization migration resources', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('uses the generated channel action URL for eligibility checks', async () => {
+    const get = jest.spyOn(client, 'get').mockResolvedValue({ data: { uncontested: true } });
+    const url = jest
+      .spyOn(Channel, 'getUrlFunction')
+      .mockReturnValue(() => '/api/channel/c/organization_migration');
+    expect(await Channel.checkOrganizationMigration('c', 'org')).toEqual({ uncontested: true });
+    expect(url).toHaveBeenCalledWith('organization_migration');
+    expect(get).toHaveBeenCalledWith('/api/channel/c/organization_migration', {
+      params: { organization: 'org' },
+    });
+  });
+
+  it('does not expose cached migration requests as sharing invitations', async () => {
+    await Invitation.transaction({ mode: 'rw' }, () =>
+      Invitation.table.bulkPut([
+        { id: 'migration', channel: 'migration-channel', organization: 'org' },
+        { id: 'sharing', channel: 'migration-channel', email: 'editor@example.com' },
+      ]),
+    );
+    const invitations = await Invitation.where({ channel: 'migration-channel' }, false);
+    expect(invitations.map(item => item.id)).toEqual(['sharing']);
+    await Invitation.transaction({ mode: 'rw' }, () =>
+      Invitation.table.bulkDelete(['migration', 'sharing']),
+    );
   });
 });
