@@ -2479,11 +2479,6 @@ video {
 [aria-disabled] {
   cursor: default;
 }
-::selection {
-  color: #000000;
-  text-shadow: none;
-  background-color: #b3d4fc;
-}
 .bottom-sheet-transition-enter,
 .bottom-sheet-transition-leave-to {
   -webkit-transform: translateY(100%);

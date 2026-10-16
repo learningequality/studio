@@ -128,14 +128,6 @@ describe('InlineChoiceNode', () => {
       expect(findChip(editor, 'r1').node.attrs.correctId).toBeNull();
     });
 
-    it('keeps a selected chip selected', async () => {
-      const { editor } = await renderPassage({ value: `<p>a${chip('r1', [['c1', 'x']])}b</p>` });
-      const { pos } = findChip(editor, 'r1');
-      editor.commands.setNodeSelection(pos);
-      editor.commands.updateInlineChoice('r1', { options: [{ id: 'c1', text: 'y' }] });
-      expect(editor.state.selection.toJSON()).toEqual({ type: 'node', anchor: pos });
-    });
-
     it('gives an added option with no id a fresh one, keeping the other ids', async () => {
       const { editor } = await renderPassage({ value });
       editor.commands.updateInlineChoice('r1', {

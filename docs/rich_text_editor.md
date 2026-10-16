@@ -98,6 +98,11 @@ The context is re-evaluated on every transaction; no listener is needed. The edi
 - Use an extension's `transformPasted`: it runs after parsing and receives a `Slice`.
 - An extension's `transformPastedHTML` runs after the editor's own (`useEditor.js` `editorProps`), on HTML `utils/pasteTransform.js` has already cleaned: `<img>` and Office `w:`/`m:`/`o:`/`v:` tags are gone.
 
+### Popups outside the editor
+- A click outside the editor closes it, except while a popup it opened is open: the click is then on the popup, or dismisses it.
+- The editor knows a popup is open from its trigger: any element inside the editor with `aria-haspopup` and `aria-expanded="true"`. KDS's `KDropdownMenu` sets both on its trigger.
+- A node view whose button opens a panel rendered beside the editor sets both on that button for as long as the panel is open, and the editor stays open while the panel is used. The inline choice chip does this for its options panel.
+
 ### Node views reading consumer state
 - ProseMirror mounts node views outside the Vue render tree: no slots, no `$emit` listener.
 - tiptap mounts them with `parent: editor.contentComponent`, so `inject` reaches whatever an ancestor of `TipTapEditor` provides.

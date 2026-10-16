@@ -2,7 +2,7 @@
 /* eslint-disable import/no-unresolved */
 import { isHistoryTransaction } from '@tiptap/pm/history';
 import { Fragment, Slice } from '@tiptap/pm/model';
-import { NodeSelection, Plugin } from '@tiptap/pm/state';
+import { Plugin } from '@tiptap/pm/state';
 /* eslint-enable import/no-unresolved */
 import {
   Node,
@@ -18,7 +18,7 @@ import { CORRECT_ATTR, DROPDOWN, OPTION, readDropdown } from './parse';
 
 const NODE_NAME = 'inlineChoice';
 
-const isChip = node => node.type.name === NODE_NAME;
+export const isChip = node => node.type.name === NODE_NAME;
 
 export const findChip = (doc, responseIdentifier) =>
   findChildren(
@@ -70,6 +70,24 @@ function trimmedRange({ doc, selection }) {
   return { from, to };
 }
 
+/**
+ * Backspace and Delete next to a chip remove it, as one step of history. ProseMirror leaves
+ * these keys to the browser beside an inline node that cannot be selected, and browsers differ
+ * on what they do beside an uneditable element.
+ */
+function deleteChip(view, event) {
+  const { state } = view;
+  const { selection } = state;
+  if (!selection.empty || event.altKey || event.ctrlKey || event.metaKey) return false;
+  const { $head } = selection;
+  const backward = event.key === 'Backspace';
+  const next = backward ? $head.nodeBefore : $head.nodeAfter;
+  if (!next || !isChip(next)) return false;
+  const from = backward ? $head.pos - next.nodeSize : $head.pos;
+  view.dispatch(state.tr.delete(from, from + next.nodeSize).scrollIntoView());
+  return true;
+}
+
 function reidentify(fragment, taken) {
   const children = [];
   fragment.forEach(child => {
@@ -91,6 +109,9 @@ export const InlineChoiceNode = Node.create({
   group: 'inline',
   inline: true,
   atom: true,
+  // The caret moves past a chip rather than selecting it: a chip is not a place to type, and its
+  // own button is how the keyboard reaches its options.
+  selectable: false,
 
   addAttributes() {
     return {
@@ -157,12 +178,8 @@ export const InlineChoiceNode = Node.create({
           }
           if (correctId !== undefined) attrs.correctId = correctId;
           if (!attrs.options.some(option => option.id === attrs.correctId)) attrs.correctId = null;
-          if (dispatch) {
-            const wasSelected = tr.selection.node && tr.selection.from === found.pos;
-            // Replaces the chip, so history groups quick successive edits as it does typing.
-            tr.setNodeMarkup(found.pos, undefined, attrs);
-            if (wasSelected) tr.setSelection(NodeSelection.create(tr.doc, found.pos));
-          }
+          // Replaces the chip, so history groups quick successive edits as it does typing.
+          if (dispatch) tr.setNodeMarkup(found.pos, undefined, attrs);
           return true;
         },
     };
@@ -176,6 +193,9 @@ export const InlineChoiceNode = Node.create({
     return [
       new Plugin({
         props: {
+          handleKeyDown(view, event) {
+            return ['Backspace', 'Delete'].includes(event.key) && deleteChip(view, event);
+          },
           // A copy must not share ids with the original; a cut-paste has already removed them.
           transformPasted(slice, view) {
             // Whether a drag moves or copies is only known at drop; see `appendTransaction`.
@@ -186,8 +206,9 @@ export const InlineChoiceNode = Node.create({
             return new Slice(reidentify(slice.content, taken), slice.openStart, slice.openEnd);
           },
         },
-        // Catches inserts `transformPasted` does not see, such as a drop. An inserted chip whose
-        // ids are still in use elsewhere was copied, not moved.
+        // Catches inserts `transformPasted` does not see, such as a drop, or the toolbar's Paste,
+        // which inserts through `insertContent`. An inserted chip whose ids are still in use
+        // elsewhere was copied, not moved.
         appendTransaction(transactions, oldState, newState) {
           // Undo and redo only restore states this plugin already accepted.
           if (transactions.every(isHistoryTransaction)) return null;

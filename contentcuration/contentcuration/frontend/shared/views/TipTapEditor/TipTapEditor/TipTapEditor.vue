@@ -95,7 +95,7 @@
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
-  import { resolveImageSrcs, toStoredImageSrcs } from './utils/imageSrc';
+  import { resolveImageSrcs, storedHTML } from './utils/imageSrc';
   import { toInlineHTML } from './utils/inlineContent';
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
@@ -167,7 +167,7 @@
         // Image srcs are resolved for display on the way in, so they are reduced
         // back to their stored form here — leaving this the one place that reads
         // content out, whichever form the editor happens to be holding.
-        if (isHTML.value) return toStoredImageSrcs(editor.value.getHTML());
+        if (isHTML.value) return storedHTML(editor.value);
         if (!editor.value.storage?.markdown) return '';
         return editor.value.storage.markdown.getMarkdown();
       };
