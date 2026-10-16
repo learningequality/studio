@@ -71,6 +71,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapGetters, mapActions } from 'vuex';
   import { LanguagesList } from 'shared/leUtils/Languages';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -78,6 +80,10 @@
 
   export default {
     name: 'EditLanguageModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeIds: {
         type: Array,
@@ -177,12 +183,14 @@
             });
           }),
         );
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        this.showSnackbarSimple(commonStrings.$tr('changesSaved'));
+        this.createSnackbar({
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          text: commonStrings.$tr('changesSaved'),
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         this.close(this.changed);
-      },
-      showSnackbarSimple(message) {
-        return this.$store.dispatch('showSnackbarSimple', message);
       },
     },
     $trs: {

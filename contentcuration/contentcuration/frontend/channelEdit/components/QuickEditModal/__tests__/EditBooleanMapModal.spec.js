@@ -7,6 +7,14 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { Categories } from 'shared/constants';
 import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 let nodes;
 
 let store;
@@ -101,9 +109,7 @@ describe('EditBooleanMapModal', () => {
       updateContentNode: jest.fn(),
       updateContentNodeDescendants: jest.fn(),
     };
-    generalActions = {
-      showSnackbarSimple: jest.fn(),
-    };
+    generalActions = {};
     store = new Store({
       actions: generalActions,
       modules: {
@@ -241,7 +247,7 @@ describe('EditBooleanMapModal', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
       await wrapper.vm.handleSave();
-      expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
+      expect(mockCreateSnackbar).toHaveBeenCalled();
     });
   });
 

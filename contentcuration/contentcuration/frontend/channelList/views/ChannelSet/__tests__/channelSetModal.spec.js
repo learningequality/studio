@@ -59,7 +59,6 @@ const mockActions = {
   deleteChannelSet: jest.fn(() => Promise.resolve()),
   addChannels: jest.fn(() => Promise.resolve()),
   removeChannels: jest.fn(() => Promise.resolve()),
-  showSnackbarSimple: jest.fn(() => Promise.resolve()),
 };
 
 const makeStore = ({
@@ -129,9 +128,6 @@ const makeStore = ({
           removeChannels: mockActions.removeChannels,
         },
       },
-    },
-    actions: {
-      showSnackbarSimple: mockActions.showSnackbarSimple,
     },
   });
 };

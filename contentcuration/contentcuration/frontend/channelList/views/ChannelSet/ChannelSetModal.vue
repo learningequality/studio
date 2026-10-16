@@ -191,6 +191,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { set } from 'vue';
   import { mapGetters, mapActions } from 'vuex';
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
@@ -224,8 +226,9 @@
     },
     mixins: [formMixin, constantsTranslationMixin, routerMixin],
     setup() {
+      const { createSnackbar } = useKSnackbar();
       const { show } = useKShow();
-      return { show };
+      return { show, createSnackbar };
     },
     props: {
       channelSetId: {
@@ -273,7 +276,12 @@
             channels.length > this.channels.length
               ? this.$tr('channelAdded')
               : this.$tr('channelRemoved');
-          this.$store.dispatch('showSnackbarSimple', snackbar);
+          this.createSnackbar({
+            text: snackbar,
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
           this.setChannelSet({ channels });
         },
       },

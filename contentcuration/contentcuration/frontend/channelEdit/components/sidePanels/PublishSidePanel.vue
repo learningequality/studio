@@ -151,6 +151,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { ref, computed, getCurrentInstance } from 'vue';
   import ChannelVersionHistory from './ChannelVersionHistory.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
@@ -169,6 +171,7 @@
       ChannelVersionHistory,
     },
     setup(props, { emit }) {
+      const { createSnackbar } = useKSnackbar();
       const PublishModes = {
         LIVE: 'live',
         DRAFT: 'draft',
@@ -362,7 +365,12 @@
             await Channel.publishDraft(currentChannel.value.id, {
               use_staging_tree: false,
             });
-            store.dispatch('showSnackbarSimple', draftBeingPublishedNotice$());
+            createSnackbar({
+              text: draftBeingPublishedNotice$(),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
             emit('close');
           } else {
             // `newChannelLanguage.value` is a KSelect option { value, label }, so we need to

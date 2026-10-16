@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import { mount } from '@vue/test-utils';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { factory } from '../../../store';
 import router from '../../../router';
 
@@ -137,6 +138,9 @@ const testData = {
 };
 
 describe('ReviewSubmissionSidePanel', () => {
+  beforeEach(() => {
+    useKSnackbar().clearSnackbar();
+  });
   it('submission data is prefilled', async () => {
     const { channel, submission } = testData.flagged;
     const wrapper = await makeWrapper({ channel, latestSubmission: submission });
@@ -349,7 +353,7 @@ describe('ReviewSubmissionSidePanel', () => {
       const confirmButton = wrapper.findComponent({ ref: 'confirmButtonRef' });
       await confirmButton.trigger('click');
 
-      expect(store.getters['snackbarIsVisible']).toBe(true);
+      expect(useKSnackbar().snackbarIsVisible.value).toBe(true);
       expect(AdminCommunityLibrarySubmission.resolve).not.toHaveBeenCalled();
     });
 
@@ -390,7 +394,7 @@ describe('ReviewSubmissionSidePanel', () => {
           jest.runAllTimers();
           await wrapper.vm.$nextTick();
 
-          expect(store.getters['snackbarOptions'].text).toBe('Submission approved');
+          expect(useKSnackbar().snackbarOptions.value.text).toBe('Submission approved');
           store.replaceState(origStoreState);
         });
 
@@ -481,7 +485,7 @@ describe('ReviewSubmissionSidePanel', () => {
           jest.runAllTimers();
           await wrapper.vm.$nextTick();
 
-          expect(store.getters['snackbarOptions'].text).toBe('Submission flagged for review');
+          expect(useKSnackbar().snackbarOptions.value.text).toBe('Submission flagged for review');
           store.replaceState(origStoreState);
         });
 

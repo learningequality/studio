@@ -43,9 +43,7 @@ const createMockStore = () => {
         actions: mockActions,
       },
     },
-    actions: {
-      showSnackbarSimple: jest.fn(),
-    },
+    actions: {},
   });
 };
 

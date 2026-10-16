@@ -94,6 +94,7 @@
 
 <script>
 
+  import useKSnackbar from "kolibri-design-system/lib/composables/useKSnackbar";
   import { mapActions, mapMutations, mapState, mapGetters } from 'vuex';
   import sumBy from 'lodash/sumBy';
   import { RouteNames } from '../../constants';
@@ -124,6 +125,10 @@
     name: 'ImportFromChannelsModal',
     components: { FullscreenModal, ResourceDrawer },
     mixins: [routerMixin],
+    setup() {
+      const { clearSnackbar } = useKSnackbar();
+      return { clearSnackbar };
+    },
     data() {
       return {
         previewNode: null,
@@ -186,7 +191,7 @@
       },
     },
     beforeRouteUpdate(to, from, next) {
-      this.$store.dispatch('clearSnackbar');
+      this.clearSnackbar();
       next();
     },
     mounted() {
