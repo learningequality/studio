@@ -274,7 +274,7 @@ def is_answerless_input(item_type: str, answers: List[Dict[str, Any]]) -> bool:
 _JS_NUMBER = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?", re.ASCII)
 
 
-def _format_number(answer: str) -> Optional[str]:
+def format_number(answer: str) -> Optional[str]:
     """
     The answer in xsd:double form, or None if it is not a finite number. Written
     as JS Number#toString writes it, since Kolibri looks up map keys that way.
@@ -356,7 +356,7 @@ def _create_text_entry_interaction_and_response(
     interaction = Div(children=prompt)
 
     answers = accepted_answers(item.answers)
-    numbers = [_format_number(answer) for answer in answers]
+    numbers = [format_number(answer) for answer in answers]
     # An answerless input question is float, so publish can tell it from free
     # response and skip it.
     is_numeric = all(numbers) and (answers or item.type == exercises.INPUT_QUESTION)

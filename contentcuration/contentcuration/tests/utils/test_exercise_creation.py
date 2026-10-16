@@ -38,6 +38,7 @@ from contentcuration.tests.utils.qti.test_perseus_derive import TOLERANCE_ITEM
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.base import resize_image
+from contentcuration.utils.assessment.perseus import answerless_input_ids
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
@@ -377,6 +378,18 @@ class TestPerseusExerciseCreation(StudioTestCase):
             user_id=self.user.id,
         )
         return generator.create_exercise_archive()
+
+    def _perseus_input_values(self, answers):
+        """Values the Perseus numeric-input renders for an input question."""
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION, "What is the answer?", answers
+        )
+        self._create_perseus_zip(_exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        item_json = json.loads(zip_file.read(f"{item.assessment_id}.json"))
+        widget = item_json["question"]["widgets"]["numeric-input 1"]
+        return [answer["value"] for answer in widget["options"]["answers"]]
 
     def _validate_perseus_zip(self, exercise_file):
         """Helper to validate the structure of the Perseus zip file"""
@@ -895,6 +908,41 @@ class TestPerseusExerciseCreation(StudioTestCase):
         zip_file = self._assert_only_perseus_item_packaged(perseus_item, answerless)
         self.assertNotIn(f"images/{image_file.filename()}", zip_file.namelist())
 
+    @mock.patch.dict(os.environ, {"BRANCH_ENVIRONMENT": ""})
+    def test_bad_checksum_image_input_answer_raises_outside_master(self):
+        perseus_item, _ = self._create_perseus_item()
+        image_only = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 2+3?",
+            [
+                {
+                    "answer": f"![]({exercises.CONTENT_STORAGE_FORMAT.format('nothex.png')})",
+                    "correct": True,
+                    "order": 1,
+                }
+            ],
+        )
+        with self.assertRaises(ValueError):
+            self._create_perseus_zip(_exercise_data([perseus_item, image_only]))
+
+    @mock.patch.dict(os.environ, {"BRANCH_ENVIRONMENT": ""})
+    def test_bad_checksum_image_input_answer_is_answerless_outside_master(self):
+        # Publish calls this on unchanged nodes too, so it must not raise.
+        image_only = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 2+3?",
+            [
+                {
+                    "answer": f"![]({exercises.CONTENT_STORAGE_FORMAT.format('nothex.png')})",
+                    "correct": True,
+                    "order": 1,
+                }
+            ],
+        )
+        self.assertEqual(
+            answerless_input_ids(self.exercise_node), {image_only.assessment_id}
+        )
+
     def test_unit_keeps_answerless_input_question(self):
         self.exercise_node.kind_id = content_kinds.TOPIC
         self.exercise_node.save()
@@ -912,6 +960,31 @@ class TestPerseusExerciseCreation(StudioTestCase):
             exercise_data["all_assessment_items"],
             [perseus_item.assessment_id, answerless.assessment_id],
         )
+
+    def test_numeric_input_answers_are_read(self):
+        for answer, numbers in (
+            (0, [0]),
+            (4.5, [4.5]),
+            ("+-3", []),
+        ):
+            with self.subTest(answer=answer):
+                self.assertEqual(
+                    self._perseus_input_values(
+                        [{"answer": answer, "correct": True, "order": 1}]
+                    ),
+                    numbers,
+                )
+                self.exercise_node.assessment_items.all().delete()
+
+    def test_incorrect_input_answers_are_dropped(self):
+        values = self._perseus_input_values(
+            [
+                {"answer": "4", "correct": True, "order": 1},
+                {"answer": 5, "correct": False, "order": 2},
+                {"answer": "6", "correct": False, "order": 3},
+            ]
+        )
+        self.assertEqual(values, [4])
 
     def test_formula_processing(self):
         """Test that formulas are properly processed in exercises"""
@@ -948,41 +1021,12 @@ class TestPerseusExerciseCreation(StudioTestCase):
         )
         self.assertIn("$\\frac{x}{2} = 3$", item_json["question"]["content"])
 
-    def _numeric_answer_values(self, answers):
-        item = self._create_assessment_item(
-            exercises.INPUT_QUESTION,
-            "What is the answer?",
+    def test_input_question_drops_non_finite_answers(self):
+        answers = ["6", "1e400", "-1e400", "1" * 401, "1" * 401 + "/" + "1" * 401]
+        values = self._perseus_input_values(
             [
                 {"answer": answer, "correct": True, "order": order}
                 for order, answer in enumerate(answers, start=1)
-            ],
-        )
-        self._create_perseus_zip(
-            {
-                "mastery_model": exercises.M_OF_N,
-                "randomize": True,
-                "n": 1,
-                "m": 1,
-                "all_assessment_items": [item.assessment_id],
-                "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
-            }
-        )
-        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
-        zip_file, _ = self._validate_perseus_zip(exercise_file)
-        item_json = json.loads(
-            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
-        )
-        options = item_json["question"]["widgets"]["numeric-input 1"]["options"]
-        return [answer["value"] for answer in options["answers"]]
-
-    def test_input_question_drops_non_finite_answers(self):
-        values = self._numeric_answer_values(
-            [
-                "6",
-                "1e400",
-                "-1e400",
-                "1" * 401,
-                "1" * 401 + "/" + "1" * 401,
             ]
         )
         self.assertEqual(values, [6.0])
@@ -3263,18 +3307,26 @@ class TestQTIExerciseCreation(StudioTestCase):
         )
 
     def test_native_qti_perseus_derivation_signed_numeric_answer(self):
-        raw_data = _text_item("single", ["+5"])
-        item = self._create_native_qti_item(raw_data)
+        for value, expected in [("+5", 5), ("1E3", 1000), (" +5 ", 5), ("+0", 0)]:
+            with self.subTest(value=value):
+                self.exercise_node.assessment_items.all().delete()
+                self.exercise_node.files.all().delete()
+                raw_data = _text_item("single", [value])
+                item = self._create_native_qti_item(raw_data)
 
-        self._create_perseus_zip(_exercise_data([item]))
+                self._create_perseus_zip(_exercise_data([item]))
 
-        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
-        with storage.open(exercise_file.file_on_disk.name, "rb") as f:
-            zip_file = zipfile.ZipFile(BytesIO(f.read()))
-        qti_id = parse_qti_xml(raw_data.encode("utf-8")).getroot().get("identifier")
-        item_json = json.loads(zip_file.read(f"{qti_id}.json").decode("utf-8"))
+                exercise_file = self.exercise_node.files.get(
+                    preset_id=format_presets.EXERCISE
+                )
+                with storage.open(exercise_file.file_on_disk.name, "rb") as f:
+                    zip_file = zipfile.ZipFile(BytesIO(f.read()))
+                qti_id = (
+                    parse_qti_xml(raw_data.encode("utf-8")).getroot().get("identifier")
+                )
+                item_json = json.loads(zip_file.read(f"{qti_id}.json").decode("utf-8"))
 
-        answers = item_json["question"]["widgets"]["numeric-input 1"]["options"][
-            "answers"
-        ]
-        self.assertEqual([answer["value"] for answer in answers], [5])
+                answers = item_json["question"]["widgets"]["numeric-input 1"][
+                    "options"
+                ]["answers"]
+                self.assertEqual([answer["value"] for answer in answers], [expected])
