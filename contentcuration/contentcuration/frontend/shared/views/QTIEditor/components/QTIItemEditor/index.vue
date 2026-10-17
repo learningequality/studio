@@ -63,6 +63,7 @@
       </p>
       <InteractionSection
         v-else-if="interactions.length > 0"
+        ref="interactionSection"
         :interaction="currentInteraction"
         :mode="mode"
         :showAnswers="showAnswers"
@@ -299,19 +300,26 @@
       }
 
       const card = ref(null);
+      const interactionSection = ref(null);
 
-      function scrollToStart() {
+      /**
+       * Brings an opened card to the author: scrolled to its start, with its question open and
+       * focused. Only a card opening does this; the editor itself takes no focus, so one
+       * remounted for a new question type leaves focus where the author is.
+       */
+      function startEditing() {
         card.value.$el.scrollIntoView({ block: 'start' });
+        interactionSection.value?.focus();
       }
 
       onMounted(() => {
-        if (props.mode === 'edit') scrollToStart();
+        if (props.mode === 'edit') startEditing();
       });
 
       watch(
         () => props.mode,
         mode => {
-          if (mode === 'edit') scrollToStart();
+          if (mode === 'edit') startEditing();
         },
         // After the re-render, so the card's position is where it has settled.
         { flush: 'post' },
@@ -365,6 +373,7 @@
 
       return {
         card,
+        interactionSection,
         currentQuestionType,
         interactions,
         currentInteraction,

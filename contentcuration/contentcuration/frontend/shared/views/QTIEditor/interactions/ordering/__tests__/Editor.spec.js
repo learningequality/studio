@@ -1,9 +1,10 @@
-import { render, screen, fireEvent, within } from '@testing-library/vue';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import OrderingEditor from '../Editor.vue';
+import { renderFocused } from '../../__tests__/renderFocused';
 
 import {
   ORDERING_XML,
@@ -43,8 +44,9 @@ const itemLabel = number => tr.$tr('orderingItemLabel', { number });
 const moveUpName = number => dragTr.$tr('moveItemUpLabel', { item: itemLabel(number) });
 const moveDownName = number => dragTr.$tr('moveItemDownLabel', { item: itemLabel(number) });
 
-const renderEditor = (props = {}) =>
-  render(OrderingEditor, {
+// `focused` renders it as its card does when the card opens.
+const renderEditor = (props = {}, { focused = false } = {}) =>
+  (focused ? renderFocused : render)(OrderingEditor, {
     props: { mode: 'edit', ...props },
     routes: new VueRouter(),
   });
@@ -67,15 +69,30 @@ const openTextarea = () => screen.queryAllByRole('textbox').find(el => el.tagNam
 
 describe('OrderingEditor', () => {
   describe('edit mode rendering', () => {
-    it('opens the question for editing when it is already written', () => {
-      renderEditor({
-        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
-        questionType: QuestionType.ORDERING,
-      });
+    it('opens the question for editing, and focuses it, when its card opens', async () => {
+      renderEditor(
+        {
+          interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+          questionType: QuestionType.ORDERING,
+        },
+        { focused: true },
+      );
+      await nextTick();
       expect(
         screen.queryByRole('button', { name: tr.$tr('editQuestionLabel') }),
       ).not.toBeInTheDocument();
       expect(openTextarea().value).toContain('Arrange the planets');
+      await waitFor(() => expect(openTextarea()).toHaveFocus());
+    });
+
+    it('leaves the question closed, and focus where it was, when it only mounts', async () => {
+      renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      await nextTick();
+      expect(screen.getByRole('button', { name: tr.$tr('editQuestionLabel') })).toBeInTheDocument();
+      expect(document.body).toHaveFocus();
     });
 
     it('renders the prompt text from the XML', () => {

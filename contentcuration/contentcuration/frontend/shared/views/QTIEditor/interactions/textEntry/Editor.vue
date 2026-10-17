@@ -365,8 +365,8 @@
             isPromptOpen.value = false;
             return;
           }
-          // Open the question, the first thing in the card, so the card opens at its start.
-          openPrompt();
+          // The question opens when the card asks for it, through focus(): entering edit
+          // mode alone, as on a remount for a new question type, takes no focus.
           showStoredAnswerValue();
           // Opening a card does not remount it, so report answers stored in another form here.
           if (
@@ -385,6 +385,9 @@
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });
 
       return {
+        // Public: opens the question for editing, which focuses it.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus: openPrompt,
         state,
         windowIsSmall,
         isNumeric,
