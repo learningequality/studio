@@ -96,6 +96,7 @@
         :is="listWrapperTag"
         :aria-labelledby="answersHeaderId"
         :role="isSingleSelect ? 'radiogroup' : 'group'"
+        :readonly="isSingleSelect && mode !== 'edit'"
       >
         <DraggableRegion
           :items="state.choices"
@@ -175,7 +176,6 @@
                             :buttonValue="choice.id"
                             :label="markCorrectLabel$()"
                             :showLabel="false"
-                            :disabled="mode !== 'edit'"
                             :style="{ width: 'auto' }"
                             :color="$themePalette.green.v_600"
                             @change="onToggleCorrect(choice.id)"
@@ -187,7 +187,7 @@
                             :checked="choice.correct"
                             :label="markCorrectLabel$()"
                             :showLabel="false"
-                            :disabled="mode !== 'edit'"
+                            :readonly="mode !== 'edit'"
                             :color="$themePalette.green.v_600"
                             @change="onToggleCorrect(choice.id)"
                           />
@@ -454,6 +454,8 @@
       );
 
       function onToggleCorrect(id) {
+        // Readonly controls can still emit `change`, e.g. arrow keys on a radio
+        if (props.mode !== 'edit') return;
         toggleCorrectChoice(id);
       }
 

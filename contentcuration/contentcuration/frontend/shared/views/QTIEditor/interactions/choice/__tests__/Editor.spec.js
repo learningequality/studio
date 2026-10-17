@@ -423,14 +423,56 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getAllByRole('radio')).toHaveLength(3);
     });
 
-    it('disables the correct-choice control in view mode', () => {
+    it('makes the correct-choice radios readonly in view mode', async () => {
       renderEditor({
-        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
         questionType: QuestionType.SINGLE_SELECT,
         mode: 'view',
         showAnswers: true,
       });
-      screen.getAllByRole('radio').forEach(r => expect(r).toBeDisabled());
+      expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-readonly', 'true');
+      const radios = screen.getAllByRole('radio');
+      radios.forEach(r => expect(r).toBeEnabled());
+      const [mercury, venus] = radios;
+      expect(mercury).toBeChecked();
+      await fireEvent.click(venus);
+      expect(mercury).toBeChecked();
+      expect(venus).not.toBeChecked();
+    });
+
+    it('ignores native radio changes in view mode', async () => {
+      // Arrow keys make the browser check the next radio and fire `change`, which
+      // the readonly group does not cancel.
+      renderEditor({
+        interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
+        questionType: QuestionType.SINGLE_SELECT,
+        mode: 'view',
+        showAnswers: true,
+      });
+      const radios = screen.getAllByRole('radio');
+      const [mercury, venus] = radios;
+      expect(mercury).toBeChecked();
+      await fireEvent.change(venus);
+      expect(mercury).toBeChecked();
+      expect(venus).not.toBeChecked();
+    });
+
+    it('makes the correct-choice checkboxes readonly in view mode', async () => {
+      renderEditor({
+        interaction: blockWithDecl(CHOICE_MULTI_SELECT_XML, MULTI_DECL),
+        questionType: QuestionType.MULTI_SELECT,
+        mode: 'view',
+        showAnswers: true,
+      });
+      const checkboxes = screen.getAllByRole('checkbox', { name: tr.$tr('markCorrectLabel') });
+      checkboxes.forEach(c => {
+        expect(c).toBeEnabled();
+        expect(c).toHaveAttribute('aria-readonly', 'true');
+      });
+      await fireEvent.click(checkboxes[1]);
+      expect(checkboxes[0]).toBeChecked(); // a
+      expect(checkboxes[1]).not.toBeChecked(); // b
+      expect(checkboxes[2]).toBeChecked(); // c
     });
 
     it('hides add/move/delete buttons in view mode', () => {
