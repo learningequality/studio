@@ -15,7 +15,7 @@
     <p
       v-else
       class="validation-message"
-      role="alert"
+      :role="alert ? 'alert' : null"
     >
       <slot></slot>
     </p>
@@ -54,6 +54,14 @@
       warning: {
         type: Boolean,
         default: false,
+      },
+      /**
+       * Whether an error is an alert, read out as it appears. Off when the component showing
+       * it announces its messages itself.
+       */
+      alert: {
+        type: Boolean,
+        default: true,
       },
     },
   };

@@ -528,10 +528,6 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Button in the passage toolbar that adds an answer dropdown at the cursor, or turns the highlighted text into one',
   },
-  addAnswers: {
-    message: 'Add answers',
-    context: 'Label on an answer dropdown chip that has no correct answer yet',
-  },
   answerDropdownWithCorrect: {
     message:
       '{label}, correct answer, answer dropdown, {count, plural, one {# option} other {# options}}',
@@ -539,10 +535,9 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
       'Accessible name of an answer dropdown chip in the passage that has a correct answer. {label} is the correct answer, as the chip shows it',
   },
   answerDropdownNoCorrect: {
-    message:
-      '{label}, answer dropdown, {count, plural, one {# option} other {# options}}, no correct answer yet',
+    message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
     context:
-      "Accessible name of an answer dropdown chip in the passage that has no correct answer. {label} is the chip's 'Add answers' label",
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer. {label} is the chip's label, the error its options show, such as 'Choose a correct answer'",
   },
   answerDropdownWithCorrectNeedsAttention: {
     message:
@@ -552,14 +547,30 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   },
   answerDropdownNoCorrectNeedsAttention: {
     message:
-      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}, no correct answer yet',
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
     context:
-      "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's 'Add answers' label",
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's label, the error its options show, such as 'Choose a correct answer'",
+  },
+  answerDropdownRemoved: {
+    message: '{label}, answer dropdown, removed',
+    context:
+      "Announced to screen readers when an answer dropdown is deleted from the passage. {label} is what the chip showed: its correct answer, or the error its options show, such as 'Choose a correct answer'",
+  },
+  answerDropdownsRemoved: {
+    message: '{count, plural, one {# answer dropdown removed} other {# answer dropdowns removed}}',
+    context:
+      'Announced to screen readers when several answer dropdowns are deleted from the passage at once',
   },
   answerDropdownHidden: {
     message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
     context:
       "Accessible name of an answer dropdown chip in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
+  },
+  answerDropdownHiddenNeedsAttention: {
+    message:
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip with a problem to fix, in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
   },
   chooseAnswer: {
     message: 'Choose…',

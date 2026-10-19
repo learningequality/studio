@@ -23,9 +23,14 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
 });
 // `useDraggableUniverse` destructures this composable, so the automock has to return a
 // usable object rather than undefined.
+const mockSendAssertiveMessage = jest.fn();
+const mockSendPoliteMessage = jest.fn();
 jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => ({
   __esModule: true,
-  default: () => ({ sendPoliteMessage: jest.fn() }),
+  default: () => ({
+    sendPoliteMessage: mockSendPoliteMessage,
+    sendAssertiveMessage: mockSendAssertiveMessage,
+  }),
 }));
 
 const PASSAGE = `<p>The Earth ${chip('r1', [
@@ -129,6 +134,12 @@ describe('InlineChoiceEditor', () => {
     expect(passage.getByText(tr.passageEditorDescription$())).toBeInTheDocument();
     expect(passage.getByRole('button', { name: tr.insertInlineChoice$() })).toBeInTheDocument();
     expect(passage.getAllByRole('button', CHIP)).toHaveLength(2);
+  });
+
+  it('describes the passage editor with its helper text', async () => {
+    await renderEditor();
+    const passage = section(tr.passageEditorLabel$()).querySelector('.ProseMirror');
+    expect(passage).toHaveAccessibleDescription(tr.passageEditorDescription$());
   });
 
   it('opens on the question, focused, with the passage closed', async () => {
@@ -235,7 +246,8 @@ describe('InlineChoiceEditor', () => {
       );
 
       expect(optionInputs().map(input => input.value)).toEqual(['Sun', 'Stars']);
-      expect(chips()[0]).toHaveTextContent(/^2/);
+      // The chip needs a correct answer, so its count is in its name, beside the error icon.
+      expect(chips()[0]).toHaveAccessibleName(/2 options/);
       expect(savedDropdowns(emitted())[0].options.map(o => o.text)).toEqual(['Sun', 'Stars']);
     });
 
@@ -314,7 +326,7 @@ describe('InlineChoiceEditor', () => {
         screen.getByRole('button', { name: tr.deleteInlineChoiceOptionBtn$({ number: 1 }) }),
       );
 
-      expect(chips()[1]).toHaveTextContent(tr.addAnswers$());
+      expect(chips()[1]).toHaveTextContent(tr.errorNoCorrectAnswer$());
       expect(savedDropdowns(emitted())[1].correctId).toBeNull();
     });
 
@@ -737,6 +749,117 @@ describe('InlineChoiceEditor', () => {
   });
 
   describe('validation', () => {
+    it('reads the problems a chip opens with as the panel’s description, not as alerts', async () => {
+      const { user } = await renderEditor({
+        interaction: interactionOf({ passage: `<p>The ${chip('r1', [['sun', '']])}</p>` }),
+      });
+      mockSendAssertiveMessage.mockClear();
+      await openChip(user, 0);
+      expect(dialog()).toHaveAccessibleDescription(
+        `${tr.errorNoCorrectAnswer$()} ${tr.errorTooFewInlineChoiceOptions$({ count: 2 })}`,
+      );
+      expect(within(dialog()).queryAllByRole('alert')).toHaveLength(0);
+      expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+    });
+
+    it('keeps the passage’s problems no alert when the panel they appeared in closes', async () => {
+      const valid = chip(
+        'r1',
+        [
+          ['sun', 'Sun'],
+          ['moon', 'Moon'],
+        ],
+        'sun',
+      );
+      const { user } = await renderEditor({
+        interaction: interactionOf({ passage: `<p>The ${valid} rises</p>` }),
+      });
+      await openChip(user, 0);
+      await user.click(screen.getByRole('button', { name: tr.addInlineChoiceOptionBtn$() }));
+      await user.keyboard('{Escape}');
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      const passage = within(section(tr.passageEditorLabel$()));
+      expect(passage.getByText(tr.errorInlineChoiceOptionProblems$())).toBeInTheDocument();
+      expect(passage.queryAllByRole('alert')).toHaveLength(0);
+    });
+
+    // Removing a chip in the passage is announced already.
+    it('raises no alert for a passage left without dropdowns as it is edited', async () => {
+      const user = userEvent.setup();
+      render(InlineChoiceEditor, {
+        props: {
+          interaction: interactionOf({ passage: '<p>Nothing to choose</p>' }),
+          questionType: QuestionType.INLINE_CHOICE,
+          mode: 'edit',
+          teleportTargetId: 'settings-target',
+        },
+        routes: new VueRouter(),
+      });
+      await user.click(await screen.findByRole('button', { name: tr.editPassageLabel$() }));
+      await user.click(await screen.findByRole('button', { name: tr.insertInlineChoice$() }));
+      await waitFor(() => expect(chips()).toHaveLength(1));
+
+      const { undo$ } = getTipTapEditorStrings();
+      await user.click(screen.getByRole('button', { name: undo$() }));
+      expect(screen.queryAllByRole('button', CHIP)).toHaveLength(0);
+      const passage = within(section(tr.passageEditorLabel$()));
+      expect(passage.getByText(tr.errorNoInlineChoice$())).toBeInTheDocument();
+      expect(passage.queryAllByRole('alert')).toHaveLength(0);
+    });
+
+    // The panel and the chip's name say it already, and an alert would cut off the focused field.
+    it('raises no alert for the passage’s problems while a panel is open', async () => {
+      const valid = chip(
+        'r1',
+        [
+          ['sun', 'Sun'],
+          ['moon', 'Moon'],
+        ],
+        'sun',
+      );
+      const { user } = await renderEditor({
+        interaction: interactionOf({ passage: `<p>The ${valid} rises</p>` }),
+      });
+      await openChip(user, 0);
+      await user.click(screen.getByRole('button', { name: tr.addInlineChoiceOptionBtn$() }));
+
+      const passage = within(section(tr.passageEditorLabel$()));
+      expect(passage.getByText(tr.errorInlineChoiceOptionProblems$())).toBeInTheDocument();
+      expect(passage.queryAllByRole('alert')).toHaveLength(0);
+    });
+
+    it('announces a problem that appears while the panel is open', async () => {
+      const { user } = await renderEditor();
+      await openChip(user, 1);
+      mockSendAssertiveMessage.mockClear();
+      mockSendPoliteMessage.mockClear();
+      await user.click(
+        screen.getByRole('button', { name: tr.deleteInlineChoiceOptionBtn$({ number: 2 }) }),
+      );
+      expect(
+        within(dialog()).getByText(tr.errorTooFewInlineChoiceOptions$({ count: 2 })),
+      ).toBeInTheDocument();
+      // Remove moves focus to the next option: what appeared waits for that field to be read.
+      expect(mockSendPoliteMessage).toHaveBeenCalledWith(
+        tr.errorTooFewInlineChoiceOptions$({ count: 2 }),
+      );
+      expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+
+      // The option Add option focuses reads its own error, so it is not announced as well.
+      mockSendAssertiveMessage.mockClear();
+      await user.click(screen.getByRole('button', { name: tr.addInlineChoiceOptionBtn$() }));
+      await waitFor(() => expect(optionInputs()[1]).toHaveFocus());
+      expect(optionInputs()[1]).toHaveAccessibleDescription(tr.errorEmptyChoiceContent$());
+      expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+
+      // An error that appears as the author types is announced, once for rows that share it.
+      await user.keyboard('revolves');
+      expect(within(dialog()).getAllByText(tr.errorDuplicateChoiceContent$())).toHaveLength(2);
+      expect(mockSendAssertiveMessage).toHaveBeenCalledTimes(1);
+      expect(mockSendAssertiveMessage).toHaveBeenCalledWith(tr.errorDuplicateChoiceContent$());
+    });
+
     it('asks for a second option on a dropdown with one in its panel', async () => {
       const { emitted, user } = await renderEditor({
         interaction: interactionOf({
@@ -744,11 +867,37 @@ describe('InlineChoiceEditor', () => {
         }),
       });
       expect(emitted()['update:errors'].at(-1)[0]).toEqual([{ code: 'TOO_FEW_CHOICES', id: 'r1' }]);
+      // A marked answer still shows, as beside a blank option; the error icon flags the chip.
+      expect(chips()[0]).toHaveTextContent(/^Sun$/);
+      expect(chips()[0].querySelector('svg')).toBeInTheDocument();
+      expect(chips()[0]).toHaveAccessibleName(/needs attention/);
 
       await openChip(user, 0);
       expect(
         within(dialog()).getByText(tr.errorTooFewInlineChoiceOptions$({ count: 2 })),
       ).toBeInTheDocument();
+      // The count is a number the message formats, not part of its text.
+      expect(within(dialog()).getByText('Add at least 2 options')).toBeInTheDocument();
+    });
+
+    it('shows on a chip the first of the problems its panel lists', async () => {
+      const { user } = await renderEditor({
+        interaction: interactionOf({ passage: `<p>The ${chip('r1', [['sun', 'Sun']])}</p>` }),
+      });
+      expect(chips()[0]).toHaveTextContent(new RegExp(`^${tr.errorNoCorrectAnswer$()}$`));
+
+      await openChip(user, 0);
+      const problems = within(dialog())
+        .getAllByText(
+          new RegExp(
+            `^(${tr.errorNoCorrectAnswer$()}|${tr.errorTooFewInlineChoiceOptions$({ count: 2 })})$`,
+          ),
+        )
+        .map(el => el.textContent.trim());
+      expect(problems).toEqual([
+        tr.errorNoCorrectAnswer$(),
+        tr.errorTooFewInlineChoiceOptions$({ count: 2 }),
+      ]);
     });
 
     it('marks the question incomplete and flags a chip without a correct answer', async () => {
@@ -761,6 +910,10 @@ describe('InlineChoiceEditor', () => {
       ).toBeInTheDocument();
       expect(chips()[0]).toHaveAccessibleName(/needs attention/);
       expect(chips()[1]).not.toHaveAccessibleName(/needs attention/);
+      // The error icon stands in for the option count, as on an option row.
+      expect(chips()[0]).toHaveTextContent(new RegExp(`^${tr.errorNoCorrectAnswer$()}$`));
+      expect(chips()[0].querySelector('svg')).toBeInTheDocument();
+      expect(chips()[1]).toHaveTextContent('2 revolves');
 
       await openChip(user, 0);
       expect(within(dialog()).getByText(tr.errorNoCorrectAnswer$())).toBeInTheDocument();
@@ -847,6 +1000,18 @@ describe('InlineChoiceEditor', () => {
       expect(hidden).toHaveAccessibleName(
         tr.answerDropdownHidden$({ label: tr.chooseAnswer$(), count: 2 }),
       );
+    });
+
+    it('marks a hidden chip that needs attention by more than colour', async () => {
+      await renderEditor({ mode: 'view', showAnswers: false });
+      const [incomplete, complete] = screen.getAllByRole('img', { name: /answer dropdown/ });
+      expect(incomplete).toHaveAccessibleName(
+        tr.answerDropdownHiddenNeedsAttention$({ label: tr.chooseAnswer$(), count: 3 }),
+      );
+      // The error icon stands in for its option count.
+      expect(incomplete).toHaveTextContent(new RegExp(`^${tr.chooseAnswer$()}$`));
+      expect(incomplete.querySelector('svg')).toBeInTheDocument();
+      expect(complete.querySelector('svg')).not.toBeInTheDocument();
     });
   });
 });

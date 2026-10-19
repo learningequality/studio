@@ -50,10 +50,16 @@
 
     <!-- Passage -->
     <div class="inline-choice-editor__section">
-      <ValidationMessage v-if="hasDropdownErrors">
+      <ValidationMessage
+        v-if="hasDropdownErrors"
+        :alert="isProblemsAlert"
+      >
         {{ errorInlineChoiceOptionProblems$() }}
       </ValidationMessage>
-      <ValidationMessage v-if="hasNoDropdown">
+      <ValidationMessage
+        v-if="hasNoDropdown"
+        :alert="isNoDropdownAlert"
+      >
         {{ errorNoInlineChoice$() }}
       </ValidationMessage>
       <h4
@@ -65,6 +71,7 @@
       </h4>
       <div
         v-if="mode === 'edit'"
+        :id="passageDescriptionId"
         class="field-description"
         :style="{ color: $themeTokens.annotation }"
       >
@@ -135,6 +142,7 @@
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import AnswerSettings from '../choice/components/AnswerSettings/index.vue';
   import { hasRichTextContent } from '../../utils/richText';
+  import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { useInlineChoicePassage } from './useInlineChoicePassage';
   import InlineChoiceOptions from './components/InlineChoiceOptions/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
@@ -186,10 +194,12 @@
           .map(d => d.responseIdentifier);
       });
 
+      const passageDescriptionId = generateRandomSlug('passage-description');
       const passage = useInlineChoicePassage({
         errorResponseIdentifiers,
         // An author editing the question sees its answers, even in the closed passage.
         showAnswers: computed(() => props.mode === 'edit' || props.showAnswers),
+        describedBy: passageDescriptionId,
         onChange: setPassage,
       });
 
@@ -244,6 +254,22 @@
       );
       const openDropdown = computed(() => dropdowns.value[openDropdownIndex.value] ?? null);
       const openDropdownNumber = computed(() => openDropdownIndex.value + 1);
+
+      /*
+       * Whether a passage message is an alert is settled as it appears, and kept while it is
+       * shown: a role added to a shown message can be read out over wherever focus has gone, as
+       * when a panel closes. Not an alert when something already says it: while a chip's options
+       * panel is open, the panel and the chip's name, whose field an alert would also cut off;
+       * while the passage is edited, the announcement of the chip it lost.
+       */
+      const isProblemsAlert = ref(true);
+      watch(hasDropdownErrors, isShown => {
+        if (isShown) isProblemsAlert.value = !openDropdown.value;
+      });
+      const isNoDropdownAlert = ref(true);
+      watch(hasNoDropdown, isShown => {
+        if (isShown) isNoDropdownAlert.value = !isPassageOpen.value;
+      });
 
       const options = ref(null);
       const optionsWrapper = ref(null);
@@ -321,9 +347,12 @@
         state,
         errors,
         passage,
+        passageDescriptionId,
         hasPrompt,
         hasDropdownErrors,
         hasNoDropdown,
+        isProblemsAlert,
+        isNoDropdownAlert,
         isPromptOpen,
         isPassageOpen,
         openPrompt,

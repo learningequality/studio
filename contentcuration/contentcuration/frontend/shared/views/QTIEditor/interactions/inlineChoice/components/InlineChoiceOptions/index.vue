@@ -12,14 +12,18 @@
       role="dialog"
       aria-modal="true"
       :aria-label="inlineChoiceOptionsDialogLabel$({ number })"
+      :aria-describedby="problems.length ? problems.map((_, i) => problemId(i)).join(' ') : null"
       class="options-panel"
       @focusout="onFocusout"
       @keydown="onHistoryKeydown"
       @keydown.esc.stop="$emit('close')"
     >
+      <!-- The dropdown's chip shows the first of these -->
       <ValidationMessage
-        v-for="problem in problems"
+        v-for="(problem, i) in problems"
+        :id="problemId(i)"
         :key="problem"
+        :alert="false"
       >
         {{ problem }}
       </ValidationMessage>
@@ -127,6 +131,7 @@
                 <ValidationMessage
                   v-if="isEmpty(option.id)"
                   :id="errorId(option.id, 'empty')"
+                  :alert="false"
                   class="option-validation-message"
                 >
                   {{ errorEmptyChoiceContent$() }}
@@ -134,6 +139,7 @@
                 <ValidationMessage
                   v-if="isDuplicate(option.id)"
                   :id="errorId(option.id, 'duplicate')"
+                  :alert="false"
                   class="option-validation-message"
                 >
                   {{ errorDuplicateChoiceContent$() }}
@@ -157,7 +163,8 @@
 
 <script>
 
-  import { computed, nextTick, ref } from 'vue';
+  import { computed, nextTick, ref, watch } from 'vue';
+  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../../../qtiEditorStrings';
   import { ValidationError } from '../../../../constants';
@@ -165,7 +172,7 @@
   import ValidationMessage from '../../../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../../../components/AddListItemButton/index.vue';
   import { historyShortcut } from '../../historyShortcut';
-  import { MIN_OPTIONS, dropdownErrors } from '../../validation';
+  import { dropdownProblems } from '../../passageChips';
   import DraggableRegion from 'shared/views/dragSort/DraggableRegion.vue';
   import DraggableItem from 'shared/views/dragSort/DraggableItem.vue';
   import DraggableHandle from 'shared/views/dragSort/DraggableHandle.vue';
@@ -198,8 +205,6 @@
         markInlineChoiceOptionCorrect$,
         addInlineChoiceOptionBtn$,
         deleteInlineChoiceOptionBtn$,
-        errorNoCorrectAnswer$,
-        errorTooFewInlineChoiceOptions$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
       } = qtiEditorStrings;
@@ -215,15 +220,8 @@
       const isEmpty = id => emptyIds.value.has(id);
       const isDuplicate = id => duplicateIds.value.has(id);
       const hasError = id => isEmpty(id) || isDuplicate(id);
-      const problemMessages = {
-        [ValidationError.NO_CORRECT_ANSWER]: errorNoCorrectAnswer$,
-        [ValidationError.TOO_FEW_CHOICES]: () =>
-          errorTooFewInlineChoiceOptions$({ count: MIN_OPTIONS }),
-      };
-      // What the dropdown as a whole lacks, rather than one of its options.
-      const problems = computed(() =>
-        dropdownErrors(props.dropdown).map(code => problemMessages[code]()),
-      );
+      const problems = computed(() => dropdownProblems(props.dropdown));
+      const problemId = index => `${headerId}-problem-${index}`;
 
       const isOnlyOption = computed(() => props.dropdown.options.length <= 1);
 
@@ -235,6 +233,39 @@
         if (isDuplicate(id)) ids.push(errorId(id, 'duplicate'));
         return ids.length ? ids.join(' ') : null;
       }
+
+      /*
+       * The panel's messages are not alerts: it mounts each time a chip opens, with every message
+       * in it, and alerts would all be read out at once. Those it opens with are read once, as the
+       * dialog's description and each field's. A message that appears while it is open is
+       * announced here, through KDS's live region, once. Not the errors of an option Add option
+       * just made: it takes focus, and its field reads them, which an announcement would cut off.
+       * What appears on a press that moves focus, as Remove does, is announced politely, after the
+       * newly focused field is read.
+       */
+      const { sendAssertiveMessage, sendPoliteMessage } = useKLiveRegion();
+      let addedOptionId = null;
+      let isMovingFocus = false;
+      const messages = computed(() => {
+        const shown = new Map(problems.value.map(problem => [problem, problem]));
+        for (const { id } of props.dropdown.options) {
+          if (isEmpty(id)) shown.set(errorId(id, 'empty'), errorEmptyChoiceContent$());
+          if (isDuplicate(id)) shown.set(errorId(id, 'duplicate'), errorDuplicateChoiceContent$());
+        }
+        return shown;
+      });
+      watch(messages, (shown, before) => {
+        const unread = new Set(
+          addedOptionId ? ['empty', 'duplicate'].map(kind => errorId(addedOptionId, kind)) : [],
+        );
+        const appeared = [...shown]
+          .filter(([key]) => !before.has(key) && !unread.has(key))
+          .map(([, text]) => text);
+        // Rows that share an error, such as a duplicate pair, announce it once.
+        if (!appeared.length) return;
+        const send = isMovingFocus ? sendPoliteMessage : sendAssertiveMessage;
+        send([...new Set(appeared)].join(' '));
+      });
 
       function optionStyle(id) {
         const isCorrect = id === props.dropdown.correctId;
@@ -275,8 +306,10 @@
         const index = props.dropdown.options.findIndex(o =>
           inputRefs[o.id]?.closest('li').contains(control),
         );
+        isMovingFocus = true;
         emit(direction);
         await nextTick();
+        isMovingFocus = false;
         if (panel.value && !panel.value.contains(document.activeElement)) focusOptionAt(index);
       }
 
@@ -301,8 +334,10 @@
 
       async function addOption() {
         const option = { id: generateRandomSlug('choice'), text: '' };
+        addedOptionId = option.id;
         emit('update', { options: [...props.dropdown.options, option] });
         await nextTick();
+        addedOptionId = null;
         inputRefs[option.id]?.focus();
       }
 
@@ -311,8 +346,10 @@
       async function removeOption(id) {
         if (isOnlyOption.value) return;
         const index = props.dropdown.options.findIndex(o => o.id === id);
+        isMovingFocus = true;
         emit('update', { options: props.dropdown.options.filter(o => o.id !== id) });
         await nextTick();
+        isMovingFocus = false;
         focusOptionAt(index);
       }
 
@@ -365,6 +402,7 @@
         errorId,
         errorIdsOf,
         problems,
+        problemId,
         isOnlyOption,
         optionStyle,
         setInputRef,
