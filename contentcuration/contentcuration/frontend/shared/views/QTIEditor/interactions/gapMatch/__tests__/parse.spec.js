@@ -365,7 +365,20 @@ describe('buildXML()', () => {
       expect(gapTextsOf(root).map(text => text.id)).toEqual(['choice_a_2', 'choice_a']);
     });
 
-    it('writes the same XML each time it builds the same state', () => {
+    it('gives a gap and a distractor without an identifier new ones', () => {
+      const { root, declaration: decl } = build(
+        makeState({
+          passage: '<p><qti-gap data-studio-answer="choice_w">winter</qti-gap></p>',
+          distractors: [{ content: 'summer' }],
+        }),
+      );
+      const [gapId] = gapIdsOf(root);
+      expect(gapId).toMatch(/^gap_/);
+      expect(gapTextsOf(root)[1].id).toMatch(/^choice_/);
+      expect(decl.correctResponse).toEqual([['choice_w', gapId]]);
+    });
+
+    it('derives the same identifiers each time it builds the same state', () => {
       const state = makeState({
         passage:
           `<p><qti-gap identifier="gap_a">winter</qti-gap> ` +
