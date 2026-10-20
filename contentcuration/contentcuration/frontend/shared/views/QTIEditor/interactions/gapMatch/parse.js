@@ -91,25 +91,48 @@ export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
 export function buildGapMatchInteractionXML(state, _questionType, declarationSchema) {
   const { responseIdentifier = RESPONSE_IDENTIFIER, prompt, passage, distractors = [] } = state;
 
-  const usedIds = new Set();
-  function claim(id, prefix) {
-    const resolved = id && !usedIds.has(id) ? id : generateRandomSlug(prefix);
-    usedIds.add(resolved);
-    return resolved;
-  }
-
   const passageEl = buildXmlNode({ tag: 'div', innerHTML: passage || '' });
   const gapEls = [...passageEl.querySelectorAll(GAP)];
+
+  const taken = new Set(
+    [
+      ...gapEls.flatMap(el => [el.getAttribute('identifier'), el.getAttribute(ANSWER_ATTR)]),
+      ...distractors.map(({ id }) => id),
+    ].filter(Boolean),
+  );
+  const claimed = new Set();
+  function nextFree(base) {
+    let n = 2;
+    while (taken.has(`${base}_${n}`)) n++;
+    return `${base}_${n}`;
+  }
+  function claim(resolved) {
+    claimed.add(resolved);
+    taken.add(resolved);
+    return resolved;
+  }
+  function claimExisting(id, prefix) {
+    if (!id) return claim(generateRandomSlug(prefix));
+    return claim(claimed.has(id) ? nextFree(id) : id);
+  }
+  function claimDerived(base) {
+    return claim(taken.has(base) ? nextFree(base) : base);
+  }
 
   const idByAnswerKey = new Map();
   const answers = new Map();
   const correctPairs = [];
   for (const gapEl of gapEls) {
-    const gapId = claim(gapEl.getAttribute('identifier'), 'gap');
+    const gapId = claimExisting(gapEl.getAttribute('identifier'), 'gap');
     const content = getContentHTML(gapEl);
     if (hasRichTextContent(content)) {
       const key = richTextComparisonKey(content);
-      const answerId = idByAnswerKey.get(key) || claim(gapEl.getAttribute(ANSWER_ATTR), 'choice');
+      const ownAnswerId = gapEl.getAttribute(ANSWER_ATTR);
+      const answerId =
+        idByAnswerKey.get(key) ||
+        (ownAnswerId
+          ? claimExisting(ownAnswerId, 'choice')
+          : claimDerived(`choice_${gapId.replace(/^gap_/, '')}`));
       idByAnswerKey.set(key, answerId);
 
       const answer = answers.get(answerId);
@@ -127,7 +150,7 @@ export function buildGapMatchInteractionXML(state, _questionType, declarationSch
   }
 
   const distractorChoices = distractors.map(({ id, content }) => ({
-    id: claim(id, 'choice'),
+    id: claimExisting(id, 'choice'),
     content,
     matchMax: 1,
   }));

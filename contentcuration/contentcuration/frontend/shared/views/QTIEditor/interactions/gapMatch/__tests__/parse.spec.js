@@ -312,39 +312,68 @@ describe('buildXML()', () => {
       ]);
     });
 
-    it('gives a repeated gap identifier a new one', () => {
+    it('gives a repeated gap identifier a numbered suffix', () => {
       const { root } = build(
         makeState({
           passage: `<p>${gap('gap_a', 'choice_w', 'winter')} ${gap('gap_a', 'choice_s', 'spring')}</p>`,
         }),
       );
-      const [first, second] = gapIdsOf(root);
-      expect(first).toBe('gap_a');
-      expect(second).toMatch(/^gap_/);
-      expect(second).not.toBe('gap_a');
+      expect(gapIdsOf(root)).toEqual(['gap_a', 'gap_a_2']);
     });
 
-    it('gives an answer whose identifier is taken by other content a new one', () => {
+    it('gives an answer whose identifier is taken by other content a numbered suffix', () => {
       const { root } = build(
         makeState({
           passage: `<p>${gap('gap_a', 'choice_w', 'winter')} ${gap('gap_b', 'choice_w', 'spring')}</p>`,
           distractors: [],
         }),
       );
-      const [first, second] = gapTextsOf(root).map(text => text.id);
-      expect(first).toBe('choice_w');
-      expect(second).toMatch(/^choice_/);
-      expect(second).not.toBe('choice_w');
+      expect(gapTextsOf(root).map(text => text.id)).toEqual(['choice_w', 'choice_w_2']);
     });
 
-    it('gives an answer without an identifier a new one', () => {
+    it('skips a numbered suffix that is already in use', () => {
+      const { root } = build(
+        makeState({
+          passage: `<p>${gap('gap_a', 'choice_w', 'winter')} ${gap('gap_b', 'choice_w', 'spring')}</p>`,
+          distractors: [{ id: 'choice_w_2', content: 'summer' }],
+        }),
+      );
+      expect(gapTextsOf(root).map(text => text.id)).toEqual([
+        'choice_w',
+        'choice_w_3',
+        'choice_w_2',
+      ]);
+    });
+
+    it('derives a missing answer identifier from its gap identifier', () => {
       const { root } = build(
         makeState({
           passage: '<p><qti-gap identifier="gap_a">winter</qti-gap></p>',
           distractors: [],
         }),
       );
-      expect(gapTextsOf(root)[0].id).toMatch(/^choice_/);
+      expect(gapTextsOf(root)[0].id).toBe('choice_a');
+    });
+
+    it('keeps a distractor identifier that a derived answer identifier would take', () => {
+      const { root } = build(
+        makeState({
+          passage: '<p><qti-gap identifier="gap_a">winter</qti-gap></p>',
+          distractors: [{ id: 'choice_a', content: 'summer' }],
+        }),
+      );
+      expect(gapTextsOf(root).map(text => text.id)).toEqual(['choice_a_2', 'choice_a']);
+    });
+
+    it('writes the same XML each time it builds the same state', () => {
+      const state = makeState({
+        passage:
+          `<p><qti-gap identifier="gap_a">winter</qti-gap> ` +
+          `${gap('gap_b', 'choice_w', 'spring')} ${gap('gap_b', 'choice_w', 'autumn')}</p>`,
+      });
+      expect(buildXML(state, QuestionType.GAP_MATCH, SCHEMA)).toEqual(
+        buildXML(state, QuestionType.GAP_MATCH, SCHEMA),
+      );
     });
   });
 });
