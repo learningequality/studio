@@ -90,6 +90,26 @@ describe('OrganizationEditPage', () => {
     expect(screen.queryByRole('textbox', { name: 'Organization name' })).not.toBeInTheDocument();
   });
 
+  it("shows the organization's channels on the channels tab", async () => {
+    jest.spyOn(Organization, 'fetchChannels').mockResolvedValue({
+      channels: [{ id: 'channel-1', name: 'Alpha', description: '', size: 0 }],
+      size: 0,
+    });
+    const router = createRouter('/organization/org-1/channels');
+    render(OrganizationEditPage, {
+      localVue,
+      router,
+      store: createStore(),
+      props: { organizationId: 'org-1', tab: 'channels' },
+    });
+
+    expect(
+      screen.getByRole('tab', { name: organizationStrings.channelsTab$() }),
+    ).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /Alpha/ })).toBeInTheDocument();
+    expect(Organization.fetchChannels).toHaveBeenCalledWith('org-1');
+  });
+
   it('navigates to the "last" route when the close button is clicked', async () => {
     const router = createRouter('/organization/org-1/details?last=' + RouteNames.MY_ORGANIZATIONS);
     render(OrganizationEditPage, {

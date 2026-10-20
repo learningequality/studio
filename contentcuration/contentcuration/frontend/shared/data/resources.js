@@ -2457,6 +2457,9 @@ export const Organization = new APIResource({
   update(id, data) {
     return client.patch(this.modelUrl(id), data).then(response => response.data);
   },
+  fetchChannels(id) {
+    return client.get(this.getUrlFunction('channels')(id)).then(response => response.data);
+  },
 });
 
 export const OrganizationRole = new APIResource({

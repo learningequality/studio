@@ -50,6 +50,10 @@
           :save="update"
           :isAdmin="isAdmin"
         />
+        <OrganizationChannelsTab
+          v-else-if="tab === tabIds.CHANNELS"
+          :organizationId="organizationId"
+        />
         <OrganizationSharingTab
           v-else-if="!loading"
           :organizationId="organizationId"
@@ -66,6 +70,7 @@
 
   import { RouteNames, OrganizationEditTabs, OrganizationRoles } from '../../constants';
   import { useOrganization } from '../../composables/useOrganization';
+  import OrganizationChannelsTab from './OrganizationChannelsTab.vue';
   import OrganizationDetailsTab from './OrganizationDetailsTab.vue';
   import OrganizationSharingTab from './OrganizationSharingTab.vue';
   import { organizationStrings } from 'shared/strings/organizationStrings';
@@ -77,6 +82,7 @@
     components: {
       StudioImmersiveModal,
       OrganizationDetailsTab,
+      OrganizationChannelsTab,
       OrganizationSharingTab,
     },
     mixins: [routerMixin],
@@ -123,6 +129,11 @@
             id: OrganizationEditTabs.DETAILS,
             label: organizationStrings.detailsTab$(),
             to: this.tabLink(OrganizationEditTabs.DETAILS),
+          },
+          {
+            id: OrganizationEditTabs.CHANNELS,
+            label: organizationStrings.channelsTab$(),
+            to: this.tabLink(OrganizationEditTabs.CHANNELS),
           },
           {
             id: OrganizationEditTabs.SHARING,
@@ -182,10 +193,7 @@
           return;
         }
         const orgName = this.organization ? this.organization.name : '';
-        const tabLabel =
-          this.tab === OrganizationEditTabs.SHARING
-            ? organizationStrings.sharingTab$()
-            : organizationStrings.detailsTab$();
+        const tabLabel = (this.tabs.find(tab => tab.id === this.tab) || this.tabs[0]).label;
         this.updateTabTitle(orgName ? `${tabLabel} - ${orgName}` : tabLabel);
       },
     },
