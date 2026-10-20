@@ -114,6 +114,10 @@ describe('QTISanitizer.stripTags — XSS defence', () => {
     expect(QTISanitizer.stripTags('A & B')).toBe('A & B');
   });
 
+  it('decodes entities in a fragment without tags', () => {
+    expect(QTISanitizer.stripTags('&nbsp;A &amp; B')).toBe(' A & B');
+  });
+
   it('handles non-string input by coercing to string', () => {
     expect(QTISanitizer.stripTags(42)).toBe('42');
     expect(QTISanitizer.stripTags(null)).toBe('');

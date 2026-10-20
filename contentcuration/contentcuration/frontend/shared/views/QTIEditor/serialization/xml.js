@@ -286,9 +286,11 @@ const BLOCK_TAGS = new Set([
  * reopen, so this is stable across saves. Whitespace-only text is dropped.
  *
  * @param {Element} container Changed in place: inline runs move out into the new `<div>`s
+ * @param {string} [tag] The wrapper, for content the XSD allows only in some blocks: it
+ *   allows `<qti-gap>` in a `<p>` but not directly in a `<div>`
  * @returns {Element[]} The container's children, as blocks
  */
-export function wrapInlineRuns(container) {
+export function wrapInlineRuns(container, tag = 'div') {
   const blocks = [];
   let run = null;
   for (const node of [...container.childNodes]) {
@@ -297,7 +299,7 @@ export function wrapInlineRuns(container) {
       run = null;
     } else if (run || node.nodeType === Node.ELEMENT_NODE || node.nodeValue.trim()) {
       if (!run) {
-        run = buildXmlNode({ tag: 'div' });
+        run = buildXmlNode({ tag });
         blocks.push(run);
       }
       run.appendChild(node);
