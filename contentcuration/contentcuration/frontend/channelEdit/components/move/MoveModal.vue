@@ -189,6 +189,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import ResourceDrawer from '../ResourceDrawer';
   import { RouteNames } from '../../constants';
   import NewTopicModal from './NewTopicModal';
@@ -219,6 +220,10 @@
       Thumbnail,
     },
     mixins: [titleMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       value: {
         type: Boolean,
@@ -348,7 +353,11 @@
       createTopic(title) {
         this.createContentNode({ parent: this.targetNodeId, kind: 'topic', title }).then(id => {
           this.showNewTopicModal = false;
-          this.$store.dispatch('showSnackbar', { text: this.$tr('topicCreatedMessage') });
+          this.createSnackbar({
+            text: this.$tr('topicCreatedMessage'),
+            duration: 6000,
+            announce: true,
+          });
           this.targetNodeId = id;
         });
       },
@@ -362,10 +371,12 @@
        */
       moveComplete() {
         this.dialog = false;
-        this.$store.dispatch('showSnackbar', {
+        this.createSnackbar({
           text: this.$tr('movedMessage', { title: this.currentNode.title }),
+          duration: 6000,
           actionText: this.$tr('goToLocationButton'),
           actionCallback: this.goToLocation,
+          announce: true,
         });
         this.moveNodesInProgress = false;
       },

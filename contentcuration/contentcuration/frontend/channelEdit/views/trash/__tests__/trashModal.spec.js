@@ -9,6 +9,14 @@ import MoveModal from '../../../components/move/MoveModal';
 import NodePanel from '../../NodePanel';
 import { createTranslator } from 'shared/i18n';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 const tr = createTranslator('TrashModal', TrashModal.$trs);
 const moveTr = createTranslator('MoveModal', MoveModal.$trs);
 const nodePanelTr = createTranslator('NodePanel', NodePanel.$trs);
@@ -99,6 +107,7 @@ async function makeWrapper(items = testChildren, { isLoading = false, hasMore = 
 describe('TrashModal', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+    mockCreateSnackbar.mockClear();
   });
 
   describe('on load', () => {
@@ -224,8 +233,7 @@ describe('TrashModal', () => {
     it('successful deletion triggers snackbar and reloads nodes', async () => {
       jest.spyOn(TrashModal.methods, 'deleteContentNodes').mockResolvedValue();
 
-      const { user, loadNodesSpy, store } = await makeWrapper();
-      const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
+      const { user, loadNodesSpy } = await makeWrapper();
 
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
       await user.click(screen.getByRole('button', { name: tr.$tr('deleteButton') }));
@@ -234,9 +242,9 @@ describe('TrashModal', () => {
       );
 
       await waitFor(() => {
-        expect(dispatchSpy).toHaveBeenCalledWith('showSnackbar', {
-          text: tr.$tr('deleteSuccessMessage'),
-        });
+        expect(mockCreateSnackbar).toHaveBeenCalledWith(
+          expect.objectContaining({ text: tr.$tr("deleteSuccessMessage") }),
+        );
         expect(loadNodesSpy).toHaveBeenCalled();
       });
     });

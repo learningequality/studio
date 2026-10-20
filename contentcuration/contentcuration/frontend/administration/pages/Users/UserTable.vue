@@ -208,6 +208,7 @@
 
   import { ref, onMounted, computed, getCurrentInstance } from 'vue';
   import { mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import transform from 'lodash/transform';
   import { saveAs } from 'file-saver';
   import { useTable } from '../../composables/useTable';
@@ -299,6 +300,7 @@
     },
     mixins: [routerMixin],
     setup() {
+      const { createSnackbar } = useKSnackbar();
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
 
@@ -411,6 +413,7 @@
       });
 
       return {
+        createSnackbar,
         userTypeFilter,
         userTypeOptions,
         locationDropdown,
@@ -499,7 +502,12 @@
     },
     methods: {
       async onDownloadCSV() {
-        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        this.createSnackbar({
+          text: 'Generating CSV...',
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         try {
           const response = await client.get(window.Urls.admin_users_download_csv(), {
             params: this.filterFetchQueryParams,
@@ -510,12 +518,19 @@
         } catch (error) {
           const status = error.response && error.response.status;
           if (status === 412) {
-            this.$store.dispatch(
-              'showSnackbarSimple',
-              'No filters applied. Pick at least one filter and try again.',
-            );
+            this.createSnackbar({
+              text: 'No filters applied. Pick at least one filter and try again.',
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           } else {
-            this.$store.dispatch('showSnackbarSimple', 'CSV download failed. Try again.');
+            this.createSnackbar({
+              text: 'CSV download failed. Try again.',
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           }
         }
       },

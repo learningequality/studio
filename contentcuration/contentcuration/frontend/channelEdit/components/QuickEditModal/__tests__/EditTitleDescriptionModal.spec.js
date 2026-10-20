@@ -2,6 +2,14 @@ import { mount } from '@vue/test-utils';
 import EditTitleDescriptionModal from '../EditTitleDescriptionModal.vue';
 import storeFactory from 'shared/vuex/baseStore';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 const nodeId = 'test-id';
 
 const node = {
@@ -16,9 +24,9 @@ describe('EditTitleDescriptionModal', () => {
   let titleInput;
   let descriptionInput;
   let updateContentNode;
-  let storeDispatch;
 
   beforeEach(() => {
+    mockCreateSnackbar.mockClear();
     wrapper = mount(EditTitleDescriptionModal, {
       store: storeFactory({
         modules: {
@@ -37,7 +45,6 @@ describe('EditTitleDescriptionModal', () => {
     });
 
     updateContentNode = jest.spyOn(wrapper.vm, 'updateContentNode').mockImplementation(() => {});
-    storeDispatch = jest.spyOn(wrapper.vm.$store, 'dispatch');
     modal = wrapper.findComponent('[data-test="edit-title-description-modal"]');
     titleInput = wrapper.findComponent('[data-test="title-input"]');
     descriptionInput = wrapper.findComponent('[data-test="description-input"]');
@@ -105,7 +112,7 @@ describe('EditTitleDescriptionModal', () => {
 
   it("should show 'Changes saved' on a snackbar on success submit", async () => {
     await wrapper.vm.handleSave();
-    expect(storeDispatch).toHaveBeenCalledWith('showSnackbarSimple', 'Changes saved');
+    expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Changes saved' }));
   });
 
   it("should emit 'close' event on success submit", async () => {
