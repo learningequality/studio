@@ -102,6 +102,7 @@ export const QuestionType = Object.freeze({
   ASSOCIATE: 'associate',
   MATCH: 'match',
   INLINE_CHOICE: 'inlineChoice',
+  GAP_MATCH: 'gapMatch',
 });
 
 /**
