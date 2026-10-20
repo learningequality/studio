@@ -16,7 +16,13 @@
 
 import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { hasRichTextContent } from '../utils/richText';
-import { getContentHTML } from './xml';
+import {
+  attributesOf,
+  contentChildrenOf,
+  getContentHTML,
+  hasNonNamespaceAttributes,
+  isChildElement,
+} from './xml';
 
 /** The catalog this editor writes hints into. */
 export const HINT_CATALOG_ID = 'kolibri-hints';
@@ -46,6 +52,49 @@ export function parseHints(doc) {
       content: htmlContent ? getContentHTML(htmlContent).trim() : '',
     };
   });
+}
+
+/**
+ * Whether this is a hint card in the shape the editor writes, which parseHints reads in full.
+ *
+ * @param {Node} card
+ * @returns {boolean}
+ */
+function isHintCard(card) {
+  if (!isChildElement(card, 'qti-card')) {
+    return false;
+  }
+  const attrs = attributesOf(card);
+  const [content, ...rest] = contentChildrenOf(card);
+  return (
+    attrs.length === 1 &&
+    attrs[0].name === 'support' &&
+    attrs[0].value === HINT_SUPPORT &&
+    !rest.length &&
+    (!content ||
+      (isChildElement(content, 'qti-html-content') && !hasNonNamespaceAttributes(content)))
+  );
+}
+
+/**
+ * Whether the item's `<qti-catalog-info>` holds only the hint catalog, with only cards
+ * parseHints reads in full, so an edit that rewrites it drops nothing. Change it with
+ * parseHints.
+ *
+ * @param {Element} catalogInfo
+ * @returns {boolean}
+ */
+export function holdsOnlyHints(catalogInfo) {
+  return (
+    !hasNonNamespaceAttributes(catalogInfo) &&
+    contentChildrenOf(catalogInfo).every(
+      catalog =>
+        isChildElement(catalog, 'qti-catalog') &&
+        attributesOf(catalog).length === 1 &&
+        catalog.getAttribute('id') === HINT_CATALOG_ID &&
+        contentChildrenOf(catalog).every(isHintCard),
+    )
+  );
 }
 
 /**

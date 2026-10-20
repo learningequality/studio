@@ -1,6 +1,7 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import {
   buildXmlNode,
+  contentChildrenOf,
   hasNonNamespaceAttributes,
   isContentNode,
   parseXML,
@@ -11,6 +12,7 @@ import CorrectResponse from '../../serialization/qti/declarations/correctRespons
 import Mapping from '../../serialization/qti/declarations/mapping';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { parseXsdDouble } from '../../utils/math';
+import { readLocaleNumber } from '../../utils/localeNumbers';
 import { BaseType, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
 
 const serializer = new XMLSerializer();
@@ -51,10 +53,6 @@ export function _defaultState() {
   };
 }
 
-function contentOf(el) {
-  return [...el.childNodes].filter(isContentNode);
-}
-
 function hasContentAfter(node) {
   for (let sibling = node.nextSibling; sibling; sibling = sibling.nextSibling) {
     if (isContentNode(sibling)) {
@@ -78,7 +76,7 @@ export function isSupportedTextEntryBody(bodyEl) {
   if (
     paragraph.localName !== 'p' ||
     hasNonNamespaceAttributes(paragraph) ||
-    contentOf(paragraph).length > 1 ||
+    contentChildrenOf(paragraph).length > 1 ||
     hasContentAfter(paragraph)
   ) {
     return false;
@@ -89,7 +87,7 @@ export function isSupportedTextEntryBody(bodyEl) {
     (container.localName === 'div' &&
       !hasNonNamespaceAttributes(container) &&
       container.parentElement === bodyEl &&
-      contentOf(bodyEl).length === 1)
+      contentChildrenOf(bodyEl).length === 1)
   );
 }
 
@@ -283,15 +281,27 @@ export function parseTextEntryInteraction(bodyXml, responseDeclarations) {
   return { prompt, answers, expectedLength };
 }
 
+// Numeric text that can't be read is kept, for validation to flag.
+function numericMapKey(value, language) {
+  return readLocaleNumber(value, language) ?? value.trim();
+}
+
 /**
  * Serialize TextEntryState → { bodyXml, responseDeclarations }.
  *
  * @param {TextEntryState} state
  * @param {string} questionType - One of QuestionType.NUMERIC, TEXT_ENTRY, FREE_RESPONSE
  * @param {{ baseType: string, cardinality: string }} declarationSchema
+ * @param {{ language?: string }} [options] - Numeric answers are read in `language`; with none
+ *   they are taken as xsd:double
  * @returns {{ bodyXml: string, responseDeclarations: string[] }}
  */
-export function buildTextEntryInteractionXML(state, questionType, declarationSchema) {
+export function buildTextEntryInteractionXML(
+  state,
+  questionType,
+  declarationSchema,
+  { language } = {},
+) {
   const { prompt, answers, expectedLength } = state;
   const { baseType, cardinality } = declarationSchema;
 
@@ -338,7 +348,7 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
     const isString = baseType === BaseType.STRING;
     const entries = answers.map(a => ({
       // Trimmed on build, not in state, so typing is untouched; matches _extractAnswers' trim.
-      mapKey: a.value.trim(),
+      mapKey: isString ? a.value.trim() : numericMapKey(a.value, language),
       mappedValue: 1,
       caseSensitive: isString && Boolean(a.caseSensitive),
     }));

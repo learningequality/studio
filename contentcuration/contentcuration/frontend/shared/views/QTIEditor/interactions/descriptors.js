@@ -9,8 +9,9 @@ import { inlineChoiceInteractionDescriptor } from './inlineChoice/Descriptor';
 /**
  * Every interaction's descriptor: matching, parsing, building and validating XML.
  *
- * This module imports `Descriptor.js` files only so that headless validation can be done withou
- * the bundle size cost of the editors.
+ * This module imports `Descriptor.js` files only so that headless validation does not load the
+ * interaction editors. It does load TipTap's extensions: rich text comparison keys parse with
+ * their schema.
  *
  * Registering a new interaction means adding its descriptor here and its editor in index.js
  */

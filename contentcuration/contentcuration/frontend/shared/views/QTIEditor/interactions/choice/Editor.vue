@@ -66,6 +66,14 @@
       <ValidationMessage v-if="tooManyCorrectError">
         {{ errorTooManyCorrectAnswers$() }}
       </ValidationMessage>
+      <!-- Keyed so Vue mounts a new instance (which announces) instead of reusing an error's -->
+      <ValidationMessage
+        v-if="singleChoiceWarning"
+        key="single-choice-warning"
+        warning
+      >
+        {{ warningSingleChoice$() }}
+      </ValidationMessage>
       <h4
         :id="answersHeaderId"
         class="answers-header field-label"
@@ -88,6 +96,7 @@
         :is="listWrapperTag"
         :aria-labelledby="answersHeaderId"
         :role="isSingleSelect ? 'radiogroup' : 'group'"
+        :readonly="isSingleSelect && mode !== 'edit'"
       >
         <DraggableRegion
           :items="state.choices"
@@ -167,7 +176,6 @@
                             :buttonValue="choice.id"
                             :label="markCorrectLabel$()"
                             :showLabel="false"
-                            :disabled="mode !== 'edit'"
                             :style="{ width: 'auto' }"
                             :color="$themePalette.green.v_600"
                             @change="onToggleCorrect(choice.id)"
@@ -179,7 +187,7 @@
                             :checked="choice.correct"
                             :label="markCorrectLabel$()"
                             :showLabel="false"
-                            :disabled="mode !== 'edit'"
+                            :readonly="mode !== 'edit'"
                             :color="$themePalette.green.v_600"
                             @change="onToggleCorrect(choice.id)"
                           />
@@ -302,6 +310,7 @@
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
+        warningSingleChoice$,
         questionLabel$,
         answersLabel$,
         answersDescriptionSingleChoice$,
@@ -438,7 +447,15 @@
           errors.value.length > 0 &&
           errorCodes.value.includes(ValidationError.TOO_MANY_CORRECT_ANSWERS),
       );
+      // Not a validation error: a single choice is unusual but valid (e.g. a confirmation).
+      const singleChoiceWarning = computed(
+        () =>
+          props.mode === 'edit' && errors.value.length === 0 && state.value.choices.length === 1,
+      );
+
       function onToggleCorrect(id) {
+        // Readonly controls can still emit `change`, e.g. arrow keys on a radio
+        if (props.mode !== 'edit') return;
         toggleCorrectChoice(id);
       }
 
@@ -539,6 +556,7 @@
         questionHasError,
         noCorrectAnswerError,
         tooManyCorrectError,
+        singleChoiceWarning,
         emptyChoiceIds,
         duplicateChoiceIds,
         choiceHasError,
@@ -567,6 +585,7 @@
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
+        warningSingleChoice$,
         questionLabel$,
         editQuestionLabel$,
         editAnswerOptionLabel$,

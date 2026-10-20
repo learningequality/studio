@@ -67,6 +67,7 @@
         :mode="mode"
         :showAnswers="showAnswers"
         :allowFreeResponse="allowFreeResponse"
+        :language="language"
         @update:questionType="type => (currentQuestionType = type)"
         @update:interaction="onUpdateInteraction"
         @update:errors="onUpdateErrors"
@@ -115,8 +116,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
-  import { validateItemShape, validateQtiItem } from '../../validateItem';
-  import { isSupportedItem } from '../../interactions/resolveDescriptor';
+  import { isEditableItem, validateItemShape, validateQtiItem } from '../../validateItem';
   import InteractionSection from '../InteractionSection/index.vue';
   import HintsSection from '../HintsSection/index.vue';
 
@@ -159,12 +159,17 @@
       /**
        * Whether this editor can edit the item's XML faithfully: it is readable, and it is
        * either blank or holds exactly one interaction this editor knows, in the body shape its
-       * builder writes.
+       * builder writes, and nothing outside the body that an edit would drop.
        */
-      const isBlank = !props.item.raw_data;
+      const sourceXml = props.item.raw_data;
       const isEditableQti = computed(
         () =>
-          !parseError.value && (isBlank || isSupportedItem(interactions.value, itemBodyXml.value)),
+          !parseError.value &&
+          (!sourceXml ||
+            isEditableItem(
+              { interactions: interactions.value, itemBodyXml: itemBodyXml.value },
+              sourceXml,
+            )),
       );
 
       /**
@@ -319,17 +324,17 @@
         errors.value = newErrors;
       }
 
+      const storedErrors = computed(() =>
+        isQti.value
+          ? validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })
+          : [],
+      );
+
       /**
        * Unreadable or empty QTI can't be fixed here and blocks publishing; other unsupported
        * items are publishable.
        */
-      const isUnfixable = computed(
-        () =>
-          isUnsupported.value &&
-          isQti.value &&
-          validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })
-            .length > 0,
-      );
+      const isUnfixable = computed(() => isUnsupported.value && storedErrors.value.length > 0);
 
       const unsupportedMessage = computed(() =>
         isUnfixable.value && props.canDelete
@@ -349,7 +354,13 @@
           questionTypes: [currentQuestionType.value],
           allowFreeResponse: props.allowFreeResponse,
         });
-        return itemErrors.length > 0 || errors.value.length > 0;
+        // Publishing reads the stored XML. Skipped while open: each edit is stored as the
+        // editor validates it.
+        return (
+          itemErrors.length > 0 ||
+          errors.value.length > 0 ||
+          (props.mode !== 'edit' && storedErrors.value.length > 0)
+        );
       });
 
       return {
@@ -417,6 +428,14 @@
       canDelete: {
         type: Boolean,
         default: false,
+      },
+      /**
+       * The exercise's language, which numeric answers are read and shown in. Empty means
+       * they are read and shown as stored.
+       */
+      language: {
+        type: String,
+        default: '',
       },
     },
 

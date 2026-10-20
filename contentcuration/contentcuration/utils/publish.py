@@ -46,6 +46,8 @@ from search.utils import get_fts_annotated_contentnode_qs
 
 from contentcuration import models as ccmodels
 from contentcuration.decorators import delay_user_storage_calculation
+from contentcuration.utils.assessment.perseus import answerless_input_ids
+from contentcuration.utils.assessment.perseus import is_perseus_readable_input_item
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.imsmanifest import (
@@ -270,6 +272,11 @@ def _node_is_perseus_derivable(node):
             if not is_perseus_derivable(item.raw_data):
                 return False
         elif item.type not in PERSEUS_EXPRESSIBLE_LEGACY_TYPES:
+            return False
+        elif (
+            item.type == exercises.INPUT_QUESTION
+            and not is_perseus_readable_input_item(item)
+        ):
             return False
     return has_native_qti
 
@@ -838,15 +845,21 @@ def process_assessment_metadata(ccnode):
 
 def create_kolibri_assessment_metadata(ccnode, kolibrinode):
     assessment_items = ccnode.assessment_items.all().order_by("order")
-    assessment_item_ids = [a.assessment_id for a in assessment_items]
     randomize, _, mastery_model = _get_exercise_data_from_ccnode(
-        ccnode, len(assessment_item_ids)
+        ccnode, len(assessment_items)
     )
     qti_file = ccnode.files.filter(preset_id=format_presets.QTI_ZIP).first()
     if qti_file:
         # Open the zip file from Django storage
         with qti_file.file_on_disk.open("rb") as file_handle:
             assessment_item_ids = get_assessment_ids_from_manifest(file_handle)
+    else:
+        answerless_ids = answerless_input_ids(ccnode)
+        assessment_item_ids = [
+            a.assessment_id
+            for a in assessment_items
+            if a.assessment_id not in answerless_ids
+        ]
 
     kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),

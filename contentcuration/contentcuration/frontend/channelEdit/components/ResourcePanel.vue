@@ -146,6 +146,7 @@
             :total="assessmentItems.length"
             mode="view"
             :allowFreeResponse="allowFreeResponse"
+            :language="language"
             :showAnswers="showAnswers"
             class="question-preview"
           />
@@ -499,6 +500,7 @@
     AccessibilityCategories,
     ContentModalities,
   } from '../../shared/constants';
+  import { exerciseLanguage } from '../composables/useAssessmentItems';
   import ContentNodeValidator from './ContentNodeValidator';
 
   import {
@@ -570,6 +572,7 @@
       ]),
       ...mapGetters('file', ['getContentNodeFiles', 'contentNodesTotalSize']),
       ...mapGetters('assessmentItem', ['getAssessmentItems', 'getInvalidAssessmentItemsCount']),
+      ...mapGetters('channel', ['getChannel']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -619,6 +622,10 @@
       // Free-response questions cannot be scored, so they only count as complete on a survey.
       allowFreeResponse() {
         return this.node?.extra_fields?.options?.modality === ContentModalities.SURVEY;
+      },
+      language() {
+        // The Clipboard previews nodes from other channels.
+        return exerciseLanguage(this.node, this.getChannel(this.node?.channel_id));
       },
       fileSize() {
         return this.contentNodesTotalSize([this.nodeId]);

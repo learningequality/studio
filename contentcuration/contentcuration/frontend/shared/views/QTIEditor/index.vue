@@ -27,6 +27,7 @@
           :total="items.length"
           :mode="activeId === item.assessment_id ? 'edit' : 'view'"
           :allowFreeResponse="allowFreeResponse"
+          :language="language"
           :showAnswers="showAnswers"
           canDelete
           data-testid="item"
@@ -224,6 +225,14 @@
       allowFreeResponse: {
         type: Boolean,
         default: true,
+      },
+      /**
+       * The exercise's language, which numeric answers are read and shown in. Empty means
+       * they are read and shown as stored.
+       */
+      language: {
+        type: String,
+        default: '',
       },
     },
 

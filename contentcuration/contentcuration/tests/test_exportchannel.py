@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import random
@@ -53,6 +54,7 @@ from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_draft_channel_version
+from contentcuration.utils.publish import create_kolibri_assessment_metadata
 from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
@@ -84,6 +86,25 @@ UNSUPPORTED_QTI_ITEM = _item_xml(
 
 # Perseus input questions are numeric-only, so this publishes QTI only.
 STRING_ENTRY_QTI_ITEM = _text_item("single", ["cat"], base_type="string")
+
+# Legacy input answers Perseus can't render as a finite number, or QTI converts
+# to a string entry.
+UNREADABLE_PERSEUS_INPUT_ANSWERS = ["Sphere", "1e400", "+50%"]
+
+# Publishing strips a zero-size image.
+ZERO_SIZE_IMAGE = (
+    f"![]({exercises.CONTENT_STORAGE_FORMAT.format('a' * 32 + '.png')} =0x0)"
+)
+
+# Legacy input answers Perseus can render, and the numbers it renders.
+# Publishing drops the image-only answer.
+READABLE_PERSEUS_INPUT_ANSWERS = [
+    (["+3"], [3]),
+    ([" +3"], [3]),
+    (["1E3"], [1000]),
+    ([f"4{ZERO_SIZE_IMAGE}"], [4]),
+    ([ZERO_SIZE_IMAGE, "4"], [4]),
+]
 
 
 # Larger than the signed 32-bit maximum (2_147_483_647); ~3 GB.
@@ -455,6 +476,98 @@ class ExportChannelTestCase(StudioTestCase):
             randomize=False,
         )
 
+        # Perseus packaging with an input question that has no accepted answer
+        perseus_answerless_input_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Perseus Answerless Input Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        perseus_answerless_input_exercise.complete = True
+        perseus_answerless_input_exercise.parent = current_exercise.parent
+        perseus_answerless_input_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=perseus_answerless_input_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.PERSEUS_QUESTION,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data="{}",
+            order=1,
+            randomize=False,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=perseus_answerless_input_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.INPUT_QUESTION,
+            question="What is 2+3?",
+            answers=json.dumps([{"answer": "", "correct": True, "order": 1}]),
+            hints="[]",
+            raw_data="{}",
+            order=2,
+            randomize=False,
+        )
+
+        # Dual-published: derivable native QTI item plus an answerless input question
+        native_qti_answerless_input_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI Answerless Input Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        native_qti_answerless_input_exercise.complete = True
+        native_qti_answerless_input_exercise.parent = current_exercise.parent
+        native_qti_answerless_input_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_answerless_input_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=VALID_CHOICE_ITEM,
+            order=1,
+            randomize=False,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_answerless_input_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.INPUT_QUESTION,
+            question="What is 2+3?",
+            answers=json.dumps([{"answer": "", "correct": True, "order": 1}]),
+            hints="[]",
+            raw_data="{}",
+            order=2,
+            randomize=False,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_answerless_input_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.INPUT_QUESTION,
+            question="What is 2+3?",
+            answers=json.dumps([{"answer": "5", "correct": True, "order": 1}]),
+            hints="[]",
+            raw_data="{}",
+            order=3,
+            randomize=False,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_answerless_input_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.INPUT_QUESTION,
+            question="What is 2+3?",
+            answers=json.dumps(
+                [{"answer": ZERO_SIZE_IMAGE, "correct": True, "order": 1}]
+            ),
+            hints="[]",
+            raw_data="{}",
+            order=4,
+            randomize=False,
+        )
+
         # A node mixing a native QTI item with a raw perseus_question item ->
         # must route to a single QTI package (Perseus embedded as custom
         # interactions), not a separate Perseus archive.
@@ -524,6 +637,55 @@ class ExportChannelTestCase(StudioTestCase):
             order=2,
             randomize=False,
         )
+
+        # Mixed nodes with legacy input questions -> QTI only if Perseus can't
+        # read an answer, so each unreadable answer needs a node of its own
+        mixed_input_answers = {
+            f"Native QTI + Input {answer!r} Mixed Exercise": [[answer]]
+            for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS
+        }
+        mixed_input_answers["Native QTI + Readable Inputs Mixed Exercise"] = [
+            answers for answers, _ in READABLE_PERSEUS_INPUT_ANSWERS
+        ]
+        for title, input_answers in mixed_input_answers.items():
+            mixed_exercise = create_node(
+                {
+                    "kind_id": "exercise",
+                    "title": title,
+                    "extra_fields": qti_extra_fields,
+                }
+            )
+            mixed_exercise.complete = True
+            mixed_exercise.parent = current_exercise.parent
+            mixed_exercise.save()
+            cc.AssessmentItem.objects.create(
+                contentnode=mixed_exercise,
+                assessment_id=uuid.uuid4().hex,
+                type=exercises.QTI,
+                question="",
+                answers="[]",
+                hints="[]",
+                raw_data=VALID_CHOICE_ITEM,
+                order=1,
+                randomize=False,
+            )
+            for item_order, answers in enumerate(input_answers, start=2):
+                cc.AssessmentItem.objects.create(
+                    contentnode=mixed_exercise,
+                    assessment_id=uuid.uuid4().hex,
+                    type=exercises.INPUT_QUESTION,
+                    question="What is the answer?",
+                    answers=json.dumps(
+                        [
+                            {"answer": answer, "correct": True, "order": order}
+                            for order, answer in enumerate(answers, start=1)
+                        ]
+                    ),
+                    hints="[]",
+                    raw_data="{}",
+                    order=item_order,
+                    randomize=False,
+                )
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
 
@@ -1104,18 +1266,24 @@ class ExportChannelTestCase(StudioTestCase):
         self.assertTrue(commented)
         self.assertEqual(commented, item_contents("Native QTI Exercise"))
 
+    def _read_perseus_archive(self, node):
+        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+        with exercise_file.file_on_disk.open("rb") as file_handle, zipfile.ZipFile(
+            file_handle
+        ) as archive:
+            item_stems = {
+                name[: -len(".json")]
+                for name in archive.namelist()
+                if name.endswith(".json") and name != "exercise.json"
+            }
+            return item_stems, json.loads(archive.read("exercise.json"))
+
     def test_native_qti_perseus_ids_match_assessment_metadata(self):
         """The derived Perseus item JSON filenames must equal the ids recorded
         in the published node's ``AssessmentMetaData.assessment_item_ids`` (the
         QTI manifest ``K``-ids), so older Kolibri resolves the derived items."""
         node = cc.ContentNode.objects.get(title="Native QTI Exercise")
-        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
-        with exercise_file.file_on_disk.open("rb") as file_handle:
-            item_stems = {
-                name[: -len(".json")]
-                for name in zipfile.ZipFile(file_handle).namelist()
-                if name.endswith(".json") and name != "exercise.json"
-            }
+        item_stems, _ = self._read_perseus_archive(node)
 
         published_node = kolibri_models.ContentNode.objects.get(
             title="Native QTI Exercise"
@@ -1131,15 +1299,7 @@ class ExportChannelTestCase(StudioTestCase):
         """Older Kolibri looks up legacy items by the QTI manifest id too."""
         title = "Native QTI + Legacy Mixed Exercise"
         node = cc.ContentNode.objects.get(title=title)
-        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
-        with exercise_file.file_on_disk.open("rb") as file_handle:
-            archive = zipfile.ZipFile(file_handle)
-            item_stems = {
-                name[: -len(".json")]
-                for name in archive.namelist()
-                if name.endswith(".json") and name != "exercise.json"
-            }
-            exercise_data = json.loads(archive.read("exercise.json"))
+        item_stems, exercise_data = self._read_perseus_archive(node)
 
         assessment_item_ids = (
             kolibri_models.ContentNode.objects.get(title=title)
@@ -1153,6 +1313,40 @@ class ExportChannelTestCase(StudioTestCase):
         self.assertEqual(
             set(exercise_data["assessment_mapping"]), set(assessment_item_ids)
         )
+
+    def test_dual_published_numeric_inputs_have_answers(self):
+        dual_published = cc.ContentNode.objects.filter(
+            files__preset_id=format_presets.QTI_ZIP
+        ).filter(files__preset_id=format_presets.EXERCISE)
+        mixed_answers = {}
+        for node in dual_published:
+            exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+            with exercise_file.file_on_disk.open("rb") as file_handle, zipfile.ZipFile(
+                file_handle
+            ) as archive:
+                for name in archive.namelist():
+                    if not name.endswith(".json") or name == "exercise.json":
+                        continue
+                    widgets = json.loads(archive.read(name))["question"]["widgets"]
+                    for widget in widgets.values():
+                        if widget["type"] != "numeric-input":
+                            continue
+                        answers = [
+                            answer["value"] for answer in widget["options"]["answers"]
+                        ]
+                        with self.subTest(node=node.title, item=name):
+                            self.assertTrue(answers)
+                        mixed_answers.setdefault(node.title, []).append(answers)
+
+        expected = {
+            "Native QTI + Legacy Mixed Exercise": [[4]],
+            "Native QTI + Readable Inputs Mixed Exercise": [
+                values for _, values in READABLE_PERSEUS_INPUT_ANSWERS
+            ],
+        }
+        for title, answers in expected.items():
+            with self.subTest(node=title):
+                self.assertCountEqual(mixed_answers.get(title), answers)
 
     def test_native_qti_item_declares_the_node_language(self):
         """The editor has no language of its own to write, so publishing supplies it.
@@ -1196,6 +1390,19 @@ class ExportChannelTestCase(StudioTestCase):
         self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
         self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
 
+    def test_mixed_native_unreadable_input_publishes_qti_only(self):
+        for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS:
+            with self.subTest(answer=answer):
+                node = cc.ContentNode.objects.get(
+                    title=f"Native QTI + Input {answer!r} Mixed Exercise"
+                )
+                self.assertTrue(
+                    node.files.filter(preset_id=format_presets.QTI_ZIP).exists()
+                )
+                self.assertFalse(
+                    node.files.filter(preset_id=format_presets.EXERCISE).exists()
+                )
+
     def test_legacy_items_without_perseus_question_route_to_qti_packaging(self):
         node = cc.ContentNode.objects.get(title="Legacy No Perseus Exercise")
         self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
@@ -1205,6 +1412,76 @@ class ExportChannelTestCase(StudioTestCase):
         node = cc.ContentNode.objects.get(title="Perseus Only Exercise")
         self.assertTrue(node.files.filter(preset_id=format_presets.EXERCISE).exists())
         self.assertFalse(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+
+    def test_answerless_input_left_out_of_perseus_archive_and_metadata(self):
+        title = "Perseus Answerless Input Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        perseus_id = node.assessment_items.get(
+            type=exercises.PERSEUS_QUESTION
+        ).assessment_id
+        self.assertFalse(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        item_stems, exercise_data = self._read_perseus_archive(node)
+        self.assertEqual(item_stems, {perseus_id})
+        self.assertEqual(exercise_data["all_assessment_items"], [perseus_id])
+
+        published_node = kolibri_models.ContentNode.objects.get(title=title)
+        self.assertEqual(
+            published_node.assessmentmetadata.first().assessment_item_ids,
+            [perseus_id],
+        )
+
+    def test_unchanged_republish_metadata_leaves_out_answerless_input(self):
+        # An unchanged node keeps its archive, which may predate the skip.
+        title = "Perseus Answerless Input Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        all_ids = list(
+            node.assessment_items.order_by("order").values_list(
+                "assessment_id", flat=True
+            )
+        )
+        perseus_id = node.assessment_items.get(
+            type=exercises.PERSEUS_QUESTION
+        ).assessment_id
+        stale_archive = io.BytesIO()
+        with zipfile.ZipFile(stale_archive, "w") as archive:
+            archive.writestr(
+                "exercise.json", json.dumps({"all_assessment_items": all_ids})
+            )
+            for assessment_id in all_ids:
+                archive.writestr(f"{assessment_id}.json", "{}")
+        node.files.filter(preset_id=format_presets.EXERCISE).delete()
+        stale_file = create_studio_file(
+            stale_archive.getvalue(), preset=format_presets.EXERCISE, ext="perseus"
+        )["db_file"]
+        stale_file.contentnode = node
+        stale_file.save()
+        published_node = kolibri_models.ContentNode.objects.get(title=title)
+        published_node.assessmentmetadata.all().delete()
+
+        create_kolibri_assessment_metadata(node, published_node)
+
+        self.assertEqual(
+            published_node.assessmentmetadata.get().assessment_item_ids,
+            [perseus_id],
+        )
+
+    def test_answerless_input_left_out_of_dual_published_archives(self):
+        title = "Native QTI Answerless Input Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        answerless_ids = node.assessment_items.filter(
+            type=exercises.INPUT_QUESTION, order__in=[2, 4]
+        ).values_list("assessment_id", flat=True)
+        item_stems, exercise_data = self._read_perseus_archive(node)
+        self.assertEqual(len(item_stems), 2)
+        for answerless_id in answerless_ids:
+            self.assertNotIn(hex_to_qti_id(answerless_id), item_stems)
+        self.assertEqual(set(exercise_data["all_assessment_items"]), item_stems)
+
+        published_node = kolibri_models.ContentNode.objects.get(title=title)
+        self.assertEqual(
+            set(published_node.assessmentmetadata.first().assessment_item_ids),
+            item_stems,
+        )
 
     def test_mixed_perseus_and_native_qti_routes_to_qti(self):
         node = cc.ContentNode.objects.get(title="Perseus + Native QTI Mixed Exercise")

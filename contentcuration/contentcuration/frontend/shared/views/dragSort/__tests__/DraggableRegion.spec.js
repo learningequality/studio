@@ -432,6 +432,22 @@ describe('DraggableRegion', () => {
       document.body.removeChild(outside);
     });
 
+    it('does not announce when the focused row is removed', async () => {
+      const { wrapper } = await mountRegion({}, { attachTo: document.body });
+      wrapper.vm._provided.registerSortItem(0, 'First', 1);
+      const deleteButton = document.createElement('button');
+      wrapper.element.appendChild(deleteButton);
+
+      deleteButton.dispatchEvent(
+        new FocusEvent('focusout', { bubbles: true, relatedTarget: null }),
+      );
+      deleteButton.remove();
+      await nextFrame();
+
+      expect(sendPoliteMessage).not.toHaveBeenCalled();
+      wrapper.destroy();
+    });
+
     it('does not announce on window blur (document not focused)', async () => {
       document.hasFocus = jest.fn(() => false);
       const { wrapper } = await mountRegion();

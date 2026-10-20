@@ -25,6 +25,7 @@ const serializer = new XMLSerializer();
  * @returns {{
  *   identifier: string,
  *   title: string,
+ *   label: string,
  *   language: string,
  *   itemBodyXml: string,
  *   interactions: Array<{ bodyXml: string, responseDeclarations: string[] }>,
@@ -37,7 +38,9 @@ export function parseItem(rawData) {
   const root = doc.querySelector('qti-assessment-item');
   const identifier = root?.getAttribute('identifier') ?? '';
   const title = root?.getAttribute('title') ?? '';
-  const language = root?.getAttribute('xml:lang') ?? '';
+  const label = root?.getAttribute('label') ?? '';
+  // Items converted before c51c5e035 carry the root language as `language`.
+  const language = root?.getAttribute('xml:lang') ?? root?.getAttribute('language') ?? '';
 
   const body = doc.querySelector('qti-item-body');
 
@@ -79,6 +82,7 @@ export function parseItem(rawData) {
   return {
     identifier,
     title,
+    label,
     language,
     itemBodyXml: body ? serializer.serializeToString(body) : '',
     interactions,

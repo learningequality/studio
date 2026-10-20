@@ -27,6 +27,7 @@ import { assembleItemXml } from '../serialization/assembleItem';
 export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {}) {
   const identifier = ref('');
   const title = ref('');
+  const label = ref('');
   const language = ref('');
   const itemBodyXml = ref('');
   const interactions = ref([]);
@@ -42,6 +43,7 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
       const model = parseItem(rawXml);
       identifier.value = model.identifier;
       title.value = model.title;
+      label.value = model.label;
       language.value = model.language;
       itemBodyXml.value = model.itemBodyXml;
       interactions.value = model.interactions;
@@ -60,6 +62,7 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
     assembleItemXml({
       identifier: identifier.value,
       title: title.value,
+      label: label.value,
       language: language.value,
       bodyXml: bodyXml?.value ?? '',
       responseDeclarations: responseDeclarations?.value ?? [],

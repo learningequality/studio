@@ -373,6 +373,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Only one correct answer is allowed for single-choice questions.',
     context: 'Validation error when multiple choices are marked correct for single-select',
   },
+  warningSingleChoice: {
+    message: 'This question has only one answer option. Did you mean to add more?',
+    context:
+      'Warning shown when a single-choice or multiple-select question has only one answer option. It does not block saving the question.',
+  },
   errorEmptyChoiceContent: {
     message: 'Answer cannot be blank',
     context: 'Validation error when an answer option is empty',
@@ -452,8 +457,9 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context: 'Placeholder inside a text-entry answer input field',
   },
   errorInvalidNumericValue: {
-    message: 'Must be a valid number (e.g. 12, 0.5, -3.14)',
-    context: 'Validation error shown when an answer value is not a valid number',
+    message: 'Must be a valid number (e.g. "{integer}", "{decimal}", "{negative}")',
+    context:
+      'Validation error shown when an answer value is not a valid number. The placeholders are example numbers written the way the exercise language writes them, and may contain commas or periods. Keep each one inside quotation marks, using the quotation marks your language normally uses.',
   },
   errorParsingQuestion: {
     message: 'This question could not be loaded',

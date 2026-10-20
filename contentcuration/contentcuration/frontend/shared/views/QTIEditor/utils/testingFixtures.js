@@ -2,6 +2,7 @@
 
 import { QTI_INTERACTION_TAGS } from '../constants';
 import { registry } from '../interactions/descriptors';
+import { QTI_SCHEMA_LOCATION, XSI_NS } from '../serialization/xml';
 
 export const CHOICE_SINGLE_SELECT_XML = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
   <qti-prompt>Which planet is closest to the Sun?</qti-prompt>
@@ -267,6 +268,25 @@ export const TEXT_ENTRY_ITEM_DOCUMENT_TRAILING_CONTENT = FREE_RESPONSE_ITEM_DOCU
   '<p>Show your working.</p></qti-item-body>',
 );
 
+export const NUMERIC_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-numeric"
+  title="Numeric"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">
+    <qti-correct-response><qti-value>1234.5</qti-value></qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <p>Combien ?</p>
+    <p><qti-text-entry-interaction response-identifier="RESPONSE" /></p>
+  </qti-item-body>
+</qti-assessment-item>`;
+
 export const NO_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
@@ -331,6 +351,54 @@ export const CHOICE_ITEM_DOCUMENT_WITH_HINTS = `<?xml version="1.0" encoding="UT
 export const CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_STIMULUS = CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
   '<qti-item-body>',
   '<qti-item-body><p>Read the passage.</p>',
+);
+
+/** A glossary catalog beside the hints, which the prompt points at. */
+export const CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_GLOSSARY = CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+  '<qti-prompt>Pick one.</qti-prompt>',
+  '<qti-prompt>Pick <span data-catalog-idref="g1">one</span>.</qti-prompt>',
+).replace(
+  '  </qti-catalog-info>',
+  `    <qti-catalog id="g1">
+      <qti-card support="glossary-on-screen">
+        <qti-html-content><p>Exactly one.</p></qti-html-content>
+      </qti-card>
+    </qti-catalog>
+  </qti-catalog-info>`,
+);
+
+export const CHOICE_ITEM_DOCUMENT_WITH_SCHEMA_LOCATION = CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+  'xml:lang="en"\n>',
+  `xml:lang="en"
+  xmlns:xsi="${XSI_NS}"
+  xsi:schemaLocation="${QTI_SCHEMA_LOCATION}"
+>`,
+);
+
+export const CHOICE_ITEM_DOCUMENT_WITH_STYLESHEET = CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+  '\n\n  <qti-item-body>',
+  `
+  <qti-stylesheet href="style.css" type="text/css"/>
+  <qti-item-body>`,
+);
+
+export const STYLESHEET_ITEM_DOCUMENT_NO_PROMPT = CHOICE_ITEM_DOCUMENT_WITH_STYLESHEET.replace(
+  '<qti-prompt>Pick one.</qti-prompt>',
+  '',
+);
+
+export const CHOICE_ITEM_DOCUMENT_WITH_MODAL_FEEDBACK = CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+  '\n\n  <qti-item-body>',
+  `
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>`,
+).replace(
+  '\n</qti-assessment-item>',
+  `
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="correct" show-hide="show">
+    <qti-content-body><p>Well done.</p></qti-content-body>
+  </qti-modal-feedback>
+</qti-assessment-item>`,
 );
 
 export const VALID_ASSOCIATE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>

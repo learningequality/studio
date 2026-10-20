@@ -40,6 +40,16 @@ describe('validate()', () => {
     expect(validate(state, QuestionType.MULTI_SELECT)).toEqual([]);
   });
 
+  it.each([QuestionType.SINGLE_SELECT, QuestionType.MULTI_SELECT])(
+    'returns an empty array for a %s state with a single correct choice',
+    questionType => {
+      const state = makeState({
+        choices: [makeAnswer({ id: 'a', content: 'I confirm', correct: true })],
+      });
+      expect(validate(state, questionType)).toEqual([]);
+    },
+  );
+
   describe('PROMPT_REQUIRED', () => {
     it('returns error when prompt is an empty string', () => {
       expect(errorCodes(validate(makeState({ prompt: '' }), QuestionType.SINGLE_SELECT))).toContain(
@@ -131,6 +141,20 @@ describe('validate()', () => {
       expect(errorCodes(validate(state, QuestionType.SINGLE_SELECT))).not.toContain(
         ValidationError.DUPLICATE_CHOICE_CONTENT,
       );
+    });
+
+    it.each([
+      ['a formula', '<span data-latex="x^2"></span>', '<span data-latex="y^3"></span>'],
+      ['an image', '<img src="abc123.png"/>', '<img src="def456.png"/>'],
+      ['a script', '<sup>2</sup>', '<sub>2</sub>'],
+    ])('does not flag choices with the same text but %s that differs', (_, first, second) => {
+      const state = makeState({
+        choices: [
+          makeAnswer({ id: 'a', content: `<p>Solve ${first} for x</p>`, correct: true }),
+          makeAnswer({ id: 'b', content: `<p>Solve ${second} for x</p>`, correct: false }),
+        ],
+      });
+      expect(validate(state, QuestionType.SINGLE_SELECT)).toEqual([]);
     });
   });
 
