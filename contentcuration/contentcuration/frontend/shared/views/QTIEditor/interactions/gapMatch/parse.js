@@ -22,7 +22,7 @@ const GAP_TEXT = 'qti-gap-text';
 const PROMPT = 'qti-prompt';
 const ANSWER_ATTR = 'data-studio-answer';
 
-export function _defaultState() {
+function defaultState() {
   return { responseIdentifier: RESPONSE_IDENTIFIER, prompt: '', passage: '', distractors: [] };
 }
 
@@ -36,13 +36,13 @@ export function getGaps(passage) {
 }
 
 export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
-  if (!bodyXml) return _defaultState();
+  if (!bodyXml) return defaultState();
 
   let root;
   try {
     root = parseXML(bodyXml).documentElement;
   } catch {
-    return _defaultState();
+    return defaultState();
   }
 
   const contentNodes = [...root.childNodes].filter(isContentNode);

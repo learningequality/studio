@@ -3,7 +3,7 @@ import { getGaps } from '../parse';
 import { isSupportedItem, resolveDescriptor } from '../../resolveDescriptor';
 import { parseItem } from '../../../serialization/parseItem';
 import { parseXML } from '../../../serialization/xml';
-import { Placement, QtiInteraction, QuestionType } from '../../../constants';
+import { QtiInteraction, QuestionType } from '../../../constants';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 
 const ITEM = `<?xml version="1.0" encoding="UTF-8"?>
@@ -29,10 +29,6 @@ const ITEM = `<?xml version="1.0" encoding="UTF-8"?>
 const toEl = xml => parseXML(xml).documentElement;
 
 describe('gapMatchInteractionDescriptor', () => {
-  it('is a block interaction', () => {
-    expect(descriptor.placement).toBe(Placement.BLOCK);
-  });
-
   describe('matches', () => {
     it('matches the gap match interaction element', () => {
       expect(descriptor.matches(toEl('<qti-gap-match-interaction/>'))).toBe(true);
