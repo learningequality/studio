@@ -1,6 +1,7 @@
 import flatten from 'lodash/flatten';
 import { ValidationError } from '../../constants';
 import { hasRichTextContent } from '../../utils/richText';
+import { duplicateDistractorErrors } from '../../utils/distractors';
 import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
@@ -58,21 +59,7 @@ export function validateAssociateInteraction(state) {
   // A distractor is there to be the wrong answer, so repeating another
   // distractor or an item the author already paired makes it unanswerable.
   // Content reused across two pairs stays valid — only distractors are flagged.
-  const occurrences = new Map();
-  for (const { filled, key } of allChoices) {
-    if (filled) {
-      occurrences.set(key, (occurrences.get(key) || 0) + 1);
-    }
-  }
-
-  const repeated = new Set(
-    readDistractors
-      .filter(({ filled, key }) => filled && occurrences.get(key) > 1)
-      .map(({ key }) => key),
-  );
-  for (const text of repeated) {
-    errors.push({ code: ValidationError.DUPLICATE_DISTRACTOR_CONTENT, text });
-  }
+  errors.push(...duplicateDistractorErrors(flatten(readPairs), readDistractors));
 
   return errors;
 }
