@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import CountryField from '../CountryField.vue';
@@ -93,11 +93,13 @@ describe('CountryField', () => {
   });
 
   it('shows a message when no country matches the search', async () => {
-    renderComponent();
+    const { container } = renderComponent();
 
     await userEvent.type(screen.getByRole('combobox'), 'zzzzz');
 
-    expect(await screen.findByText('No countries found')).toBeInTheDocument();
+    // The page-level live region also announces this text, so only look inside the field
+    expect(await within(container).findByText('No countries found')).toBeInTheDocument();
+    expect(within(container).queryAllByRole('option', { hidden: true })).toHaveLength(0);
   });
 
   it('disables the input when disabled', () => {
@@ -111,7 +113,9 @@ describe('CountryField', () => {
 
       await leaveField();
 
-      expect(await screen.findByText('Field is required')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole('combobox')).toHaveAccessibleDescription('Field is required');
+      });
     });
 
     it('does not show an error before the field is touched', () => {

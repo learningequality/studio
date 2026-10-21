@@ -141,7 +141,10 @@ describe('Create account page', () => {
     await userEvent.click(finishButton);
 
     await waitFor(() => {
-      expect(mockRegisterAction).toHaveBeenCalled();
+      expect(mockRegisterAction).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ locations: 'Kenya' }),
+      );
     });
   });
 

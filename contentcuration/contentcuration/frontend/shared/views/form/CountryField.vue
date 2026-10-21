@@ -94,16 +94,14 @@
           clearAction$,
           optionRemovedLabel$,
           countryItemsSelectedLabel$,
-          countrySelectionsClearedLabel$,
+          selectionsClearedLabel$,
         } = commonStrings;
         return createMultiSelectMessages({
           clearText: clearAction$,
           itemsSelected: countryItemsSelectedLabel$,
           // KMultiSelect passes a label in single mode and a count in multiple mode
           cleared: ({ label, count }) =>
-            this.multiple
-              ? countrySelectionsClearedLabel$({ count })
-              : optionRemovedLabel$({ label }),
+            this.multiple ? selectionsClearedLabel$({ count }) : optionRemovedLabel$({ label }),
         });
       },
     },
