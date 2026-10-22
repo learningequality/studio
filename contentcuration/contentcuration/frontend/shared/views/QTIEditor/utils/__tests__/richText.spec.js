@@ -1,4 +1,4 @@
-import { hasRichTextContent } from '../richText';
+import { escapeText, hasRichTextContent, toPlainText } from '../richText';
 
 describe('hasRichTextContent', () => {
   it.each([
@@ -31,5 +31,46 @@ describe('hasRichTextContent', () => {
     ['![](abc123.png =550x364)', true],
   ])('%s -> %s', (content, expected) => {
     expect(hasRichTextContent(content)).toBe(expected);
+  });
+});
+
+describe('toPlainText', () => {
+  it.each([
+    ['Paris', 'Paris'],
+    ['<p>Paris</p>', 'Paris'],
+    ['<p></p>', ''],
+    ['', ''],
+    [null, ''],
+    // Entities are decoded, not left as their literal characters.
+    ['<p>a &amp; b&nbsp;c</p>', 'a & b c'],
+  ])('reads %s as %s and loses nothing', (content, text) => {
+    expect(toPlainText(content)).toEqual({ text, lost: false });
+  });
+
+  it.each([
+    ['<p><strong>Paris</strong></p>', 'Paris'],
+    ['<p>H<sub>2</sub>O</p>', 'H2O'],
+    ['<p>first</p><p>second</p>', 'first second'],
+    ['<p>first<br>second</p>', 'first second'],
+    ['<ul><li>one</li><li>two</li></ul>', 'one two'],
+  ])('reads %s as %s and says what plain text cannot hold is lost', (content, text) => {
+    expect(toPlainText(content)).toEqual({ text, lost: true });
+  });
+
+  it.each([
+    ['an image', '<p><img src="abc123.png"/></p>'],
+    ['a formula', '<p><span data-latex="x^2"></span></p>'],
+  ])('reads %s on its own as no text, and lost', (_, content) => {
+    expect(toPlainText(content)).toEqual({ text: '', lost: true });
+  });
+
+  it('counts an empty paragraph after the text as no second line', () => {
+    expect(toPlainText('<p>Paris</p><p></p>')).toEqual({ text: 'Paris', lost: false });
+  });
+});
+
+describe('escapeText', () => {
+  it('escapes markup, so it reads back as the same text', () => {
+    expect(escapeText('a < b & <b>c</b>')).toBe('a &lt; b &amp; &lt;b&gt;c&lt;/b&gt;');
   });
 });

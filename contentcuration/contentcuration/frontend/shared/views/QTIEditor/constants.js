@@ -134,6 +134,51 @@ export const ValidationError = Object.freeze({
   DUPLICATE_MATCH_CONTENT: 'DUPLICATE_MATCH_CONTENT',
 });
 
+/**
+ * What makes an answer correct, for the question types whose answers are a list
+ * (conversion/answers.js translates one into another).
+ */
+export const CorrectCriterion = Object.freeze({
+  // The answers marked correct (single and multi select)
+  SELECTED: 'selected',
+  // Every answer (numeric and text entry)
+  ACCEPTED: 'accepted',
+  // The order of the answers (ordering)
+  ORDERED: 'ordered',
+});
+
+/**
+ * How much markup a field can hold, from most to least. A question type change moves
+ * answers between fields of different levels: going down drops what the lower level can't
+ * hold, which the author is told about first, and going up loses nothing.
+ */
+export const ContentLevel = Object.freeze({
+  // Blocks, images and formulas, as a rich text editor writes them: choices, ordering
+  // items, associate and match items
+  RICH: 'rich',
+  // Text, inline formatting and formulas, with no blocks, for a field that sits inside a
+  // sentence: gap match answers
+  INLINE: 'inline',
+  // Text only: numeric and text entry answers, inline choice options
+  PLAIN: 'plain',
+});
+
+/**
+ * What changing a question's type would remove or change in a way validation can't catch,
+ * so the author confirms it first. In the order the author is told about them.
+ */
+export const ConversionLoss = Object.freeze({
+  ANSWERS_REMOVED: 'ANSWERS_REMOVED',
+  INCORRECT_ANSWERS_REMOVED: 'INCORRECT_ANSWERS_REMOVED',
+  ANY_CORRECT_ANSWER_ACCEPTED: 'ANY_CORRECT_ANSWER_ACCEPTED',
+  CORRECT_ANSWERS_REDUCED: 'CORRECT_ANSWERS_REDUCED',
+  CORRECT_ANSWERS_NOT_KEPT: 'CORRECT_ANSWERS_NOT_KEPT',
+  ORDER_BECOMES_ANSWER: 'ORDER_BECOMES_ANSWER',
+  ORDER_NOT_KEPT: 'ORDER_NOT_KEPT',
+  FORMATTING_REMOVED: 'FORMATTING_REMOVED',
+  PASSAGE_ADDED_TO_QUESTION: 'PASSAGE_ADDED_TO_QUESTION',
+});
+
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
 
 export const SENTINEL_MARKER = 'data-studio-sentinel';
