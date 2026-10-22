@@ -64,12 +64,12 @@
         },
       },
       messages() {
-        const { languageItemsSelectedLabel$, languageSelectionsClearedLabel$ } = commonStrings;
+        const { languageItemsSelectedLabel$, selectionsClearedLabel$ } = commonStrings;
         const { clearAllAction$ } = communityChannelsStrings;
         return createMultiSelectMessages({
           clearText: clearAllAction$,
           itemsSelected: languageItemsSelectedLabel$,
-          cleared: languageSelectionsClearedLabel$,
+          cleared: selectionsClearedLabel$,
         });
       },
     },
