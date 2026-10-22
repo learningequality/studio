@@ -100,6 +100,7 @@
   }
 
   .message-slot-container {
+    width: 100%;
     max-width: 400px;
     margin: 24px auto 0;
     text-align: center;
