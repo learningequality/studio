@@ -20,7 +20,7 @@ const serializer = new XMLSerializer();
 const GAP = 'qti-gap';
 const GAP_TEXT = 'qti-gap-text';
 const PROMPT = 'qti-prompt';
-const ANSWER_ATTR = 'data-studio-answer';
+const CORRECT_ATTR = 'data-studio-correct';
 const SENTINEL_ID = 'studio_sentinel';
 
 function defaultState() {
@@ -31,8 +31,8 @@ export function getGaps(passage) {
   const doc = parseXML(passage || '', 'text/html');
   return [...doc.querySelectorAll(GAP)].map(el => ({
     id: el.getAttribute('identifier'),
-    answerId: el.getAttribute(ANSWER_ATTR),
-    answer: el.innerHTML,
+    answerId: el.getAttribute(CORRECT_ATTR),
+    answer: getContentHTML(el),
   }));
 }
 
@@ -79,7 +79,7 @@ export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
 
     const gapTextEl = gapTextById.get(answerIdByGapId.get(originalId));
     if (gapTextEl) {
-      gapEl.setAttribute(ANSWER_ATTR, gapTextEl.getAttribute('identifier'));
+      gapEl.setAttribute(CORRECT_ATTR, gapTextEl.getAttribute('identifier'));
       gapEl.append(...[...gapTextEl.childNodes].map(node => node.cloneNode(true)));
       paired.add(gapTextEl);
     }
@@ -103,7 +103,7 @@ export function buildGapMatchInteractionXML(state, _questionType, declarationSch
 
   const taken = new Set(
     [
-      ...gapEls.flatMap(el => [el.getAttribute('identifier'), el.getAttribute(ANSWER_ATTR)]),
+      ...gapEls.flatMap(el => [el.getAttribute('identifier'), el.getAttribute(CORRECT_ATTR)]),
       ...distractors.map(({ id }) => id),
     ].filter(Boolean),
   );
@@ -134,7 +134,7 @@ export function buildGapMatchInteractionXML(state, _questionType, declarationSch
     const content = getContentHTML(gapEl);
     if (hasRichTextContent(content)) {
       const key = richTextComparisonKey(content);
-      const ownAnswerId = gapEl.getAttribute(ANSWER_ATTR);
+      const ownAnswerId = gapEl.getAttribute(CORRECT_ATTR);
       const answerId =
         idByAnswerKey.get(key) ||
         (ownAnswerId

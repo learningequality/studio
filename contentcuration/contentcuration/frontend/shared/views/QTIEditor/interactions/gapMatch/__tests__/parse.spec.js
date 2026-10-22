@@ -36,7 +36,7 @@ const BODY = interaction(
 const DECL = declaration('choice_winter gap_a', 'choice_spring gap_b');
 
 const gap = (id, answerId, answer) =>
-  `<qti-gap identifier="${id}" data-studio-answer="${answerId}">${answer}</qti-gap>`;
+  `<qti-gap identifier="${id}" data-studio-correct="${answerId}">${answer}</qti-gap>`;
 const blankGap = id => `<qti-gap identifier="${id}"></qti-gap>`;
 
 function makeState(overrides = {}) {
@@ -71,6 +71,13 @@ const roundTrip = state => {
   const { bodyXml, responseDeclarations } = buildXML(state, QuestionType.GAP_MATCH, SCHEMA);
   return parse(bodyXml, responseDeclarations);
 };
+
+describe('getGaps()', () => {
+  it('reads an answer as the build does, without comments or scripts', () => {
+    const passage = `<p>${gap('gap_a', 'choice_w', '<!-- note -->winter<script>x()</script>')}</p>`;
+    expect(getGaps(passage)[0].answer).toBe('winter');
+  });
+});
 
 describe('parse()', () => {
   describe('fallbacks', () => {
@@ -368,7 +375,7 @@ describe('buildXML()', () => {
     it('gives a gap and a distractor without an identifier new ones', () => {
       const { root, declaration: decl } = build(
         makeState({
-          passage: '<p><qti-gap data-studio-answer="choice_w">winter</qti-gap></p>',
+          passage: '<p><qti-gap data-studio-correct="choice_w">winter</qti-gap></p>',
           distractors: [{ content: 'summer' }],
         }),
       );

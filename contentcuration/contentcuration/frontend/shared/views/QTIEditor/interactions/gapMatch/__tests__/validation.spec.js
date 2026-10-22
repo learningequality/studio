@@ -3,7 +3,7 @@ import { ValidationError } from '../../../constants';
 import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 const gap = (id, answer) =>
-  `<qti-gap identifier="${id}" data-studio-answer="choice_${id}">${answer}</qti-gap>`;
+  `<qti-gap identifier="${id}" data-studio-correct="choice_${id}">${answer}</qti-gap>`;
 const distractor = (id, content) => ({ id, content });
 
 function makeState(overrides = {}) {
