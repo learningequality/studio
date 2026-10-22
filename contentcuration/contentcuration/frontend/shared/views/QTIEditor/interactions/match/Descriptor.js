@@ -12,7 +12,6 @@ export class MatchInteractionDescriptor extends InteractionDescriptor {
       type: QtiInteraction.MATCH,
       questionTypes: [QuestionType.MATCH],
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {

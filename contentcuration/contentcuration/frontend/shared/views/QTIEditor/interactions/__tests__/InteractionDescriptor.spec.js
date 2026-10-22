@@ -98,5 +98,28 @@ describe('InteractionDescriptor', () => {
     it('contributes no question type options', () => {
       expect(new (makeDescriptorClass())().getTypeOptions()).toEqual([]);
     });
+
+    describe('when the question type changes', () => {
+      it('takes nothing but the question', () => {
+        expect(new (makeDescriptorClass())().getConversionFormat()).toEqual({});
+      });
+
+      it('exports the question', () => {
+        const descriptor = new (makeDescriptorClass())();
+        expect(descriptor.exportContent({ prompt: '<p>Q</p>', choices: [] })).toEqual({
+          prompt: '<p>Q</p>',
+        });
+        expect(descriptor.exportContent({})).toEqual({ prompt: '' });
+      });
+
+      it('imports a new question holding the question', () => {
+        const Descriptor = makeDescriptorClass();
+        Descriptor.prototype.parse = () => ({ prompt: '', choices: ['blank'] });
+        expect(new Descriptor().importContent({ prompt: '<p>Q</p>' })).toEqual({
+          prompt: '<p>Q</p>',
+          choices: ['blank'],
+        });
+      });
+    });
   });
 });

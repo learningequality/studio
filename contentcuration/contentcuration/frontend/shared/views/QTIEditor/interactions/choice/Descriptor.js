@@ -13,7 +13,6 @@ export class ChoiceInteractionDescriptor extends InteractionDescriptor {
       type: QtiInteraction.CHOICE,
       questionTypes: [QuestionType.SINGLE_SELECT, QuestionType.MULTI_SELECT],
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {
