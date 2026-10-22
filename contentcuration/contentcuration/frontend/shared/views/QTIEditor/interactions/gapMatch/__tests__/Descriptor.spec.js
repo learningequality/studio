@@ -54,6 +54,40 @@ describe('gapMatchInteractionDescriptor', () => {
     });
   });
 
+  describe('isSupportedBody', () => {
+    const isSupported = item =>
+      descriptor.isSupportedBody(parseXML(parseItem(item).itemBodyXml).documentElement);
+
+    it('supports an item that the build writes back unchanged', () => {
+      expect(isSupported(ITEM)).toBe(true);
+    });
+
+    it('does not support an item with an image gap text', () => {
+      const item = ITEM.replace(
+        '<qti-gap-text identifier="choice_s0mm3rxx"',
+        '<qti-gap-img identifier="img_a" match-max="1"><img src="a.png" alt="A"/></qti-gap-img>' +
+          '<qti-gap-text identifier="choice_s0mm3rxx"',
+      );
+      expect(isSupported(item)).toBe(false);
+    });
+
+    it('does not support an item with a match group', () => {
+      const item = ITEM.replace(
+        '<qti-gap identifier="gap_a1b2c3d4"/>',
+        '<qti-gap identifier="gap_a1b2c3d4" match-group="choice_w1n7erxx"/>',
+      );
+      expect(isSupported(item)).toBe(false);
+    });
+
+    it('does not support an item with a minimum number of associations', () => {
+      const item = ITEM.replace(
+        'max-associations="2"',
+        'max-associations="2" min-associations="1"',
+      );
+      expect(isSupported(item)).toBe(false);
+    });
+  });
+
   it('parses a full item', () => {
     const [{ bodyXml, responseDeclarations }] = parseItem(ITEM).interactions;
     const state = descriptor.parse(bodyXml, responseDeclarations);
