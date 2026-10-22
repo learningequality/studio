@@ -1,5 +1,6 @@
 import { ValidationError } from '../../constants';
 import { hasRichTextContent } from '../../utils/richText';
+import { duplicateDistractorErrors } from '../../utils/distractors';
 import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
@@ -71,15 +72,12 @@ export function validateMatchInteraction(state) {
 
   // An answer may serve several rows, so only distractors are flagged: one
   // repeating another distractor or any answer cannot be told apart from it.
-  const choiceKeyCounts = countFilledKeys(readChoices);
-  const repeated = new Set(
-    readDistractors
-      .filter(({ filled, key }) => filled && choiceKeyCounts.get(key) > 1)
-      .map(({ key }) => key),
+  errors.push(
+    ...duplicateDistractorErrors(
+      readRows.flatMap(row => row.matches),
+      readDistractors,
+    ),
   );
-  for (const text of repeated) {
-    errors.push({ code: ValidationError.DUPLICATE_DISTRACTOR_CONTENT, text });
-  }
 
   return errors;
 }

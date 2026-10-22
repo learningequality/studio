@@ -91,8 +91,8 @@ export class QTISanitizer {
    */
   static stripTags(value) {
     if (typeof value !== 'string') return String(value ?? '');
-    // Fast path: if no `<` is present there is nothing to strip.
-    if (!value.includes('<')) return value;
+    // Fast path: with no `<` or `&` there is nothing to strip or decode.
+    if (!value.includes('<') && !value.includes('&')) return value;
     const doc = parseXML(value, 'text/html');
     // Remove script and style elements entirely — we do NOT want their text content.
     doc.querySelectorAll('script, style').forEach(el => el.remove());

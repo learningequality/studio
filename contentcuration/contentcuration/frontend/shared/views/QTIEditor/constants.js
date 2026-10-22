@@ -102,6 +102,7 @@ export const QuestionType = Object.freeze({
   ASSOCIATE: 'associate',
   MATCH: 'match',
   INLINE_CHOICE: 'inlineChoice',
+  GAP_MATCH: 'gapMatch',
 });
 
 /**
@@ -134,6 +135,8 @@ export const ValidationError = Object.freeze({
 });
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
+
+export const SENTINEL_MARKER = 'data-studio-sentinel';
 
 /**
  * The QTI 3.0 standard response processing templates. Each one scores the response

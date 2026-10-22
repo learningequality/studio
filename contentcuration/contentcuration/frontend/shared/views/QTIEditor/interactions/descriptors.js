@@ -5,6 +5,7 @@ import { orderingInteractionDescriptor } from './ordering/Descriptor';
 import { associateInteractionDescriptor } from './associate/Descriptor';
 import { matchInteractionDescriptor } from './match/Descriptor';
 import { inlineChoiceInteractionDescriptor } from './inlineChoice/Descriptor';
+import { gapMatchInteractionDescriptor } from './gapMatch/Descriptor';
 
 /**
  * Every interaction's descriptor: matching, parsing, building and validating XML.
@@ -27,6 +28,7 @@ export const descriptors = [
   associateInteractionDescriptor,
   matchInteractionDescriptor,
   inlineChoiceInteractionDescriptor,
+  gapMatchInteractionDescriptor,
 ];
 
 /**
@@ -36,9 +38,12 @@ export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
 
 /**
  * Interactions with a descriptor but no editor in index.js yet. Items holding one are
- * shown read-only. TODO: #6182 removes inline choice.
+ * shown read-only. TODO: #6182 removes inline choice, #6204 removes gap match.
  */
-export const HEADLESS_INTERACTIONS = Object.freeze([QtiInteraction.INLINE_CHOICE]);
+export const HEADLESS_INTERACTIONS = Object.freeze([
+  QtiInteraction.INLINE_CHOICE,
+  QtiInteraction.GAP_MATCH,
+]);
 
 /**
  * Inline interactions whose editor holds one per item body. A body with several would
