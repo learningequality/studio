@@ -23,10 +23,39 @@ const PROMPT = 'qti-prompt';
 const CORRECT_ATTR = 'data-studio-correct';
 const SENTINEL_ID = 'studio_sentinel';
 
+/**
+ * @typedef {object} GapMatchDistractor
+ * @property {string} id      - QTI identifier of its <qti-gap-text>
+ * @property {string} content - HTML content of its <qti-gap-text>
+ */
+
+/**
+ * @typedef {object} GapMatchState
+ * @property {string} responseIdentifier - Response identifier attribute
+ * @property {string} prompt             - HTML content of <qti-prompt>; '' when there is none
+ * @property {string} passage            - HTML of the passage. Each <qti-gap> holds its
+ *   correct answer as content, and the answer's <qti-gap-text> identifier in
+ *   data-studio-correct. A blank gap has neither.
+ * @property {GapMatchDistractor[]} distractors - Gap texts that no gap takes
+ */
+
+/**
+ * @typedef {object} GapMatchGap
+ * @property {string}      id       - QTI identifier of the <qti-gap>
+ * @property {string|null} answerId - data-studio-correct; null when the gap has none
+ * @property {string}      answer   - HTML of the gap's correct answer; '' when blank
+ */
+
 function defaultState() {
   return { responseIdentifier: RESPONSE_IDENTIFIER, prompt: '', passage: '', distractors: [] };
 }
 
+/**
+ * Read every gap out of the passage, in document order.
+ *
+ * @param {string} passage - GapMatchState.passage
+ * @returns {GapMatchGap[]}
+ */
 export function getGaps(passage) {
   const doc = parseXML(passage || '', 'text/html');
   return [...doc.querySelectorAll(GAP)].map(el => ({
@@ -36,6 +65,17 @@ export function getGaps(passage) {
   }));
 }
 
+/**
+ * Parse a <qti-gap-match-interaction> into editor state. QTI keeps every <qti-gap> empty
+ * and lists the answers as <qti-gap-text> elements, paired to gaps in the correct
+ * response. The parse hydrates each paired gap: it copies the content of its gap text
+ * into the gap and sets data-studio-correct. A gap text that no gap takes becomes a
+ * distractor. The sentinel gap text that the build writes is dropped.
+ *
+ * @param {string}   bodyXml
+ * @param {string[]} responseDeclarations
+ * @returns {GapMatchState}
+ */
 export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
   if (!bodyXml) return defaultState();
 
@@ -95,6 +135,19 @@ export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
   };
 }
 
+/**
+ * Build the QTI for editor state. This reverses the parse: it takes each answer out of its
+ * hydrated gap, writes it as a <qti-gap-text>, and leaves the gap empty, as QTI expects.
+ * Gaps with the same answer share one gap text. Missing or repeated identifiers are
+ * derived, so the same state always builds the same XML. If the schema needs a gap text
+ * or a passage block that the state does not give, the build writes a sentinel gap text
+ * or an empty paragraph.
+ *
+ * @param {GapMatchState} state
+ * @param {string}        _questionType - unused; present to match the descriptor interface
+ * @param {{ baseType: string, cardinality: string }} declarationSchema
+ * @returns {{ bodyXml: string, responseDeclarations: string[] }}
+ */
 export function buildGapMatchInteractionXML(state, _questionType, declarationSchema) {
   const { responseIdentifier = RESPONSE_IDENTIFIER, prompt, passage, distractors = [] } = state;
 

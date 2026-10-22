@@ -281,9 +281,10 @@ const BLOCK_TAGS = new Set([
 
 /**
  * Wrap each run of top-level text and non-block elements (including TipTap's `<img>` and
- * `<small>`, which the XSD only allows inside a block) in one `<div>`, so `<qti-item-body>`
- * holds only blocks and every child can carry a marker attribute. TipTap unwraps a `<div>` on
- * reopen, so this is stable across saves. Whitespace-only text is dropped.
+ * `<small>`, which the XSD only allows inside a block) in one wrapper element, so
+ * `<qti-item-body>` holds only blocks and every child can carry a marker attribute. TipTap
+ * unwraps a `<div>` on reopen and keeps a `<p>` as a paragraph, so either wrapper is stable
+ * across saves. Whitespace-only text is dropped.
  *
  * @param {Element} container Changed in place: inline runs move out into the new `<div>`s
  * @param {string} [tag] The wrapper, for content the XSD allows only in some blocks: it
