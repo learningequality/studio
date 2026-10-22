@@ -21,7 +21,6 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
       questionTypes: [QuestionType.NUMERIC, QuestionType.TEXT_ENTRY, QuestionType.FREE_RESPONSE],
       placement: Placement.INLINE,
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {
