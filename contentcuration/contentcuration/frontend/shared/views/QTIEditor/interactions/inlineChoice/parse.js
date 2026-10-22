@@ -2,13 +2,13 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { buildXmlNode, parseXML, serializeAsHtml, wrapInlineRuns } from '../../serialization/xml';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
+import { SENTINEL_MARKER } from '../../constants';
 
 const serializer = new XMLSerializer();
 
 export const DROPDOWN = 'qti-inline-choice-interaction';
 export const OPTION = 'qti-inline-choice';
 const PROMPT_MARKER = 'data-studio-prompt';
-const SENTINEL_MARKER = 'data-studio-sentinel';
 export const CORRECT_ATTR = 'data-studio-correct';
 const SENTINEL_ID = 'studio_sentinel';
 const KEPT_DROPDOWN_ATTRS = ['response-identifier', CORRECT_ATTR];

@@ -11,7 +11,7 @@ import {
 } from '../../serialization/xml';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { hasRichTextContent } from '../../utils/richText';
-import { RESPONSE_IDENTIFIER } from '../../constants';
+import { RESPONSE_IDENTIFIER, SENTINEL_MARKER } from '../../constants';
 import { _extractCorrectPairIds } from '../associate/parse';
 import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
@@ -21,6 +21,7 @@ const GAP = 'qti-gap';
 const GAP_TEXT = 'qti-gap-text';
 const PROMPT = 'qti-prompt';
 const ANSWER_ATTR = 'data-studio-answer';
+const SENTINEL_ID = 'studio_sentinel';
 
 function defaultState() {
   return { responseIdentifier: RESPONSE_IDENTIFIER, prompt: '', passage: '', distractors: [] };
@@ -46,8 +47,14 @@ export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
   }
 
   const contentNodes = [...root.childNodes].filter(isContentNode);
-  const gapTextEls = contentNodes.filter(node => node.localName === GAP_TEXT);
+  const gapTextEls = contentNodes.filter(
+    node => node.localName === GAP_TEXT && !node.hasAttribute(SENTINEL_MARKER),
+  );
   const passageNodes = contentNodes.filter(node => ![GAP_TEXT, PROMPT].includes(node.localName));
+  const isEmptyParagraph =
+    passageNodes.length === 1 &&
+    passageNodes[0].localName === 'p' &&
+    !passageNodes[0].hasChildNodes();
 
   const gapTextById = new Map();
   for (const el of gapTextEls) {
@@ -81,7 +88,7 @@ export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
   return {
     responseIdentifier: root.getAttribute('response-identifier') || RESPONSE_IDENTIFIER,
     prompt: getPromptHTML(root),
-    passage: serializeAsHtml(passageNodes, root.namespaceURI),
+    passage: isEmptyParagraph ? '' : serializeAsHtml(passageNodes, root.namespaceURI),
     distractors: gapTextEls
       .filter(el => !paired.has(el))
       .map(el => ({ id: el.getAttribute('identifier'), content: getContentHTML(el) })),
@@ -168,7 +175,17 @@ export function buildGapMatchInteractionXML(state, _questionType, declarationSch
       }),
     );
   }
-  children.push(...wrapInlineRuns(passageEl, 'p'));
+  if (!answers.size && !distractorChoices.length) {
+    children.push(
+      buildXmlNode({
+        tag: GAP_TEXT,
+        attrs: { identifier: SENTINEL_ID, 'match-max': 1, [SENTINEL_MARKER]: '' },
+        innerHTML: SENTINEL_ID,
+      }),
+    );
+  }
+  const passageBlocks = wrapInlineRuns(passageEl, 'p');
+  children.push(...(passageBlocks.length ? passageBlocks : [buildXmlNode({ tag: 'p' })]));
 
   const interactionEl = buildXmlNode({
     tag: 'qti-gap-match-interaction',

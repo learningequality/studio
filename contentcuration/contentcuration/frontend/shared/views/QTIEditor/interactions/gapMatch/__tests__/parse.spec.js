@@ -6,7 +6,7 @@ import {
   getGaps,
   parseGapMatchInteraction as parse,
 } from '../parse';
-import { BaseType, Cardinality, QuestionType } from '../../../constants';
+import { BaseType, Cardinality, QuestionType, SENTINEL_MARKER } from '../../../constants';
 import { parseXML } from '../../../serialization/xml';
 import { QTIDeclaration } from '../../../serialization/qti/QTIDeclaration';
 
@@ -408,6 +408,36 @@ describe('round trip', () => {
         `<p>${gap('gap_b', 'choice_winter', 'winter')}</p>`,
     });
     expect(roundTrip(state)).toEqual(state);
+  });
+
+  describe('items that the schema needs filled', () => {
+    const sentinelsOf = root => root.querySelectorAll(`qti-gap-text[${SENTINEL_MARKER}]`);
+    const passageBlocksOf = root => [...root.children].filter(el => el.localName === 'p');
+
+    it('writes a sentinel gap text and an empty paragraph for a new question', () => {
+      const state = makeState({ prompt: '', passage: '', distractors: [] });
+      const { root } = build(state);
+      expect(sentinelsOf(root)).toHaveLength(1);
+      expect(passageBlocksOf(root).map(p => p.childNodes.length)).toEqual([0]);
+      expect(roundTrip(state)).toEqual(state);
+    });
+
+    it('writes a sentinel gap text when the only gap is blank', () => {
+      const state = makeState({
+        passage: `<p>Now is the ${blankGap('gap_a')} of our discontent</p>`,
+        distractors: [],
+      });
+      expect(sentinelsOf(build(state).root)).toHaveLength(1);
+      expect(roundTrip(state)).toEqual(state);
+    });
+
+    it('writes an empty paragraph and no sentinel for an empty passage with a distractor', () => {
+      const state = makeState({ passage: '' });
+      const { root } = build(state);
+      expect(sentinelsOf(root)).toHaveLength(0);
+      expect(passageBlocksOf(root).map(p => p.childNodes.length)).toEqual([0]);
+      expect(roundTrip(state)).toEqual(state);
+    });
   });
 
   it('reopens a blank gap with no answer', () => {
