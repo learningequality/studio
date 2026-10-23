@@ -3,10 +3,19 @@ import userEvent from '@testing-library/user-event';
 import { ref, nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import { Extension } from '@tiptap/core';
+import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 import EditorToolbar from '../TipTapEditor/components/EditorToolbar.vue';
 import { getTipTapEditorStrings } from '../TipTapEditor/TipTapEditorStrings';
 import { useEditor } from '../TipTapEditor/composables/useEditor';
 import { stubProseMirrorLayout, tabIn } from 'shared/utils/testing';
+
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
+  const windowIsSmall = require('vue').ref(false);
+  return {
+    __esModule: true,
+    default: () => ({ windowIsSmall }),
+  };
+});
 
 const {
   textFormatOptions$,
@@ -209,6 +218,28 @@ describe('EditorToolbar contributed insert actions', () => {
     );
     expect(controls.at(-2)).toBe(prominentButton);
     expect(controls.at(-1)).toBe(screen.getByRole('button', { name: 'Minimize Toolbar' }));
+  });
+
+  describe('in a small window', () => {
+    const { windowIsSmall } = useKResponsiveWindow();
+    beforeEach(() => {
+      windowIsSmall.value = true;
+    });
+    afterEach(() => {
+      windowIsSmall.value = false;
+    });
+
+    it('shows a prominent action as an icon button, still named', async () => {
+      const action = { ...prominent, handler: jest.fn() };
+      const { user } = await renderToolbar({}, { insertActions: [action] });
+      const prominentButton = screen.getByRole('button', { name: 'Insert prominent' });
+
+      expect(prominentButton).not.toHaveTextContent('Insert prominent');
+      expect(prominentButton.querySelector('svg')).toBeInTheDocument();
+
+      await user.click(prominentButton);
+      expect(action.handler).toHaveBeenCalledTimes(1);
+    });
   });
 
   it.each([inline, prominent])("shows a contributed action's KDS icon: $name", async action => {

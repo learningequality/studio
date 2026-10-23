@@ -100,8 +100,10 @@
             aria-hidden="true"
             class="more-button-icon"
           >
+          <!-- Not kept inside the toolbar, which scrolls when too narrow, as its other menus -->
           <KDropdownMenu
             :options="flatOverflowOptions(overflowItems)"
+            :constrainToScrollParent="false"
             @select="onOverflowSelect"
           >
             <template #option="{ option }">
@@ -135,18 +137,22 @@
       </template>
     </KListWithOverflow>
 
-    <!-- `aria-disabled` rather than `disabled`, which would drop its tab stop. -->
+    <!-- `aria-disabled` rather than `disabled`, which would drop its tab stop. In a small window
+         it shows only its icon, for the toolbar to fit. -->
     <KButton
       v-for="action in prominentInsertTools"
       :key="action.name"
       class="prominent-button"
+      :class="{ 'icon-only': windowIsSmall }"
       primary
       appearance="raised-button"
-      :text="action.title"
+      :text="windowIsSmall ? '' : action.title"
       :title="action.title"
+      :aria-label="windowIsSmall ? action.title : null"
       :icon="action.kIcon"
       data-toolbar-item
       :aria-disabled="String(!action.isAvailable)"
+      :appearanceOverrides="action.isAvailable ? {} : unavailableProminentStyle"
       @mousedown.native.prevent
       @click="action.handler()"
     />
@@ -165,6 +171,8 @@
 <script>
 
   import { ref, computed, inject } from 'vue';
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
   import { useRovingTabIndex } from '../composables/useRovingTabIndex';
@@ -185,6 +193,7 @@
       const toolbarRef = ref(null);
       useRovingTabIndex(toolbarRef);
       const inlineOnly = inject('inlineOnly', false);
+      const { windowIsSmall } = useKResponsiveWindow();
 
       const {
         handleCopy,
@@ -304,6 +313,8 @@
 
       // Outside KListWithOverflow, so they never collapse into More.
       const prominentInsertTools = computed(() => insertTools.value.filter(tool => tool.prominent));
+      // An unavailable action keeps its colour on hover, so it doesn't offer a click.
+      const unavailableProminentStyle = { ':hover': { backgroundColor: themeTokens().primary } };
 
       // Flattens the visible overflow groups into a KDropdownMenu-compatible
       // options array. Maps `title` → `label` and `isAvailable` → `disabled`.
@@ -364,6 +375,8 @@
         flatOverflowOptions,
         historyActions,
         prominentInsertTools,
+        unavailableProminentStyle,
+        windowIsSmall,
         minimizeAction,
         onOverflowSelect,
         textFormattingToolbar$,
@@ -385,6 +398,11 @@
     gap: 6px;
     align-items: center;
     padding: 8px;
+
+    /* A last resort: the overflow list gives up tools first, but too narrow a window can
+       still leave what remains wider than the toolbar. */
+    overflow-x: auto;
+    overflow-y: hidden;
     border-radius: 8px 8px 0 0;
   }
 
@@ -401,15 +419,26 @@
     min-width: 0;
   }
 
-  /* Keeps its full label; the overflow list gives up tools instead. */
+  /* Never collapses into More; the overflow list gives up tools instead. */
   .toolbar .prominent-button {
     flex: none;
   }
 
+  .prominent-button.icon-only {
+    min-width: 36px;
+    padding: 0 6px;
+
+    /* KButton keeps its empty label, with a margin that would push the icon off centre. */
+    ::v-deep .link-text {
+      display: none;
+    }
+  }
+
+  /* Matches the disabled toolbar buttons. */
   .prominent-button[aria-disabled='true'] {
-    cursor: default;
+    cursor: not-allowed;
     box-shadow: none;
-    opacity: 0.5;
+    opacity: 0.3;
   }
 
   .toolbar-group {

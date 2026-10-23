@@ -1,6 +1,23 @@
 import { ValidationError } from '../../constants';
 import { getDropdowns } from './parse';
 
+/** The fewest options a dropdown can have: with one, the learner has nothing to choose. */
+export const MIN_OPTIONS = 2;
+
+/**
+ * What a dropdown as a whole lacks, rather than one of its options, in the order its options
+ * panel lists them; its chip shows the first.
+ *
+ * @param {{ options: Array, correctId: string|null }} dropdown
+ * @returns {string[]} ValidationError codes
+ */
+export function dropdownErrors({ options, correctId }) {
+  const codes = [];
+  if (correctId === null) codes.push(ValidationError.NO_CORRECT_ANSWER);
+  if (options.length < MIN_OPTIONS) codes.push(ValidationError.TOO_FEW_CHOICES);
+  return codes;
+}
+
 /**
  * Validate InlineChoiceState → ValidationError[]. Option errors carry the choice id,
  * dropdown errors the response identifier.
@@ -15,7 +32,8 @@ export function validateInlineChoiceInteraction(state) {
   }
 
   const errors = [];
-  for (const { responseIdentifier, options, correctId } of dropdowns) {
+  for (const dropdown of dropdowns) {
+    const { responseIdentifier, options } = dropdown;
     const firstSeenId = new Map();
     const duplicateIds = new Set();
 
@@ -37,8 +55,8 @@ export function validateInlineChoiceInteraction(state) {
       errors.push({ code: ValidationError.DUPLICATE_CHOICE_CONTENT, id });
     }
 
-    if (correctId === null) {
-      errors.push({ code: ValidationError.NO_CORRECT_ANSWER, id: responseIdentifier });
+    for (const code of dropdownErrors(dropdown)) {
+      errors.push({ code, id: responseIdentifier });
     }
   }
 
