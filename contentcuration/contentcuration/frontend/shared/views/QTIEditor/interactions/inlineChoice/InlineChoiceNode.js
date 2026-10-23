@@ -1,8 +1,8 @@
 // The resolver does not read package `exports` subpaths.
 /* eslint-disable import/no-unresolved */
 import { isHistoryTransaction } from '@tiptap/pm/history';
-import { Fragment, Slice } from '@tiptap/pm/model';
-import { NodeSelection, Plugin } from '@tiptap/pm/state';
+import { DOMSerializer, Fragment, Slice } from '@tiptap/pm/model';
+import { Plugin } from '@tiptap/pm/state';
 /* eslint-enable import/no-unresolved */
 import {
   Node,
@@ -14,11 +14,19 @@ import {
 import { VueNodeViewRenderer } from '@tiptap/vue-2';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import InlineChoiceChip from './components/InlineChoiceChip';
-import { CORRECT_ATTR, DROPDOWN, OPTION, readDropdown } from './parse';
+import {
+  COPIED_DROPDOWN,
+  CORRECT_ATTR,
+  DROPDOWN,
+  OPTION,
+  copiedDropdown,
+  readCopiedDropdown,
+  readDropdown,
+} from './parse';
 
 const NODE_NAME = 'inlineChoice';
 
-const isChip = node => node.type.name === NODE_NAME;
+export const isChip = node => node.type.name === NODE_NAME;
 
 export const findChip = (doc, responseIdentifier) =>
   findChildren(
@@ -70,6 +78,35 @@ function trimmedRange({ doc, selection }) {
   return { from, to };
 }
 
+/**
+ * Backspace and Delete next to a chip remove it, as one step of history. ProseMirror leaves
+ * these keys to the browser beside an inline node that cannot be selected, and browsers differ
+ * on what they do beside an uneditable element.
+ */
+function deleteChip(view, event) {
+  const { state } = view;
+  const { selection } = state;
+  if (!selection.empty || event.altKey || event.ctrlKey || event.metaKey) return false;
+  const { $head } = selection;
+  const backward = event.key === 'Backspace';
+  const next = backward ? $head.nodeBefore : $head.nodeAfter;
+  if (!next || !isChip(next)) return false;
+  const from = backward ? $head.pos - next.nodeSize : $head.pos;
+  view.dispatch(state.tr.delete(from, from + next.nodeSize).scrollIntoView());
+  return true;
+}
+
+/**
+ * A chip read from HTML holding no options, such as a copy whose dropdown cannot be read, gets
+ * one: QTI requires one in every dropdown, and every save is checked against it. It holds the
+ * element's text, which in a copy is the correct answer; the missing id is filled in on insert.
+ */
+function readStoredChip(el) {
+  const dropdown = readDropdown(el);
+  if (dropdown.options.length) return dropdown;
+  return { ...dropdown, options: [{ id: '', text: el.textContent.trim() }] };
+}
+
 function reidentify(fragment, taken) {
   const children = [];
   fragment.forEach(child => {
@@ -91,6 +128,9 @@ export const InlineChoiceNode = Node.create({
   group: 'inline',
   inline: true,
   atom: true,
+  // The caret moves past a chip rather than selecting it: a chip is not a place to type, and its
+  // own button is how the keyboard reaches its options.
+  selectable: false,
 
   addAttributes() {
     return {
@@ -101,7 +141,11 @@ export const InlineChoiceNode = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: DROPDOWN, getAttrs: readDropdown }];
+    // A copied chip first, so it is not read as the stored form, which it also matches.
+    return [
+      { tag: COPIED_DROPDOWN, getAttrs: readCopiedDropdown },
+      { tag: DROPDOWN, getAttrs: readStoredChip },
+    ];
   },
 
   renderHTML({ node }) {
@@ -114,6 +158,10 @@ export const InlineChoiceNode = Node.create({
       ...options.map(option => [OPTION, { identifier: option.id }, option.text]),
     ];
   },
+
+  // No `renderText`: TipTap's typing shortcuts read text through it, so a chip read as its answer
+  // could start one (a `-` answer at the start of a paragraph and a space make a list), and be
+  // deleted as the characters typed for it. Plain text leaves a chip out; copied HTML has it.
 
   addCommands() {
     return {
@@ -157,12 +205,8 @@ export const InlineChoiceNode = Node.create({
           }
           if (correctId !== undefined) attrs.correctId = correctId;
           if (!attrs.options.some(option => option.id === attrs.correctId)) attrs.correctId = null;
-          if (dispatch) {
-            const wasSelected = tr.selection.node && tr.selection.from === found.pos;
-            // Replaces the chip, so history groups quick successive edits as it does typing.
-            tr.setNodeMarkup(found.pos, undefined, attrs);
-            if (wasSelected) tr.setSelection(NodeSelection.create(tr.doc, found.pos));
-          }
+          // Replaces the chip, so history groups quick successive edits as it does typing.
+          if (dispatch) tr.setNodeMarkup(found.pos, undefined, attrs);
           return true;
         },
     };
@@ -173,9 +217,20 @@ export const InlineChoiceNode = Node.create({
   },
 
   addProseMirrorPlugins() {
+    const serializer = DOMSerializer.fromSchema(this.editor.schema);
+    // Copies write a chip as `copiedDropdown`, which another passage reads back whole and other
+    // editors as its correct answer.
+    const clipboardSerializer = new DOMSerializer(
+      { ...serializer.nodes, [this.name]: node => copiedDropdown(node.attrs) },
+      serializer.marks,
+    );
     return [
       new Plugin({
         props: {
+          clipboardSerializer,
+          handleKeyDown(view, event) {
+            return ['Backspace', 'Delete'].includes(event.key) && deleteChip(view, event);
+          },
           // A copy must not share ids with the original; a cut-paste has already removed them.
           transformPasted(slice, view) {
             // Whether a drag moves or copies is only known at drop; see `appendTransaction`.
@@ -186,8 +241,9 @@ export const InlineChoiceNode = Node.create({
             return new Slice(reidentify(slice.content, taken), slice.openStart, slice.openEnd);
           },
         },
-        // Catches inserts `transformPasted` does not see, such as a drop. An inserted chip whose
-        // ids are still in use elsewhere was copied, not moved.
+        // Catches inserts `transformPasted` does not see, such as a drop, or the toolbar's Paste,
+        // which inserts through `insertContent`. An inserted chip whose ids are still in use
+        // elsewhere was copied, not moved.
         appendTransaction(transactions, oldState, newState) {
           // Undo and redo only restore states this plugin already accepted.
           if (transactions.every(isHistoryTransaction)) return null;

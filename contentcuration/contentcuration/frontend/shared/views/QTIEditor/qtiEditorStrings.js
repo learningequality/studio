@@ -369,6 +369,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Choose a correct answer',
     context: 'Validation error when no choice is marked correct',
   },
+  errorTooFewInlineChoiceOptions: {
+    message: 'Add at least {count, number} options',
+    context:
+      'Validation error when an answer dropdown in an inline choice question has fewer options than it needs. {count} is the minimum, 2. Also shown on the dropdown itself',
+  },
   errorTooManyCorrectAnswers: {
     message: 'Only one correct answer is allowed for single-choice questions.',
     context: 'Validation error when multiple choices are marked correct for single-select',
@@ -523,10 +528,6 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Button in the passage toolbar that adds an answer dropdown at the cursor, or turns the highlighted text into one',
   },
-  addAnswers: {
-    message: 'Add answers',
-    context: 'Label on an answer dropdown chip that has no correct answer yet',
-  },
   answerDropdownWithCorrect: {
     message:
       '{label}, correct answer, answer dropdown, {count, plural, one {# option} other {# options}}',
@@ -534,10 +535,9 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
       'Accessible name of an answer dropdown chip in the passage that has a correct answer. {label} is the correct answer, as the chip shows it',
   },
   answerDropdownNoCorrect: {
-    message:
-      '{label}, answer dropdown, {count, plural, one {# option} other {# options}}, no correct answer yet',
+    message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
     context:
-      "Accessible name of an answer dropdown chip in the passage that has no correct answer. {label} is the chip's 'Add answers' label",
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer. {label} is the chip's label, the error its options show, such as 'Choose a correct answer'",
   },
   answerDropdownWithCorrectNeedsAttention: {
     message:
@@ -547,8 +547,164 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   },
   answerDropdownNoCorrectNeedsAttention: {
     message:
-      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}, no correct answer yet',
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
     context:
-      "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's 'Add answers' label",
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's label, the error its options show, such as 'Choose a correct answer'",
+  },
+  answerDropdownRemoved: {
+    message: '{label}, answer dropdown, removed',
+    context:
+      "Announced to screen readers when an answer dropdown is deleted from the passage. {label} is what the chip showed: its correct answer, or the error its options show, such as 'Choose a correct answer'",
+  },
+  answerDropdownsRemoved: {
+    message: '{count, plural, one {# answer dropdown removed} other {# answer dropdowns removed}}',
+    context:
+      'Announced to screen readers when several answer dropdowns are deleted from the passage at once',
+  },
+  answerDropdownHidden: {
+    message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
+  },
+  answerDropdownHiddenNeedsAttention: {
+    message:
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip with a problem to fix, in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
+  },
+  chooseAnswer: {
+    message: 'Choose…',
+    context:
+      'Label on an answer dropdown in a question preview that hides the correct answers, where the learner would pick one',
+  },
+  inlineChoiceLabel: {
+    message: 'Inline choice',
+    context: 'Display name for an inline choice question type shown in the question type selector',
+  },
+  inlineChoiceDescription: {
+    message: 'Learners choose the correct answer from dropdowns placed within a passage.',
+    context: 'Description for the inline choice question type in the info modal',
+  },
+  questionOptionalLabel: {
+    message: 'Question (optional)',
+    context: 'Section header for a question prompt that authors may leave empty',
+  },
+  passageEditorLabel: {
+    message: 'Passage editor',
+    context: 'Section header for the passage that holds the inline choice dropdowns',
+  },
+  passageLabel: {
+    message: 'Passage',
+    context: 'Section header for the passage of an inline choice question, as a preview shows it',
+  },
+  passageEditorDescription: {
+    message: 'Inline choice widgets can be inserted blank or converted from highlighted text.',
+    context: 'Instruction under the passage editor header of an inline choice question',
+  },
+  editPassageLabel: {
+    message: 'Edit passage',
+    context: 'Accessible label for the clickable region that opens the passage for editing',
+  },
+  inlineChoiceOptionsLabel: {
+    message: 'Inline choice answer options',
+    context: 'Section header above the answer options of the open inline choice dropdown',
+  },
+  inlineChoiceOptionsDialogLabel: {
+    message: 'Answer options for dropdown {number}',
+    context:
+      'Accessible name of the panel that edits the options of one inline choice dropdown. {number} is its position in the passage',
+  },
+  closeInlineChoiceOptions: {
+    message: 'Close answer options',
+    context: 'Button that closes the panel editing the options of an inline choice dropdown',
+  },
+  inlineChoiceOptionLabel: {
+    message: 'Option {number}',
+    context:
+      'Names an inline choice option row: its text field, its reorder controls, and the announcement after it moves',
+  },
+  markInlineChoiceOptionCorrect: {
+    message: 'Mark option {number} as correct',
+    context: 'Accessible label for the radio button that marks an inline choice option correct',
+  },
+  addInlineChoiceOptionBtn: {
+    message: 'Add option',
+    context: 'Button that appends a new option to the open inline choice dropdown',
+  },
+  deleteInlineChoiceOptionBtn: {
+    message: 'Delete option {number}',
+    context: 'Accessible label for the delete icon button next to an inline choice option',
+  },
+  errorInlineChoiceOptionProblems: {
+    message: 'One or more inline choice options have problems',
+    context: 'Validation error above the passage when any of its dropdowns needs attention',
+  },
+  errorNoInlineChoice: {
+    message: 'Insert at least one inline choice',
+    context: 'Validation error when the passage of an inline choice question has no dropdown',
+  },
+  changeQuestionTypeTitle: {
+    message: 'Change question type?',
+    context:
+      'Title of the dialog asking an author to confirm a change of question type that would remove or change some of the question',
+  },
+  changeQuestionTypeIntro: {
+    message: 'Switching to {type} will change this question:',
+    context:
+      "Opens the list of what changing the question's type would remove or change. {type} is the new question type, e.g. 'Numeric input'",
+  },
+  changeQuestionTypeAction: {
+    message: 'Change',
+    context: 'Button that confirms changing the question type',
+  },
+  cancelAction: {
+    message: 'Cancel',
+    context: 'Button that closes a dialog without doing anything',
+  },
+  answersRemovedLoss: {
+    message: 'All answers will be removed.',
+    context:
+      'Listed when changing the question type: the new type has no place for the answers the question has',
+  },
+  incorrectAnswersRemovedLoss: {
+    message: 'Answers not marked as correct will be removed.',
+    context:
+      'Listed when changing a choice question to a type whose answers are all correct, such as numeric input or text entry',
+  },
+  anyCorrectAnswerAcceptedLoss: {
+    message: 'Learners will only need to give one of the correct answers.',
+    context:
+      'Listed when changing a choice question with several correct answers to numeric input or text entry, where any one accepted answer is enough',
+  },
+  correctAnswersReducedLoss: {
+    message: 'Only the first correct answer will stay marked as correct.',
+    context:
+      'Listed when changing a question with several correct answers to single choice, which can only have one',
+  },
+  correctAnswersNotKeptLoss: {
+    message: 'Answers will no longer be marked as correct.',
+    context:
+      'Listed when changing a choice question to ordering, where an answer is not correct or incorrect by itself',
+  },
+  orderBecomesAnswerLoss: {
+    message: 'The current order will become the correct order.',
+    context: 'Listed when changing a question to ordering: the answers keep their current order',
+  },
+  orderNotKeptLoss: {
+    message: "The correct order won't be kept.",
+    context:
+      'Listed when changing an ordering question to a choice question, which has no correct order',
+  },
+  formattingRemovedLoss: {
+    message:
+      'Formatting, images and formulas in answers will be removed. Answers with only an image or formula will be removed entirely.',
+    context:
+      'Listed when changing the question type to one whose answers can only hold text, such as text entry',
+  },
+  passageAddedToQuestionLoss: {
+    message:
+      'The passage will be added to the question, with each blank shown as "{blank}". Its answers will be removed.',
+    context:
+      'Listed when changing an inline choice question to a type with no passage. {blank} is what each blank becomes, a row of underscores',
   },
 });

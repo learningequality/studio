@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import QTIItemEditor from '../index.vue';
@@ -51,6 +51,8 @@ const {
   hintsLabel$,
   associateLabel$,
   matchLabel$,
+  inlineChoiceLabel$,
+  passageEditorLabel$,
   questionNumberAndTypeLabel$,
   unknownTypeLabel$,
   responsePoolLabel$,
@@ -210,6 +212,34 @@ describe('QTIItemEditor', () => {
     });
   });
 
+  describe('focusing an opened card', () => {
+    // The mock rich text editor renders a <textarea> only for the field that is open.
+    const openField = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
+
+    test('opens and focuses the question when the card opens', async () => {
+      const { updateProps } = renderDocument(VALID_CHOICE_ITEM_DOCUMENT, { mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+      expect(openField().value).toContain('Pick one.');
+    });
+
+    test('opens and focuses the question of a card created open', async () => {
+      renderDocument(VALID_CHOICE_ITEM_DOCUMENT, { mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+    });
+
+    // Associate and match open their question only once their own mode is edit, which they
+    // hear about a render after the card does.
+    test.each([
+      ['an associate', VALID_ASSOCIATE_ITEM_DOCUMENT],
+      ['a match', VALID_MATCH_ITEM_DOCUMENT],
+    ])('opens and focuses the question of %s card when it opens', async (_, document) => {
+      const { updateProps } = renderDocument(document, { mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+    });
+  });
+
   describe('edit mode', () => {
     test('shows the card body', () => {
       renderComponent({ mode: 'edit' });
@@ -274,6 +304,8 @@ describe('QTIItemEditor', () => {
       language: 'fr',
     });
     const input = await screen.findByRole('textbox', { name: answerValuePlaceholder$() });
+    // A card created open focuses its question; the author moves on from there.
+    await waitFor(() => expect(document.activeElement.tagName).toBe('TEXTAREA'));
     input.focus();
     await updateProps({ language: 'en' });
 
@@ -335,7 +367,6 @@ describe('QTIItemEditor', () => {
       const publishableDocuments = {
         'two interactions': MULTI_INTERACTION_ITEM_DOCUMENT,
         'an interaction with no descriptor': UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
-        'an interaction with no editor': INLINE_CHOICE_ITEM_DOCUMENT,
         'several blanks in one text entry': MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
         'a stimulus beside a block interaction': CHOICE_ITEM_DOCUMENT_WITH_STIMULUS,
         'a stimulus beside a hinted block interaction':
@@ -727,6 +758,41 @@ describe('QTIItemEditor', () => {
       renderMatchItem();
       expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
       expect(screen.getByText('Dog')).toBeInTheDocument();
+    });
+  });
+
+  describe('inline choice interaction', () => {
+    const renderInlineChoiceItem = (props = {}) =>
+      renderComponent({
+        item: {
+          assessment_id: 'test-item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: INLINE_CHOICE_ITEM_DOCUMENT,
+        },
+        ...props,
+      });
+
+    test('names the inline choice question type', async () => {
+      renderInlineChoiceItem();
+      const heading = questionNumberAndTypeLabel$({
+        number: 1,
+        total: 5,
+        type: inlineChoiceLabel$(),
+      });
+      expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
+    });
+
+    test('opens in the inline choice editor', async () => {
+      renderInlineChoiceItem({ mode: 'edit' });
+      expect(
+        await screen.findByRole('heading', { name: passageEditorLabel$() }),
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId('unsupportedMessage')).not.toBeInTheDocument();
+    });
+
+    test('marks a dropdown without a correct answer as incomplete', async () => {
+      renderInlineChoiceItem();
+      expect(await screen.findByTestId('incompleteIndicator')).toBeInTheDocument();
     });
   });
 

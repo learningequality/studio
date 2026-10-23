@@ -365,8 +365,6 @@
             isPromptOpen.value = false;
             return;
           }
-          // Open the question, the first thing in the card, so the card opens at its start.
-          openPrompt();
           showStoredAnswerValue();
           // Opening a card does not remount it, so report answers stored in another form here.
           if (
@@ -385,6 +383,9 @@
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });
 
       return {
+        // Public: opens the question for editing, which focuses it.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus: openPrompt,
         state,
         windowIsSmall,
         isNumeric,

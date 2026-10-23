@@ -84,7 +84,16 @@
 
 <script>
 
-  import { defineComponent, provide, watch, computed, ref, toRef, nextTick } from 'vue';
+  import {
+    defineComponent,
+    provide,
+    watch,
+    computed,
+    ref,
+    toRef,
+    nextTick,
+    onBeforeUnmount,
+  } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
@@ -95,7 +104,7 @@
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
-  import { resolveImageSrcs, toStoredImageSrcs } from './utils/imageSrc';
+  import { resolveImageSrcs, storedHTML } from './utils/imageSrc';
   import { toInlineHTML } from './utils/inlineContent';
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
@@ -167,7 +176,7 @@
         // Image srcs are resolved for display on the way in, so they are reduced
         // back to their stored form here — leaving this the one place that reads
         // content out, whichever form the editor happens to be holding.
-        if (isHTML.value) return toStoredImageSrcs(editor.value.getHTML());
+        if (isHTML.value) return storedHTML(editor.value);
         if (!editor.value.storage?.markdown) return '';
         return editor.value.storage.markdown.getMarkdown();
       };
@@ -177,6 +186,32 @@
       // back, so we can skip unnecessary re-rendering of the editor content.
       let lastEmittedMarkdown = null;
 
+      /**
+       * Focus the content once it is in the page. TipTap puts it there only when the editor is
+       * ready, in a timeout after it is created, and focusing it any earlier focuses nothing:
+       * so an editor switched into edit mode as soon as it mounts waits for that.
+       */
+      let stopWaitingForReady = () => {};
+
+      const focusWhenReady = () => {
+        stopWaitingForReady();
+        if (isReady.value) {
+          nextTick(() => editor.value?.commands.focus('end'));
+          return;
+        }
+        stopWaitingForReady = watch(isReady, ready => {
+          if (!ready) return;
+          stopWaitingForReady();
+          // After the re-render that puts the content into the page.
+          nextTick(() => {
+            if (props.mode === 'edit') editor.value?.commands.focus('end');
+          });
+        });
+      };
+
+      // Created outside setup, so the component's unmount doesn't stop it by itself.
+      onBeforeUnmount(() => stopWaitingForReady());
+
       watch(
         () => props.mode,
         newMode => {
@@ -184,9 +219,7 @@
             editor.value.setEditable(newMode === 'edit');
           }
           if (newMode === 'edit' && editor.value && props.autofocus) {
-            nextTick(() => {
-              editor.value?.commands.focus('end');
-            });
+            focusWhenReady();
           }
         },
       );

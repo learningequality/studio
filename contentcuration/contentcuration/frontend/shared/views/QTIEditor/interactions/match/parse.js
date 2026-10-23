@@ -31,12 +31,16 @@ const serializer = new XMLSerializer();
  */
 
 /**
+ * A new row, with a fresh identifier and one match to fill in.
+ *
+ * @param {Partial<MatchRow>} [fields]
  * @returns {MatchRow}
  */
-export const newRow = () => ({
+export const newRow = (fields = {}) => ({
   id: generateRandomSlug('row'),
   content: '',
   matches: [newChoice()],
+  ...fields,
 });
 
 /**

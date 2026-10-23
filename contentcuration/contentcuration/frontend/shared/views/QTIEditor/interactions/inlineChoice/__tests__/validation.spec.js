@@ -77,11 +77,12 @@ describe('validateInlineChoiceInteraction', () => {
       expect(errors).toEqual([{ code: ValidationError.EMPTY_CHOICE_CONTENT, id: 'b' }]);
     });
 
-    it('reports a single empty option with no correct answer as exactly two errors', () => {
+    it('reports a single empty option with no correct answer as exactly three errors', () => {
       const errors = validate(withPassage(dropdown('r1', null, [{ id: 'a', text: '' }])));
       expect(errors).toEqual([
         { code: ValidationError.EMPTY_CHOICE_CONTENT, id: 'a' },
         { code: ValidationError.NO_CORRECT_ANSWER, id: 'r1' },
+        { code: ValidationError.TOO_FEW_CHOICES, id: 'r1' },
       ]);
     });
   });
@@ -172,11 +173,32 @@ describe('validateInlineChoiceInteraction', () => {
     it('is reported per dropdown', () => {
       const errors = validate(
         withPassage(
-          dropdown('r1', 'a', [{ id: 'a', text: 'blue' }]),
-          dropdown('r2', null, [{ id: 'c', text: 'red' }]),
+          dropdown('r1', 'a', [
+            { id: 'a', text: 'blue' },
+            { id: 'b', text: 'green' },
+          ]),
+          dropdown('r2', null, [
+            { id: 'c', text: 'red' },
+            { id: 'd', text: 'grey' },
+          ]),
         ),
       );
       expect(errors).toEqual([{ code: ValidationError.NO_CORRECT_ANSWER, id: 'r2' }]);
+    });
+  });
+
+  describe('TOO_FEW_CHOICES', () => {
+    it('flags a dropdown with one option by its response id', () => {
+      const errors = validate(withPassage(dropdown('r1', 'a', [{ id: 'a', text: 'blue' }])));
+      expect(errors).toEqual([{ code: ValidationError.TOO_FEW_CHOICES, id: 'r1' }]);
+    });
+
+    it('comes after a missing correct answer, as the options panel shows them', () => {
+      const errors = validate(withPassage(dropdown('r1', null, [{ id: 'a', text: 'blue' }])));
+      expect(errors).toEqual([
+        { code: ValidationError.NO_CORRECT_ANSWER, id: 'r1' },
+        { code: ValidationError.TOO_FEW_CHOICES, id: 'r1' },
+      ]);
     });
   });
 });

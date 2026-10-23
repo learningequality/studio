@@ -1,6 +1,11 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality, Placement } from '../../constants';
 import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseInlineChoiceInteraction, buildInlineChoiceInteractionXML } from './parse';
+import {
+  exportInlineChoiceContent,
+  getInlineChoiceConversionFormat,
+  importInlineChoiceContent,
+} from './convert';
 import { validateInlineChoiceInteraction } from './validation';
 
 /**
@@ -18,9 +23,30 @@ class InlineChoiceInteractionDescriptor extends InteractionDescriptor {
     });
   }
 
+  getTypeOptions(tr) {
+    return [
+      {
+        value: QuestionType.INLINE_CHOICE,
+        label: tr.inlineChoiceLabel$(),
+        description: tr.inlineChoiceDescription$(),
+      },
+    ];
+  }
+
   matches(el) {
     if (el.tagName.toLowerCase() === QtiInteraction.INLINE_CHOICE) return true;
     return Boolean(el.querySelector(QtiInteraction.INLINE_CHOICE));
+  }
+
+  /**
+   * parse() reads every body: elements it wrote as the question go back to the question, and
+   * everything else is the passage. Another interaction in the body would be its own block,
+   * which isSupportedItem already rejects.
+   *
+   * @returns {boolean}
+   */
+  isSupportedBody() {
+    return true;
   }
 
   getQuestionType() {
@@ -60,6 +86,29 @@ class InlineChoiceInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state) {
     return validateInlineChoiceInteraction(state);
+  }
+
+  /**
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat() {
+    return getInlineChoiceConversionFormat();
+  }
+
+  /**
+   * @param {InlineChoiceState} state
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state) {
+    return exportInlineChoiceContent(state);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @returns {InlineChoiceState}
+   */
+  importContent(content) {
+    return importInlineChoiceContent(content);
   }
 }
 

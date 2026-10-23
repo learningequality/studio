@@ -10,6 +10,9 @@ export const DROPDOWN = 'qti-inline-choice-interaction';
 export const OPTION = 'qti-inline-choice';
 const PROMPT_MARKER = 'data-studio-prompt';
 export const CORRECT_ATTR = 'data-studio-correct';
+const COPY_ATTR = 'data-studio-dropdown';
+/** A dropdown as `copiedDropdown` puts it on the clipboard. */
+export const COPIED_DROPDOWN = `${DROPDOWN}[${COPY_ATTR}]`;
 const SENTINEL_ID = 'studio_sentinel';
 const KEPT_DROPDOWN_ATTRS = ['response-identifier', CORRECT_ATTR];
 
@@ -57,6 +60,84 @@ export function readDropdown(el) {
     responseIdentifier: el.getAttribute('response-identifier') ?? '',
     options,
     correctId: options.some(option => option.id === correct) ? correct : null,
+  };
+}
+
+/**
+ * A new option, with a fresh identifier.
+ *
+ * @param {string} [text]
+ * @returns {{ id: string, text: string }}
+ */
+export const newOption = (text = '') => ({ id: generateRandomSlug('choice'), text });
+
+/**
+ * A new dropdown, with a fresh response identifier.
+ *
+ * @param {Partial<InlineChoiceDropdown>} [fields]
+ * @returns {InlineChoiceDropdown}
+ */
+export const newDropdown = (fields = {}) => ({
+  responseIdentifier: generateRandomSlug('response'),
+  options: [newOption()],
+  correctId: null,
+  ...fields,
+});
+
+/**
+ * A dropdown as the passage holds it. The reverse of readDropdown.
+ *
+ * @param {Document} doc - The document of the passage it goes in
+ * @param {InlineChoiceDropdown} dropdown
+ * @returns {Element}
+ */
+export function writeDropdown(doc, { responseIdentifier, options, correctId }) {
+  const el = doc.createElement(DROPDOWN);
+  el.setAttribute('response-identifier', responseIdentifier);
+  if (correctId !== null) el.setAttribute(CORRECT_ATTR, correctId);
+  for (const { id, text } of options) {
+    const option = doc.createElement(OPTION);
+    option.setAttribute('identifier', id);
+    option.textContent = text;
+    el.appendChild(option);
+  }
+  return el;
+}
+
+/**
+ * A dropdown as it is copied, as a DOM output spec. An editor without dropdowns keeps only the
+ * text of an element it doesn't know, so the text is the correct answer alone, or nothing with no
+ * correct answer, and the dropdown itself is held in an attribute for a passage to read back.
+ *
+ * @param {InlineChoiceDropdown} dropdown
+ * @returns {Array}
+ */
+export function copiedDropdown({ responseIdentifier, options, correctId }) {
+  const correct = options.find(option => option.id === correctId);
+  const attrs = { [COPY_ATTR]: JSON.stringify({ responseIdentifier, options, correctId }) };
+  return [DROPDOWN, attrs, correct ? correct.text : ''];
+}
+
+/**
+ * @param {Element} el - A `COPIED_DROPDOWN`, from the clipboard
+ * @returns {InlineChoiceDropdown|false} false when it holds no dropdown with an option
+ */
+export function readCopiedDropdown(el) {
+  let copied;
+  try {
+    copied = JSON.parse(el.getAttribute(COPY_ATTR));
+  } catch {
+    return false;
+  }
+  const isText = value => typeof value === 'string';
+  const options = (Array.isArray(copied?.options) ? copied.options : [])
+    .filter(option => isText(option?.id) && isText(option?.text))
+    .map(({ id, text }) => ({ id, text }));
+  if (!options.length) return false;
+  return {
+    responseIdentifier: isText(copied.responseIdentifier) ? copied.responseIdentifier : '',
+    options,
+    correctId: options.some(option => option.id === copied.correctId) ? copied.correctId : null,
   };
 }
 

@@ -9,6 +9,8 @@ Edits an exercise's assessment items stored as [QTI 3](https://www.imsglobal.org
 4. The interaction's `Editor.vue` (`interactions/index.js`) edits a plain state object through `composables/useInteraction.js`: `descriptor.parse` → state → `descriptor.buildXML` → `descriptor.validate`.
 5. `useQtiItem` rebuilds the full item with `serialization/assembleItem.js`; `QTIItemEditor` emits `update:rawData`. `validateItem.js` `isEditableItem` shows read-only any item holding content outside the body that this rebuild doesn't write or regenerate.
 
+Changing a question's type goes through `conversion/`: the old descriptor exports its state, the new one imports it, and whatever the change would remove or change is listed in `components/ChangeQuestionTypeModal` for the author to confirm first.
+
 `validateItem.js` `validateQtiItem` runs the same parse and validation headless, without the Vue editors.
 
 > [!IMPORTANT]
@@ -19,15 +21,17 @@ Edits an exercise's assessment items stored as [QTI 3](https://www.imsglobal.org
   - `Descriptor.js` — subclass of `InteractionDescriptor`: matches the element, picks the question type, delegates to `parse.js` and `validation.js`.
   - `parse.js` — XML ↔ state.
   - `validation.js` — state → error codes.
+  - `convert.js` — state ↔ the neutral facets a question type change carries (answers, pairs, a passage).
   - `Editor.vue` — the UI; absent for headless interactions (`HEADLESS_INTERACTIONS`).
 - `interactions/descriptors.js` — descriptor registry, free of `.vue` imports. `interactions/index.js` adds the editors.
 - `serialization/` — item-level parse/assemble, hints (`qti-catalog-info`), XML helpers (`xml.js`), response declarations (`qti/`).
 - `components/` — shared UI: hints, chip lists, toolbars, question type selector.
 
 ### Adding an interaction
-1. Create `interactions/<type>/` with `Descriptor.js`, `parse.js`, `validation.js` and `Editor.vue`.
+1. Create `interactions/<type>/` with `Descriptor.js`, `parse.js`, `validation.js`, `convert.js` and `Editor.vue`.
 2. Register the descriptor in `interactions/descriptors.js` and the editor in `interactions/index.js`.
 3. Add its question types to `constants.js` and strings to `qtiEditorStrings.js`.
+4. Override `getConversionFormat`, `exportContent` and `importContent` with `convert.js`, so its answers carry over when an author changes the question's type, and add a filled question of each type to `conversion/__tests__/questions.js`. Until it does, a type change from it keeps only the question without telling the author, which is why the conversion tests fail without it.
 
 ### Rich text fields
 Prompts, choices, items and hints are edited in `TipTapEditor` with `format="html"`.
@@ -36,3 +40,6 @@ Prompts, choices, items and hints are edited in `TipTapEditor` with `format="htm
 > In `parse`, read any field TipTap loads as HTML with `getContentHTML` (or `getPromptHTML`) from `serialization/xml.js`, never `innerHTML` or `XMLSerializer`. XML serialization self-closes empty elements (`<span data-latex="…"/>`); the HTML parser doesn't treat `/>` as closing, so everything after it is nested inside and lost.
 >
 > On build, pass the HTML to `buildXmlNode({ innerHTML })`, which parses it as HTML and re-creates it as XML.
+
+> [!NOTE]
+> A node view that shows itself as selected, like the inline choice chip, uses `--brand-secondary-v100`, the background of KDS's global `::selection`, with `--tokens-text` for its text.
