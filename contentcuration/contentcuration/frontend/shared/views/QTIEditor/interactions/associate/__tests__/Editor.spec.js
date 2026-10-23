@@ -11,6 +11,7 @@ import {
   mockInteractionBlockWithDecl as blockWithDecl,
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
+import { parseXML } from '../../../serialization/xml';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
@@ -57,6 +58,37 @@ const SHARED_CHOICE_DECL_XML = `<qti-response-declaration identifier="RESPONSE" 
   <qti-correct-response>
     <qti-value>choice_aaa11111 choice_bbb22222</qti-value>
     <qti-value>choice_aaa11111 choice_ccc33333</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
+const PAIRED_DISTRACTOR_XML = `<qti-associate-interaction response-identifier="RESPONSE">
+  <qti-prompt><p>Match each character to his adversary.</p></qti-prompt>
+  <qti-simple-associable-choice identifier="choice_aaa11111" match-max="1">Antonio</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_bbb22222" match-max="1">Prospero</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ddd44444" match-max="1">Antonio</qti-simple-associable-choice>
+</qti-associate-interaction>`;
+
+const BLANK_CHOICES_XML = `<qti-associate-interaction response-identifier="RESPONSE">
+  <qti-prompt><p>Match each character to his adversary.</p></qti-prompt>
+  <qti-simple-associable-choice identifier="choice_aaa11111" match-max="2"></qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_bbb22222" match-max="1">Prospero</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ccc33333" match-max="1">Capulet</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ddd44444" match-max="1"></qti-simple-associable-choice>
+</qti-associate-interaction>`;
+
+const THRICE_SHARED_CHOICE_XML = `<qti-associate-interaction response-identifier="RESPONSE">
+  <qti-prompt><p>Match each character to his adversary.</p></qti-prompt>
+  <qti-simple-associable-choice identifier="choice_aaa11111" match-max="3">Antonio</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_bbb22222" match-max="1">Prospero</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ccc33333" match-max="1">Capulet</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ddd44444" match-max="1">Montague</qti-simple-associable-choice>
+</qti-associate-interaction>`;
+
+const THRICE_SHARED_CHOICE_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+  <qti-correct-response>
+    <qti-value>choice_aaa11111 choice_bbb22222</qti-value>
+    <qti-value>choice_aaa11111 choice_ccc33333</qti-value>
+    <qti-value>choice_aaa11111 choice_ddd44444</qti-value>
   </qti-correct-response>
 </qti-response-declaration>`;
 
@@ -376,13 +408,49 @@ describe('AssociateEditor', () => {
       }
     });
 
-    it('repeats an option in the pool once per association it allows', () => {
+    it('lists an option shared by several associations once in the pool', () => {
       renderEditor({
         ...viewProps,
         interaction: blockWithDecl(SHARED_CHOICE_XML, SHARED_CHOICE_DECL_XML),
       });
-      expect(screen.getAllByText('Antonio')).toHaveLength(2);
-      expect(screen.getAllByText('Prospero')).toHaveLength(1);
+      const pool = screen.getByRole('list', { name: tr.$tr('responsePoolLabel') });
+      expect(within(pool).getAllByText('Antonio')).toHaveLength(1);
+      expect(within(pool).getAllByText('Prospero')).toHaveLength(1);
+    });
+
+    it('lists a distractor of the same content as a paired option once in the pool', () => {
+      renderEditor({
+        ...viewProps,
+        interaction: blockWithDecl(PAIRED_DISTRACTOR_XML, ONE_PAIR_DECL_XML),
+      });
+      const pool = screen.getByRole('list', { name: tr.$tr('responsePoolLabel') });
+      expect(within(pool).getAllByText('Antonio')).toHaveLength(1);
+    });
+
+    it('lists a blank option once per identifier in the pool', () => {
+      renderEditor({
+        ...viewProps,
+        interaction: blockWithDecl(BLANK_CHOICES_XML, SHARED_CHOICE_DECL_XML),
+      });
+      const pool = screen.getByRole('list', { name: tr.$tr('responsePoolLabel') });
+      expect(within(pool).getAllByRole('listitem')).toHaveLength(4);
+    });
+
+    it('lists as many pool options as the saved XML holds once shared options are cleared', async () => {
+      const user = userEvent.setup();
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(THRICE_SHARED_CHOICE_XML, THRICE_SHARED_CHOICE_DECL_XML),
+      });
+      for (const number of [2, 3]) {
+        await user.click(button(editPairItem(number, 1)));
+        await user.clear(openTextarea());
+      }
+      await updateProps({ mode: 'view' });
+      const savedChoices = parseXML(latestBodyXml(emitted)).querySelectorAll(
+        'qti-simple-associable-choice',
+      );
+      const pool = screen.getByRole('list', { name: tr.$tr('responsePoolLabel') });
+      expect(within(pool).getAllByRole('listitem')).toHaveLength(savedChoices.length);
     });
 
     it('keeps the pool order across a round trip through edit mode', async () => {

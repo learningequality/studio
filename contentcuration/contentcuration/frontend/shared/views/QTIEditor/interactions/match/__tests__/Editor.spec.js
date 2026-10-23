@@ -77,6 +77,17 @@ const SHARED_ANSWER_DECL_XML = `<qti-response-declaration identifier="RESPONSE" 
   </qti-correct-response>
 </qti-response-declaration>`;
 
+const ANSWER_AS_DISTRACTOR_XML = `<qti-match-interaction response-identifier="RESPONSE">
+  <qti-prompt><p>Match each animal to its class.</p></qti-prompt>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="row_dog" match-max="1">Dog</qti-simple-associable-choice>
+  </qti-simple-match-set>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="choice_mammal" match-max="1">Mammal</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_mammal_2" match-max="1">Mammal</qti-simple-associable-choice>
+  </qti-simple-match-set>
+</qti-match-interaction>`;
+
 const BLANK_ANSWER_XML = `<qti-match-interaction response-identifier="RESPONSE">
   <qti-prompt><p>Match each animal to its class.</p></qti-prompt>
   <qti-simple-match-set>
@@ -86,6 +97,25 @@ const BLANK_ANSWER_XML = `<qti-match-interaction response-identifier="RESPONSE">
     <qti-simple-associable-choice identifier="choice_mammal" match-max="1"></qti-simple-associable-choice>
   </qti-simple-match-set>
 </qti-match-interaction>`;
+
+const TWO_BLANK_ANSWERS_XML = `<qti-match-interaction response-identifier="RESPONSE">
+  <qti-prompt><p>Match each animal to its class.</p></qti-prompt>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="row_dog" match-max="1">Dog</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="row_cat" match-max="1">Cat</qti-simple-associable-choice>
+  </qti-simple-match-set>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="choice_dog" match-max="1"></qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_cat" match-max="1"></qti-simple-associable-choice>
+  </qti-simple-match-set>
+</qti-match-interaction>`;
+
+const TWO_BLANK_ANSWERS_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+  <qti-correct-response>
+    <qti-value>row_dog choice_dog</qti-value>
+    <qti-value>row_cat choice_cat</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
 
 // The mock TipTapEditor renders a <textarea> only for the card currently open.
 const openTextareas = () =>
@@ -808,12 +838,37 @@ describe('MatchEditor', () => {
     const renderView = (props = {}) => renderEditor({ mode: 'view', ...props });
     const pool = () => screen.getByRole('list', { name: tr.$tr('responsePoolLabel') });
 
-    it('repeats an answer in the pool once per row it serves, and each distractor once', () => {
+    it('lists an answer shared by several rows once in the pool, and each distractor once', () => {
       renderView({
         interaction: blockWithDecl(SHARED_ANSWER_XML, SHARED_ANSWER_DECL_XML),
       });
-      expect(within(pool()).getAllByText('Mammal')).toHaveLength(2);
+      expect(within(pool()).getAllByText('Mammal')).toHaveLength(1);
       expect(within(pool()).getAllByText('Reptile')).toHaveLength(1);
+    });
+
+    it('lists a distractor apart from an answer of the same content', () => {
+      renderView({
+        interaction: blockWithDecl(ANSWER_AS_DISTRACTOR_XML, ONE_ROW_DECL_XML),
+      });
+      expect(within(pool()).getAllByText('Mammal')).toHaveLength(2);
+    });
+
+    it('paints the one pool chip of an answer shared by several rows green', () => {
+      const palette = themePalette();
+      renderView({
+        interaction: blockWithDecl(SHARED_ANSWER_XML, SHARED_ANSWER_DECL_XML),
+        showAnswers: true,
+      });
+      const chips = within(pool()).getAllByText('Mammal');
+      expect(chips).toHaveLength(1);
+      expect(chips[0].closest('li')).toHaveStyle({ borderColor: palette.green.v_600 });
+    });
+
+    it('lists each blank answer as its own pool chip', () => {
+      renderView({
+        interaction: blockWithDecl(TWO_BLANK_ANSWERS_XML, TWO_BLANK_ANSWERS_DECL_XML),
+      });
+      expect(within(pool()).getAllByRole('listitem')).toHaveLength(2);
     });
 
     it('lists every row prompt and no answer when answers are hidden', () => {

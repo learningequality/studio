@@ -2,10 +2,9 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { hasRichTextContent } from '../../utils/richText';
+import { choiceKey } from '../../utils/richText';
 import { RESPONSE_IDENTIFIER } from '../../constants';
 import { _extractCorrectPairIds, newChoice } from '../associate/parse';
-import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 const serializer = new XMLSerializer();
 
@@ -153,7 +152,7 @@ export function buildMatchInteractionXML(state, _questionType, declarationSchema
   const correctPairs = [];
   rows.forEach((row, index) => {
     for (const { id, content } of row.matches) {
-      const key = hasRichTextContent(content) ? richTextComparisonKey(content) : '';
+      const key = choiceKey(content);
       const resolved = (key && idByAnswerKey.get(key)) || claim(id, 'choice');
       if (key) idByAnswerKey.set(key, resolved);
 

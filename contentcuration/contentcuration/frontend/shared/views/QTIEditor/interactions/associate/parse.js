@@ -4,9 +4,8 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { hasRichTextContent } from '../../utils/richText';
+import { choiceKey } from '../../utils/richText';
 import { RESPONSE_IDENTIFIER } from '../../constants';
-import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 const serializer = new XMLSerializer();
 
@@ -132,7 +131,7 @@ export function buildAssociateInteractionXML(state, _questionType, declarationSc
   // Preserves the id a choice already carries unless it is already bound to
   // different content.
   function resolveChoice({ id, content }) {
-    const key = hasRichTextContent(content) ? richTextComparisonKey(content) : '';
+    const key = choiceKey(content);
 
     // Blank choices are never deduped — a freshly added pair holds two of them,
     // and collapsing them would leave the pair unable to round-trip.
