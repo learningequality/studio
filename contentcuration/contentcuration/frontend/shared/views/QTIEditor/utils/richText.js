@@ -14,6 +14,7 @@
 
 import { QTISanitizer } from '../serialization/qti/QTISanitizer';
 import { parseXML } from '../serialization/xml';
+import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Markup that is content in its own right, with no text to find.
@@ -48,4 +49,12 @@ export function hasRichTextContent(content) {
     toText(content).length > 0 ||
     Boolean(parseXML(content ?? '', 'text/html').querySelector(EMBEDDED_MEDIA))
   );
+}
+
+/**
+ * @param {string} content - HTML fragment from a TipTap editor
+ * @returns {string} the key choices of equal content share; '' for blank content
+ */
+export function choiceKey(content) {
+  return hasRichTextContent(content) ? richTextComparisonKey(content) : '';
 }
