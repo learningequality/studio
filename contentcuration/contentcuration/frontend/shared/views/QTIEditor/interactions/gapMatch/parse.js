@@ -10,10 +10,9 @@ import {
   wrapInlineRuns,
 } from '../../serialization/xml';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { hasRichTextContent } from '../../utils/richText';
+import { choiceKey, hasRichTextContent } from '../../utils/richText';
 import { RESPONSE_IDENTIFIER, SENTINEL_MARKER } from '../../constants';
 import { _extractCorrectPairIds } from '../associate/parse';
-import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 const serializer = new XMLSerializer();
 
@@ -185,8 +184,8 @@ export function buildGapMatchInteractionXML(state, _questionType, declarationSch
   for (const gapEl of gapEls) {
     const gapId = claimExisting(gapEl.getAttribute('identifier'), 'gap');
     const content = getContentHTML(gapEl);
-    if (hasRichTextContent(content)) {
-      const key = richTextComparisonKey(content);
+    const key = choiceKey(content);
+    if (key) {
       const ownAnswerId = gapEl.getAttribute(CORRECT_ATTR);
       const answerId =
         idByAnswerKey.get(key) ||
