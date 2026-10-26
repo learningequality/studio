@@ -4,7 +4,7 @@
     <div
       ref="containerRef"
       class="image-node-view"
-      :class="{ 'is-selected': selected && editor.isEditable }"
+      :class="{ 'is-selected': selected && editor.isEditable, 'is-end-aligned': isEndAligned }"
       :style="{ width: styleWidth }"
     >
       <img
@@ -191,19 +191,20 @@
         return null;
       };
 
-      const isHandleRtl = () => getComputedStyle(resizeHandleRef.value).direction === 'rtl';
+      const isEndAligned = computed(() => props.node.attrs.textAlign === 'right');
+
+      const isHandleOnLeft = () =>
+        (getComputedStyle(resizeHandleRef.value).direction === 'rtl') !== isEndAligned.value;
 
       const onResizeStart = startEvent => {
-        const isRtl = isHandleRtl();
+        const growthPerPixel =
+          (isHandleOnLeft() ? -1 : 1) * (props.node.attrs.textAlign === 'center' ? 2 : 1);
         const startX = startEvent.clientX;
         const startWidth = width.value || containerRef.value.offsetWidth;
 
         const onMouseMove = moveEvent => {
           const deltaX = moveEvent.clientX - startX;
-
-          const newWidth = isRtl
-            ? startWidth - deltaX // In RTL, moving right should decrease width
-            : startWidth + deltaX; // In LTR, moving right should increase width
+          const newWidth = startWidth + growthPerPixel * deltaX;
 
           const clampedWidth = Math.max(minWidth, newWidth);
 
@@ -241,14 +242,13 @@
         const currentWidth = width.value || containerRef.value.offsetWidth;
         let newWidth = currentWidth;
 
-        // Invert keyboard controls for RTL
-        const isRtl = isHandleRtl();
-        const rightKey = isRtl ? 'ArrowLeft' : 'ArrowRight';
-        const leftKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
+        const handleOnLeft = isHandleOnLeft();
+        const growKey = handleOnLeft ? 'ArrowLeft' : 'ArrowRight';
+        const shrinkKey = handleOnLeft ? 'ArrowRight' : 'ArrowLeft';
 
-        if (event.key === rightKey) {
+        if (event.key === growKey) {
           newWidth = currentWidth + step;
-        } else if (event.key === leftKey) {
+        } else if (event.key === shrinkKey) {
           newWidth = currentWidth - step;
         } else if (event.key === 'Escape' || event.key === 'Enter') {
           // Use ref instead of DOM query
@@ -315,6 +315,7 @@
         removeImage,
         editImage,
         isCompact,
+        isEndAligned,
         onResizeKeyDown,
         onImageLoad,
       };
@@ -368,6 +369,16 @@
 
   .resize-handle:dir(rtl) {
     cursor: nesw-resize /* rtl:ignore */;
+  }
+
+  .is-end-aligned .resize-handle {
+    inset-inline-start: -6px;
+    inset-inline-end: auto;
+    cursor: nesw-resize /* rtl:ignore */;
+  }
+
+  .is-end-aligned .resize-handle:dir(rtl) {
+    cursor: nwse-resize /* rtl:ignore */;
   }
 
   .image-node-view.is-selected .resize-handle,
