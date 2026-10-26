@@ -1,8 +1,8 @@
 import { computed, readonly } from 'vue';
 import { inlineChoiceInteractionDescriptor } from '../interactions/inlineChoice/Descriptor';
 import { getDropdowns } from '../interactions/inlineChoice/parse';
-import { hasRichTextContent } from '../utils/richText';
 import { useInteraction } from './useInteraction';
+import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Composable for the inline choice interaction editor.

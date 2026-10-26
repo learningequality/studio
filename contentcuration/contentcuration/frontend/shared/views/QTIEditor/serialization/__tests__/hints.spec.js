@@ -54,7 +54,7 @@ describe('hintHasContent', () => {
   });
 
   // A hint can be entirely an image or a formula, which hasRichTextContent covers in
-  // full — see utils/__tests__/richText.spec.js.
+  // full — see TipTapEditor/__tests__/hasRichTextContent.spec.js.
   it('is true for a hint that is nothing but an image', () => {
     expect(hintHasContent({ content: '<p><img src="abc123.png"/></p>' })).toBe(true);
   });

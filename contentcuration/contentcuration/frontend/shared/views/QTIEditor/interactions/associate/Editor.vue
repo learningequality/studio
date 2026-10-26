@@ -248,9 +248,12 @@
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import ShuffledResponsePool from '../../components/ShuffledResponsePool/index.vue';
   import EditableChipList from '../../components/EditableChipList/index.vue';
-  import { hasRichTextContent } from '../../utils/richText';
+  import { resolveAssociateChoices } from './parse';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
-  import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
+  import {
+    hasRichTextContent,
+    richTextComparisonKey,
+  } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   /** Which card currently holds the open TipTap editor. */
@@ -531,27 +534,21 @@
         props.mode === 'edit' ? correctPairsLabel$() : correctAnswersLabel$(),
       );
 
-      // Blank pair members are left out: every blank choice keys the same, so
-      // keeping them would mark an unwritten option in the pool as correct.
-      const pairedTexts = computed(
-        () =>
-          new Set(
-            flatten(state.value.pairs)
-              .filter(choice => hasRichTextContent(choice.content))
-              .map(choice => richTextComparisonKey(choice.content)),
-          ),
-      );
-
-      // One option per association the learner can make: the emitted XML folds
-      // choices holding the same answer into a single option whose match-max is
-      // the number of occurrences walked here.
-      const poolChoices = computed(() =>
-        [...flatten(state.value.pairs), ...state.value.distractors].map(choice => ({
-          content: choice.content,
-          isCorrect:
-            props.showAnswers && pairedTexts.value.has(richTextComparisonKey(choice.content)),
-        })),
-      );
+      // Kolibri's pool shows each choice of the interaction once.
+      const poolChoices = computed(() => {
+        const { pairs, pool } = resolveAssociateChoices(state.value.pairs, state.value.distractors);
+        // Blank pair members are left out: every blank choice keys the same, so
+        // keeping them would mark an unwritten option in the pool as correct.
+        const pairedKeys = new Set(
+          flatten(pairs)
+            .map(({ key }) => key)
+            .filter(Boolean),
+        );
+        return pool.map(({ content, key }) => ({
+          content,
+          isCorrect: props.showAnswers && pairedKeys.has(key),
+        }));
+      });
 
       return {
         EditorImageProcessor,

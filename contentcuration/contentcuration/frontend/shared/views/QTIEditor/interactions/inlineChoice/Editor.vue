@@ -141,12 +141,12 @@
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import AnswerSettings from '../choice/components/AnswerSettings/index.vue';
-  import { hasRichTextContent } from '../../utils/richText';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { useInlineChoicePassage } from './useInlineChoicePassage';
   import InlineChoiceOptions from './components/InlineChoiceOptions/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
+  import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
   export default {
     name: 'InlineChoiceEditor',

@@ -2,6 +2,13 @@ import { useEditor } from '../TipTapEditor/composables/useEditor';
 import { richTextComparisonKey } from '../TipTapEditor/utils/comparisonKey';
 
 describe('richTextComparisonKey', () => {
+  it.each(['', null, '<p></p>', '<p>&nbsp;</p>', '<p><span></span></p>'])(
+    'is empty for %s, which holds no rich text content',
+    blank => {
+      expect(richTextComparisonKey(blank)).toBe('');
+    },
+  );
+
   it.each([
     ['bold', '<p>x<strong>2</strong></p>'],
     ['italic', '<p>x<em>2</em></p>'],

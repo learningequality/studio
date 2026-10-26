@@ -1,7 +1,9 @@
 import { ValidationError } from '../../constants';
-import { hasRichTextContent } from '../../utils/richText';
 import { duplicateDistractorErrors } from '../../utils/distractors';
-import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
+import {
+  hasRichTextContent,
+  richTextComparisonKey,
+} from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Validate MatchState → ValidationError[].
@@ -21,13 +23,10 @@ export function validateMatchInteraction(state) {
     errors.push({ code: ValidationError.PROMPT_REQUIRED });
   }
 
-  // Every rule below asks the same two questions of a choice, and answering
-  // either one parses its HTML — so each choice is read once, here.
-  const read = ({ id, content }) => ({
-    id,
-    filled: hasRichTextContent(content),
-    key: richTextComparisonKey(content),
-  });
+  const read = ({ id, content }) => {
+    const key = richTextComparisonKey(content);
+    return { id, filled: Boolean(key), key };
+  };
   const readRows = rows.map(row => ({ ...read(row), matches: row.matches.map(read) }));
   const readDistractors = distractors.map(read);
   const readChoices = [...readRows.flatMap(row => row.matches), ...readDistractors];

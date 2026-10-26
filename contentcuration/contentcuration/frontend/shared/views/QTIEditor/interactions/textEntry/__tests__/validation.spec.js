@@ -41,7 +41,7 @@ describe('validateTextEntryInteraction', () => {
 
     it('returns PROMPT_REQUIRED for a visually-empty &nbsp;-only prompt (entity regression)', () => {
       // The naive /<[^>]*>/g regex leaves the literal text "&nbsp;" which is truthy,
-      // so PROMPT_REQUIRED would silently pass. QTISanitizer.stripTags parses via
+      // so PROMPT_REQUIRED would silently pass. hasRichTextContent parses via
       // DOMParser text/html, which decodes entities and returns actual whitespace.
       const errors = validateTextEntryInteraction(
         { ...VALID_NUMERIC_STATE, prompt: '<p>&nbsp;</p>' },

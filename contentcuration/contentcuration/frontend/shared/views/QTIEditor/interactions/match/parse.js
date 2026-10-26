@@ -2,7 +2,6 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { hasRichTextContent } from '../../utils/richText';
 import { RESPONSE_IDENTIFIER } from '../../constants';
 import { _extractCorrectPairIds, newChoice } from '../associate/parse';
 import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
@@ -124,6 +123,47 @@ export function parseMatchInteraction(bodyXml, responseDeclarations) {
   };
 }
 
+// Ids are unique across both match sets; the first appearance keeps its id.
+function idClaimer() {
+  const usedIds = new Set();
+  return (id, prefix) => {
+    const resolved = id && !usedIds.has(id) ? id : generateRandomSlug(prefix);
+    usedIds.add(resolved);
+    return resolved;
+  };
+}
+
+/**
+ * @param {MatchRow[]} rows
+ * @param {function(string, string): string} [claim]
+ * @returns {{
+ *   answers: Array<MatchChoice & { key: string, matchMax: number }>,
+ *   answerIds: string[][],
+ * }}
+ */
+export function resolveMatchAnswers(rows, claim = idClaimer()) {
+  // Answers of equal content are one choice, serving every row that names it;
+  // blanks never are.
+  const idByAnswerKey = new Map();
+  const answers = new Map();
+  const answerIds = rows.map(row =>
+    row.matches.map(({ id, content }) => {
+      const key = richTextComparisonKey(content);
+      const resolved = (key && idByAnswerKey.get(key)) || claim(id, 'choice');
+      if (key) idByAnswerKey.set(key, resolved);
+
+      const answer = answers.get(resolved);
+      if (answer) {
+        answer.matchMax += 1;
+      } else {
+        answers.set(resolved, { id: resolved, content, key, matchMax: 1 });
+      }
+      return resolved;
+    }),
+  );
+  return { answers: [...answers.values()], answerIds };
+}
+
 /**
  * Serialize MatchState → { bodyXml, responseDeclarations }.
  *
@@ -135,37 +175,13 @@ export function parseMatchInteraction(bodyXml, responseDeclarations) {
 export function buildMatchInteractionXML(state, _questionType, declarationSchema) {
   const { responseIdentifier = RESPONSE_IDENTIFIER, prompt, rows = [], distractors = [] } = state;
 
-  // Ids are unique across both match sets; the first appearance keeps its id.
-  const usedIds = new Set();
-  function claim(id, prefix) {
-    const resolved = id && !usedIds.has(id) ? id : generateRandomSlug(prefix);
-    usedIds.add(resolved);
-    return resolved;
-  }
+  const claim = idClaimer();
 
   // Rows and distractors are never merged, so any repeat of their id is a conflict.
   const rowIds = rows.map(row => claim(row.id, 'row'));
 
-  // Answers of equal content are one choice, serving every row that names it;
-  // blanks never are.
-  const idByAnswerKey = new Map();
-  const answers = new Map();
-  const correctPairs = [];
-  rows.forEach((row, index) => {
-    for (const { id, content } of row.matches) {
-      const key = hasRichTextContent(content) ? richTextComparisonKey(content) : '';
-      const resolved = (key && idByAnswerKey.get(key)) || claim(id, 'choice');
-      if (key) idByAnswerKey.set(key, resolved);
-
-      const answer = answers.get(resolved);
-      if (answer) {
-        answer.matchMax += 1;
-      } else {
-        answers.set(resolved, { id: resolved, content, matchMax: 1 });
-      }
-      correctPairs.push([rowIds[index], resolved]);
-    }
-  });
+  const { answers, answerIds } = resolveMatchAnswers(rows, claim);
+  const correctPairs = answerIds.flatMap((ids, index) => ids.map(id => [rowIds[index], id]));
 
   const distractorChoices = distractors.map(({ id, content }) => ({
     id: claim(id, 'choice'),
@@ -188,7 +204,7 @@ export function buildMatchInteractionXML(state, _questionType, declarationSchema
   });
   const responseSet = buildXmlNode({
     tag: 'qti-simple-match-set',
-    children: [...answers.values(), ...distractorChoices].map(choiceNode),
+    children: [...answers, ...distractorChoices].map(choiceNode),
   });
 
   const children = [];

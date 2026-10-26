@@ -1,7 +1,7 @@
 import { QuestionType, ValidationError } from '../../constants';
 import { parseXsdDouble } from '../../utils/math';
 import { readLocaleNumber } from '../../utils/localeNumbers';
-import { hasRichTextContent } from '../../utils/richText';
+import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Validate TextEntryState → ValidationError[].

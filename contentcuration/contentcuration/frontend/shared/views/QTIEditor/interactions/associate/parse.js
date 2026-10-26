@@ -4,7 +4,6 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { hasRichTextContent } from '../../utils/richText';
 import { RESPONSE_IDENTIFIER } from '../../constants';
 import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
@@ -116,6 +115,56 @@ export function parseAssociateInteraction(bodyXml, responseDeclarations) {
 }
 
 /**
+ * @param {AssociateChoice[][]} pairs
+ * @param {AssociateChoice[]} distractors
+ * @returns {{
+ *   pairs: Array<Array<AssociateChoice & { key: string }>>,
+ *   pool: Array<AssociateChoice & { key: string, matchMax: number }>,
+ * }}
+ */
+export function resolveAssociateChoices(pairs, distractors) {
+  const idByContent = new Map();
+  const contentById = new Map();
+
+  // Preserves the id a choice already carries unless it is already bound to
+  // different content.
+  function resolveChoice({ id, content }) {
+    const key = richTextComparisonKey(content);
+
+    // Blank choices are never deduped — a freshly added pair holds two of them,
+    // and collapsing them would leave the pair unable to round-trip.
+    if (key && idByContent.has(key)) {
+      return { id: idByContent.get(key), content, key };
+    }
+
+    const boundKey = contentById.get(id);
+    const resolvedId =
+      boundKey === undefined || boundKey === key ? id : generateRandomSlug('choice');
+    contentById.set(resolvedId, key);
+    if (key) {
+      idByContent.set(key, resolvedId);
+    }
+    return { id: resolvedId, content, key };
+  }
+
+  const resolvedPairs = pairs.map(pair => pair.map(resolveChoice));
+  const resolvedDistractors = distractors.map(resolveChoice);
+
+  // Every appearance of a choice is one pairing it may take part in.
+  const pool = new Map();
+  for (const { id, content, key } of [...flatten(resolvedPairs), ...resolvedDistractors]) {
+    const entry = pool.get(id);
+    if (entry) {
+      entry.matchMax += 1;
+    } else {
+      pool.set(id, { id, content, key, matchMax: 1 });
+    }
+  }
+
+  return { pairs: resolvedPairs, pool: [...pool.values()] };
+}
+
+/**
  * Serialize AssociateState → { bodyXml, responseDeclarations }.
  *
  * @param {AssociateState} state
@@ -126,49 +175,13 @@ export function parseAssociateInteraction(bodyXml, responseDeclarations) {
 export function buildAssociateInteractionXML(state, _questionType, declarationSchema) {
   const { responseIdentifier = RESPONSE_IDENTIFIER, prompt, pairs = [], distractors = [] } = state;
 
-  const idByContent = new Map();
-  const contentById = new Map();
-
-  // Preserves the id a choice already carries unless it is already bound to
-  // different content.
-  function resolveChoice({ id, content }) {
-    const key = hasRichTextContent(content) ? richTextComparisonKey(content) : '';
-
-    // Blank choices are never deduped — a freshly added pair holds two of them,
-    // and collapsing them would leave the pair unable to round-trip.
-    if (key && idByContent.has(key)) {
-      return { id: idByContent.get(key), content };
-    }
-
-    const boundKey = contentById.get(id);
-    const resolvedId =
-      boundKey === undefined || boundKey === key ? id : generateRandomSlug('choice');
-    contentById.set(resolvedId, key);
-    if (key) {
-      idByContent.set(key, resolvedId);
-    }
-    return { id: resolvedId, content };
-  }
-
-  const resolvedPairs = pairs.map(pair => pair.map(resolveChoice));
-  const resolvedDistractors = distractors.map(resolveChoice);
-
-  // Every appearance of a choice is one pairing it may take part in.
-  const pool = new Map();
-  for (const { id, content } of [...flatten(resolvedPairs), ...resolvedDistractors]) {
-    const entry = pool.get(id);
-    if (entry) {
-      entry.matchMax += 1;
-    } else {
-      pool.set(id, { id, content, matchMax: 1 });
-    }
-  }
+  const { pairs: resolvedPairs, pool } = resolveAssociateChoices(pairs, distractors);
 
   const children = [];
   if (prompt) {
     children.push(buildXmlNode({ tag: 'qti-prompt', innerHTML: prompt }));
   }
-  for (const { id, content, matchMax } of pool.values()) {
+  for (const { id, content, matchMax } of pool) {
     children.push(
       buildXmlNode({
         tag: 'qti-simple-associable-choice',
