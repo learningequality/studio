@@ -2,9 +2,9 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { choiceKey } from '../../utils/richText';
 import { RESPONSE_IDENTIFIER } from '../../constants';
 import { _extractCorrectPairIds, newChoice } from '../associate/parse';
+import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 const serializer = new XMLSerializer();
 
@@ -148,7 +148,7 @@ export function resolveMatchAnswers(rows, claim = idClaimer()) {
   const answers = new Map();
   const answerIds = rows.map(row =>
     row.matches.map(({ id, content }) => {
-      const key = choiceKey(content);
+      const key = richTextComparisonKey(content);
       const resolved = (key && idByAnswerKey.get(key)) || claim(id, 'choice');
       if (key) idByAnswerKey.set(key, resolved);
 

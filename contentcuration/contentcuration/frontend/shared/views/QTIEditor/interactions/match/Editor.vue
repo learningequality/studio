@@ -309,10 +309,12 @@
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import EditableChipList from '../../components/EditableChipList/index.vue';
   import ShuffledResponsePool from '../../components/ShuffledResponsePool/index.vue';
-  import { hasRichTextContent } from '../../utils/richText';
   import { resolveMatchAnswers } from './parse';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
-  import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
+  import {
+    hasRichTextContent,
+    richTextComparisonKey,
+  } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   /** Which card or chip list currently holds the open TipTap editor. */

@@ -167,9 +167,9 @@
   import ClickableRegion from '../ClickableRegion/index.vue';
   import ValidationMessage from '../ValidationMessage/index.vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { hasRichTextContent } from '../../utils/richText';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
+  import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
   // Holds a message line open without text
   const NO_BREAK_SPACE = '\u00a0';

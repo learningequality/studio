@@ -1,5 +1,4 @@
 import { ValidationError } from '../../constants';
-import { hasRichTextContent } from '../../utils/richText';
 import { duplicateDistractorErrors } from '../../utils/distractors';
 import { getGaps } from './parse';
 import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
@@ -11,11 +10,10 @@ export function validateGapMatchInteraction(state) {
     return [{ code: ValidationError.NO_CORRECT_ANSWER }];
   }
 
-  const read = (id, content) => ({
-    id,
-    filled: hasRichTextContent(content),
-    key: richTextComparisonKey(content),
-  });
+  const read = (id, content) => {
+    const key = richTextComparisonKey(content);
+    return { id, filled: Boolean(key), key };
+  };
   const readAnswers = gaps.map(({ id, answer }) => read(id, answer));
   const readDistractors = distractors.map(({ id, content }) => read(id, content));
 

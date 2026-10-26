@@ -15,6 +15,47 @@ const UNPARSED_MEDIA = 'svg, math';
 const SCRIPTS = ['superscript', 'subscript'];
 
 /**
+ * Markup that is content in its own right, with no text to find.
+ *
+ * A formula is authored as the `data-latex` span the editor's Math node round-trips, and
+ * only becomes MathML when the item is published — so both forms count, the item being
+ * read here having come from either side of that.
+ */
+const EMBEDDED_MEDIA = 'img, math, svg, span[data-latex]';
+
+function parseHTML(html) {
+  return new DOMParser().parseFromString(html ?? '', 'text/html');
+}
+
+function toText(document) {
+  // Remove script and style elements entirely — we do NOT want their text content.
+  document.querySelectorAll('script, style').forEach(el => el.remove());
+  return document.body.textContent.trim();
+}
+
+function hasContent(document) {
+  return Boolean(document.querySelector(EMBEDDED_MEDIA)) || toText(document).length > 0;
+}
+
+/**
+ * Whether a rich text fragment holds anything worth keeping.
+ *
+ * A fragment is empty in more ways than an empty string: a `<p></p>` the author opened
+ * and never typed into, a paragraph holding nothing but `&nbsp;`.
+ *
+ * It can also say something without saying it in words. An image, or a formula from the
+ * editor's own formula button, is the whole content — a converted legacy question often
+ * asks its question entirely in a picture. Reading only the text would call those empty,
+ * dropping a hint on the next save and failing a question that has nothing wrong with it.
+ *
+ * @param {string} content - HTML fragment from a TipTap editor
+ * @returns {boolean}
+ */
+export function hasRichTextContent(content) {
+  return hasContent(parseHTML(content));
+}
+
+/**
  * A key two fragments can be compared on to tell whether they say the same thing.
  *
  * Its text, however marked up except its sub/superscripts, and each formula, image,
@@ -22,10 +63,11 @@ const SCRIPTS = ['superscript', 'subscript'];
  * re-render keys the same, unless it has SVG or MathML, which TipTap drops.
  *
  * @param {string} html - HTML fragment from a TipTap editor
- * @returns {string}
+ * @returns {string} '' for a fragment without rich text content
  */
 export function richTextComparisonKey(html) {
-  const document = new DOMParser().parseFromString(html ?? '', 'text/html');
+  const document = parseHTML(html);
+  if (!hasContent(document)) return '';
   // A formula stands in for each, so parsing keeps its place. HTML parsing turns NUL
   // into U+FFFD, so no stored formula has this LaTeX.
   const unparsed = new Map();

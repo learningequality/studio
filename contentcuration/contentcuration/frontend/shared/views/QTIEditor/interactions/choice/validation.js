@@ -1,6 +1,8 @@
 import { QuestionType, ValidationError } from '../../constants';
-import { hasRichTextContent } from '../../utils/richText';
-import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
+import {
+  hasRichTextContent,
+  richTextComparisonKey,
+} from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Validate ChoiceState → ValidationError[].
@@ -23,12 +25,12 @@ export function validateChoiceInteraction(state, questionType) {
   const duplicateIds = new Set();
 
   for (const choice of choices) {
-    if (!hasRichTextContent(choice.content)) {
+    const key = richTextComparisonKey(choice.content);
+    if (!key) {
       errors.push({ code: ValidationError.EMPTY_CHOICE_CONTENT, id: choice.id });
       continue;
     }
 
-    const key = richTextComparisonKey(choice.content);
     if (firstSeenId.has(key)) {
       duplicateIds.add(firstSeenId.get(key));
       duplicateIds.add(choice.id);

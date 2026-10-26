@@ -1,6 +1,8 @@
 import { ValidationError } from '../../constants';
-import { hasRichTextContent } from '../../utils/richText';
-import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
+import {
+  hasRichTextContent,
+  richTextComparisonKey,
+} from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Validate OrderingState → ValidationError[].
@@ -24,12 +26,12 @@ export function validateOrderingInteraction(state) {
   const duplicateIds = new Set();
 
   for (const item of items) {
-    if (!hasRichTextContent(item.content)) {
+    const key = richTextComparisonKey(item.content);
+    if (!key) {
       errors.push({ code: ValidationError.EMPTY_CHOICE_CONTENT, id: item.id });
       continue;
     }
 
-    const key = richTextComparisonKey(item.content);
     if (firstSeenId.has(key)) {
       duplicateIds.add(firstSeenId.get(key));
       duplicateIds.add(item.id);

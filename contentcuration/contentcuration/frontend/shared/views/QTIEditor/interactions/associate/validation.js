@@ -1,8 +1,10 @@
 import flatten from 'lodash/flatten';
 import { ValidationError } from '../../constants';
-import { hasRichTextContent } from '../../utils/richText';
 import { duplicateDistractorErrors } from '../../utils/distractors';
-import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
+import {
+  hasRichTextContent,
+  richTextComparisonKey,
+} from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /**
  * Validate AssociateState → ValidationError[].
@@ -23,13 +25,10 @@ export function validateAssociateInteraction(state) {
     errors.push({ code: ValidationError.PROMPT_REQUIRED });
   }
 
-  // Every rule below asks the same two questions of a choice, and answering
-  // either one parses its HTML — so each choice is read once, here.
-  const read = ({ id, content }) => ({
-    id,
-    filled: hasRichTextContent(content),
-    key: richTextComparisonKey(content),
-  });
+  const read = ({ id, content }) => {
+    const key = richTextComparisonKey(content);
+    return { id, filled: Boolean(key), key };
+  };
   const readPairs = pairs.map(pair => pair.map(read));
   const readDistractors = distractors.map(read);
   const allChoices = [...flatten(readPairs), ...readDistractors];

@@ -1,4 +1,4 @@
-import { hasRichTextContent } from '../richText';
+import { hasRichTextContent } from '../TipTapEditor/utils/comparisonKey';
 
 describe('hasRichTextContent', () => {
   it.each([
@@ -12,6 +12,8 @@ describe('hasRichTextContent', () => {
     // The literal six characters a pattern strip leaves behind are not content.
     ['<p>&nbsp;</p>', false],
     ['&nbsp; ', false],
+    ['<p><script>alert(1)</script></p>', false],
+    ['<p><style>p { color: red; }</style></p>', false],
     // A prompt, choice or hint can be entirely an image or a formula — from a converted
     // legacy question, or from the editor's own image and formula buttons.
     ['<p><img src="abc123.png"/></p>', true],

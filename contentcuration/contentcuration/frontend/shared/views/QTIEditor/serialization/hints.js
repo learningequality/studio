@@ -15,7 +15,6 @@
  */
 
 import { generateRandomSlug } from '../utils/generateRandomSlug';
-import { hasRichTextContent } from '../utils/richText';
 import {
   attributesOf,
   contentChildrenOf,
@@ -23,6 +22,7 @@ import {
   hasNonNamespaceAttributes,
   isChildElement,
 } from './xml';
+import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
 /** The catalog this editor writes hints into. */
 export const HINT_CATALOG_ID = 'kolibri-hints';
