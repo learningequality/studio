@@ -56,6 +56,26 @@ describe('the editor schema', () => {
     expect(editor.getHTML()).not.toContain('<s>');
   });
 
+  it.each([
+    ['paragraph', '<p>text</p>'],
+    ['small', '<small>text</small>'],
+  ])('strikes a %s through on Ctrl+Shift+S, keeping the block', (block, content) => {
+    const editor = createEditor(content);
+    editor.commands.selectAll();
+    const keydown = new KeyboardEvent('keydown', {
+      key: 'S',
+      keyCode: 83,
+      ctrlKey: true,
+      shiftKey: true,
+    });
+    editor.view.someProp('handleKeyDown', handler => handler(editor.view, keydown));
+
+    expect(editor.state.doc.firstChild.type.name).toBe(block);
+    expect(spansIn(editor.getHTML())).toEqual([
+      { text: 'text', style: expect.stringContaining('text-decoration: line-through') },
+    ]);
+  });
+
   it('reads back the decorated spans it writes', () => {
     // A <span> is no node in this schema, so it survives the round trip only by being
     // read as the mark that wrote it.
@@ -148,7 +168,6 @@ describe('the inline-only schema', () => {
     ['ordered list', 'Mod-Shift-7'],
     ['blockquote', 'Mod-Shift-b'],
     ['code block', 'Mod-Alt-c'],
-    ['small text', 'Mod-Shift-S'],
   ])('creates no block from the %s shortcut', (_, shortcut) => {
     const editor = createEditor('text');
     editor.commands.focus('end');
