@@ -47,7 +47,11 @@ describe('ForgotPassword', () => {
   it('should not submit form with empty email', async () => {
     renderComponent();
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(await screen.findByText(commonStrings.$tr('fieldRequired'))).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('email-field')).toHaveTextContent(
+        commonStrings.$tr('fieldRequired'),
+      );
+    });
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
   });
 
@@ -55,7 +59,11 @@ describe('ForgotPassword', () => {
     renderComponent();
     await fireEvent.update(screen.getByLabelText(/email/i), 'invalid-email');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(await screen.findByText(ForgotPassword.$trs.emailValidationMessage)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('email-field')).toHaveTextContent(
+        ForgotPassword.$trs.emailValidationMessage,
+      );
+    });
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
   });
 

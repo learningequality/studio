@@ -20,6 +20,7 @@
       <StudioEmailField
         v-model="email"
         autofocus
+        data-testid="email-field"
         :label="$tr('emailLabel')"
         :errorMessages="errors.email ? [emailErrorText] : []"
       />
