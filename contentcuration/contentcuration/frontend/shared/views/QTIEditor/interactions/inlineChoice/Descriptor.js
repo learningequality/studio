@@ -18,9 +18,30 @@ class InlineChoiceInteractionDescriptor extends InteractionDescriptor {
     });
   }
 
+  getTypeOptions(tr) {
+    return [
+      {
+        value: QuestionType.INLINE_CHOICE,
+        label: tr.inlineChoiceLabel$(),
+        description: tr.inlineChoiceDescription$(),
+      },
+    ];
+  }
+
   matches(el) {
     if (el.tagName.toLowerCase() === QtiInteraction.INLINE_CHOICE) return true;
     return Boolean(el.querySelector(QtiInteraction.INLINE_CHOICE));
+  }
+
+  /**
+   * parse() reads every body: elements it wrote as the question go back to the question, and
+   * everything else is the passage. Another interaction in the body would be its own block,
+   * which isSupportedItem already rejects.
+   *
+   * @returns {boolean}
+   */
+  isSupportedBody() {
+    return true;
   }
 
   getQuestionType() {

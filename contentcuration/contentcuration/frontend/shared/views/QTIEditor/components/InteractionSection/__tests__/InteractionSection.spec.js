@@ -144,6 +144,29 @@ describe('InteractionSection', () => {
     });
   });
 
+  describe('switching to inline choice', () => {
+    it('keeps the prompt as the question and shows the passage editor', async () => {
+      const { emitted } = render(SwitchableSection, { routes: new VueRouter() });
+      await nextTick();
+
+      await fireEvent.click(screen.getAllByText(tr.$tr('singleSelectLabel'))[0]);
+      await fireEvent.click(screen.getByText(tr.$tr('inlineChoiceLabel')));
+      await nextTick();
+
+      const switched = emitted()['wrapper-update'].at(-1)[0];
+      expect(switched.bodyXml).toContain('Which planet is closest to the Sun?');
+      expect(switched.bodyXml).toContain('<qti-inline-choice-interaction');
+      expect(switched.bodyXml).not.toContain('Mercury');
+      expect(
+        screen.getByRole('heading', { name: tr.$tr('questionOptionalLabel') }),
+      ).toBeInTheDocument();
+      const passage = screen.getByRole('heading', { name: tr.$tr('passageEditorLabel') });
+      expect(
+        within(passage.parentElement).getByText(tr.$tr('passageEditorDescription')),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('unknown interaction type', () => {
     it('renders nothing editable', () => {
       renderSection({ interaction: interactionBlock(UNKNOWN_INTERACTION_XML), mode: 'edit' });

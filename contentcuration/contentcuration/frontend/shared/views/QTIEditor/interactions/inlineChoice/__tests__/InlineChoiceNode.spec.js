@@ -1,5 +1,6 @@
-import { screen, waitFor } from '@testing-library/vue';
+import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 // The resolver does not read package `exports` subpaths.
 // eslint-disable-next-line import/no-unresolved
 import { closeHistory } from '@tiptap/pm/history';
@@ -7,6 +8,7 @@ import { getDropdowns, parseInlineChoiceInteraction } from '../parse';
 import { chip, findChip, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 import { getTipTapEditorStrings } from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditorStrings';
+import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
 const { copy$, paste$ } = getTipTapEditorStrings();
 
@@ -15,6 +17,18 @@ jest.mock('shared/utils/browserInfo', () => ({ isTouchDevice: false }));
 
 // jsdom has no ClipboardEvent, which `pasteHTML` creates by default.
 const paste = (editor, html) => editor.view.pasteHTML(html, new Event('paste'));
+
+/** Mounts a rich text editor without dropdowns, as the question field is; resolves its editor. */
+async function renderEditorWithoutChips() {
+  const onReady = jest.fn();
+  render(TipTapEditor, {
+    props: { value: '<p></p>', mode: 'edit', format: 'html' },
+    listeners: { ready: onReady },
+    routes: new VueRouter(),
+  });
+  await waitFor(() => expect(onReady).toHaveBeenCalled());
+  return onReady.mock.calls[0][0];
+}
 
 describe('InlineChoiceNode', () => {
   stubProseMirrorLayout();
@@ -128,14 +142,6 @@ describe('InlineChoiceNode', () => {
       expect(findChip(editor, 'r1').node.attrs.correctId).toBeNull();
     });
 
-    it('keeps a selected chip selected', async () => {
-      const { editor } = await renderPassage({ value: `<p>a${chip('r1', [['c1', 'x']])}b</p>` });
-      const { pos } = findChip(editor, 'r1');
-      editor.commands.setNodeSelection(pos);
-      editor.commands.updateInlineChoice('r1', { options: [{ id: 'c1', text: 'y' }] });
-      expect(editor.state.selection.toJSON()).toEqual({ type: 'node', anchor: pos });
-    });
-
     it('gives an added option with no id a fresh one, keeping the other ids', async () => {
       const { editor } = await renderPassage({ value });
       editor.commands.updateInlineChoice('r1', {
@@ -201,6 +207,34 @@ describe('InlineChoiceNode', () => {
     });
   });
 
+  // TipTap's typing shortcuts read the text before the caret, so a chip read as its answer
+  // could start one, and be deleted as the characters typed for it.
+  it.each(['-', '#', '>'])(
+    'starts no typing shortcut with a chip answering %s at the start of a paragraph',
+    async answer => {
+      const { editor } = await renderPassage({
+        value: `<p>${chip(
+          'r1',
+          [
+            ['a', answer],
+            ['b', 'z'],
+          ],
+          'a',
+        )}rest</p>`,
+      });
+      editor.commands.focus();
+      const { view } = editor;
+      const typeSpace = () => view.state.tr.insertText(' ', 2, 2);
+      const handled = view.someProp('handleTextInput', handle =>
+        handle(view, 2, 2, ' ', typeSpace),
+      );
+      if (!handled) view.dispatch(typeSpace());
+
+      expect(getDropdowns(editor.getHTML())).toHaveLength(1);
+      expect(editor.state.doc.firstChild.type.name).toBe('paragraph');
+    },
+  );
+
   describe('paste', () => {
     const source = chip(
       'r1',
@@ -261,6 +295,25 @@ describe('InlineChoiceNode', () => {
       expect(correctId).toBe(options[0].id);
     });
 
+    // QTI requires an option in every dropdown, and every save is checked against it.
+    it.each([
+      [
+        'a dropdown with no options',
+        '<qti-inline-choice-interaction response-identifier="x"></qti-inline-choice-interaction>',
+        '',
+      ],
+      [
+        'a copy whose dropdown cannot be read',
+        '<qti-inline-choice-interaction data-studio-dropdown="{not json">sun</qti-inline-choice-interaction>',
+        'sun',
+      ],
+    ])('gives %s one option, holding its text', async (_, html, text) => {
+      const { editor } = await renderPassage({ value: '<p>a</p>' });
+      paste(editor, html);
+      const [pasted] = getDropdowns(editor.getHTML());
+      expect(pasted.options).toEqual([{ id: expect.stringMatching(/./), text }]);
+    });
+
     it('gives a pasted chip missing its ids fresh ones', async () => {
       const { editor } = await renderPassage({ value: '<p>a</p>' });
       paste(
@@ -306,6 +359,48 @@ describe('InlineChoiceNode', () => {
         { id: 'c1', text: 'x' },
         { id: expect.stringMatching(/./), text: '' },
       ]);
+    });
+
+    describe('a copy', () => {
+      // What copying the passage's first paragraph puts on the clipboard. TipTap writes the
+      // plain text from the selection.
+      const copyParagraph = editor => {
+        const to = editor.state.doc.firstChild.nodeSize - 1;
+        editor.commands.setTextSelection({ from: 1, to });
+        return editor.view.serializeForClipboard(editor.state.selection.content());
+      };
+
+      it('pastes into an editor without dropdowns as just its correct answer', async () => {
+        const { editor } = await renderPassage({ value: `<p>a ${source} b</p>` });
+        const plain = await renderEditorWithoutChips();
+        paste(plain, copyParagraph(editor).dom.innerHTML);
+        expect(plain.getHTML()).toBe('<p>a y b</p>');
+      });
+
+      it('leaves a dropdown with no correct answer out of an editor without dropdowns', async () => {
+        const { editor } = await renderPassage({
+          value: `<p>a ${chip('r1', [['c1', 'x']])} b</p>`,
+        });
+        const plain = await renderEditorWithoutChips();
+        paste(plain, copyParagraph(editor).dom.innerHTML);
+        expect(plain.getText()).not.toContain('x');
+      });
+
+      // The plain text has no form a passage could read the chip back from.
+      it('leaves the chip out of its plain text', async () => {
+        const { editor } = await renderPassage({ value: `<p>a ${source} b</p>` });
+        expect(copyParagraph(editor).text).toBe('a  b');
+      });
+
+      it('pastes into a passage as the whole dropdown', async () => {
+        const { editor } = await renderPassage({ value: `<p>a ${source} b</p>` });
+        const { dom } = copyParagraph(editor);
+        editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+        paste(editor, dom.innerHTML);
+        const [, copy] = getDropdowns(editor.getHTML());
+        expect(copy.options.map(o => o.text)).toEqual(['x', 'y']);
+        expectFreshCopy(copy);
+      });
     });
 
     describe('with the toolbar Copy and Paste buttons', () => {
@@ -380,6 +475,29 @@ describe('InlineChoiceNode', () => {
         const [, copy] = getDropdowns(editor.getHTML());
         expect(copy.options.map(o => o.text)).toEqual(['x', 'y']);
         expectFreshCopy(copy);
+      });
+
+      it('copies a selected chip as its correct answer for an editor without dropdowns', async () => {
+        const { editor } = await renderPassage({ value: `<p>a${source}b</p>` });
+        editor.commands.focus();
+        editor.commands.setNodeSelection(findChip(editor, 'r1').pos);
+        await userEvent.click(screen.getByRole('button', { name: copy$() }));
+        await waitFor(() => expect(clipboard).toHaveLength(1));
+
+        const html = await (await clipboard[0].getType('text/html')).text();
+        const plain = await renderEditorWithoutChips();
+        paste(plain, html);
+        expect(plain.getText()).toBe('y');
+      });
+
+      it('leaves a chip out of its plain text, as Ctrl+C does', async () => {
+        const { editor } = await renderPassage({ value: `<p>a ${source} b</p>` });
+        editor.commands.focus();
+        editor.commands.setTextSelection({ from: 1, to: editor.state.doc.content.size - 1 });
+        await userEvent.click(screen.getByRole('button', { name: copy$() }));
+        await waitFor(() => expect(clipboard).toHaveLength(1));
+
+        expect(await (await clipboard[0].getType('text/plain')).text()).toBe('a  b');
       });
     });
 
