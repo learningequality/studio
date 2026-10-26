@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import ForgotPassword from '../resetPassword/ForgotPassword';
+import commonStrings from 'shared/translator';
 
 const sendPasswordResetLinkMock = jest.fn(() => Promise.resolve());
 
@@ -40,11 +41,13 @@ describe('ForgotPassword', () => {
     expect(screen.getByText('Reset your password')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    expect(screen.queryByTestId('error-banner')).not.toBeInTheDocument();
   });
 
   it('should not submit form with empty email', async () => {
     renderComponent();
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText(commonStrings.$tr('fieldRequired'))).toBeInTheDocument();
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
   });
 
@@ -52,6 +55,7 @@ describe('ForgotPassword', () => {
     renderComponent();
     await fireEvent.update(screen.getByLabelText(/email/i), 'invalid-email');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText(ForgotPassword.$trs.emailValidationMessage)).toBeInTheDocument();
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
   });
 
@@ -74,6 +78,8 @@ describe('ForgotPassword', () => {
     renderComponent();
     await fireEvent.update(screen.getByLabelText(/email/i), 'test@test.com');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(await screen.findByTestId('error-banner')).toBeInTheDocument();
+    expect(await screen.findByTestId('error-banner')).toHaveTextContent(
+      ForgotPassword.$trs.forgotPasswordFailed,
+    );
   });
 });
