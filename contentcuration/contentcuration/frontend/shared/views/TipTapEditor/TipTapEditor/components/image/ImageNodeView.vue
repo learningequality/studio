@@ -358,7 +358,7 @@
     bottom: -6px;
     width: 24px;
     height: 24px;
-    cursor: nwse-resize;
+    cursor: nwse-resize /* rtl:ignore */;
     background: white;
     border: 2px solid #666666;
     border-radius: 50%;
@@ -366,8 +366,8 @@
     transition: opacity 0.2s;
   }
 
-  [dir='rtl'] .resize-handle {
-    cursor: nesw-resize;
+  .resize-handle:dir(rtl) {
+    cursor: nesw-resize /* rtl:ignore */;
   }
 
   .image-node-view.is-selected .resize-handle,
