@@ -115,16 +115,14 @@ export function parseAssociateInteraction(bodyXml, responseDeclarations) {
 }
 
 /**
- * Serialize AssociateState → { bodyXml, responseDeclarations }.
- *
- * @param {AssociateState} state
- * @param {string} _questionType - unused (associate has one question type); kept for API parity
- * @param {object} declarationSchema - { baseType: string, cardinality: string }
- * @returns {{ bodyXml: string, responseDeclarations: string[] }}
+ * @param {AssociateChoice[][]} pairs
+ * @param {AssociateChoice[]} distractors
+ * @returns {{
+ *   pairs: Array<Array<AssociateChoice & { key: string }>>,
+ *   pool: Array<AssociateChoice & { key: string, matchMax: number }>,
+ * }}
  */
-export function buildAssociateInteractionXML(state, _questionType, declarationSchema) {
-  const { responseIdentifier = RESPONSE_IDENTIFIER, prompt, pairs = [], distractors = [] } = state;
-
+export function resolveAssociateChoices(pairs, distractors) {
   const idByContent = new Map();
   const contentById = new Map();
 
@@ -136,7 +134,7 @@ export function buildAssociateInteractionXML(state, _questionType, declarationSc
     // Blank choices are never deduped — a freshly added pair holds two of them,
     // and collapsing them would leave the pair unable to round-trip.
     if (key && idByContent.has(key)) {
-      return { id: idByContent.get(key), content };
+      return { id: idByContent.get(key), content, key };
     }
 
     const boundKey = contentById.get(id);
@@ -146,7 +144,7 @@ export function buildAssociateInteractionXML(state, _questionType, declarationSc
     if (key) {
       idByContent.set(key, resolvedId);
     }
-    return { id: resolvedId, content };
+    return { id: resolvedId, content, key };
   }
 
   const resolvedPairs = pairs.map(pair => pair.map(resolveChoice));
@@ -154,20 +152,36 @@ export function buildAssociateInteractionXML(state, _questionType, declarationSc
 
   // Every appearance of a choice is one pairing it may take part in.
   const pool = new Map();
-  for (const { id, content } of [...flatten(resolvedPairs), ...resolvedDistractors]) {
+  for (const { id, content, key } of [...flatten(resolvedPairs), ...resolvedDistractors]) {
     const entry = pool.get(id);
     if (entry) {
       entry.matchMax += 1;
     } else {
-      pool.set(id, { id, content, matchMax: 1 });
+      pool.set(id, { id, content, key, matchMax: 1 });
     }
   }
+
+  return { pairs: resolvedPairs, pool: [...pool.values()] };
+}
+
+/**
+ * Serialize AssociateState → { bodyXml, responseDeclarations }.
+ *
+ * @param {AssociateState} state
+ * @param {string} _questionType - unused (associate has one question type); kept for API parity
+ * @param {object} declarationSchema - { baseType: string, cardinality: string }
+ * @returns {{ bodyXml: string, responseDeclarations: string[] }}
+ */
+export function buildAssociateInteractionXML(state, _questionType, declarationSchema) {
+  const { responseIdentifier = RESPONSE_IDENTIFIER, prompt, pairs = [], distractors = [] } = state;
+
+  const { pairs: resolvedPairs, pool } = resolveAssociateChoices(pairs, distractors);
 
   const children = [];
   if (prompt) {
     children.push(buildXmlNode({ tag: 'qti-prompt', innerHTML: prompt }));
   }
-  for (const { id, content, matchMax } of pool.values()) {
+  for (const { id, content, matchMax } of pool) {
     children.push(
       buildXmlNode({
         tag: 'qti-simple-associable-choice',

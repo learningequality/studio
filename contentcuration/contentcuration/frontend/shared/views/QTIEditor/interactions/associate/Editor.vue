@@ -249,6 +249,7 @@
   import ShuffledResponsePool from '../../components/ShuffledResponsePool/index.vue';
   import EditableChipList from '../../components/EditableChipList/index.vue';
   import { choiceKey, hasRichTextContent } from '../../utils/richText';
+  import { resolveAssociateChoices } from './parse';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
@@ -543,19 +544,14 @@
       );
 
       // Kolibri's pool shows each choice of the interaction once.
-      const poolChoices = computed(() => {
-        const keys = new Set();
-        const keyById = new Map();
-        const choices = [];
-        for (const { id, content } of [...flatten(state.value.pairs), ...state.value.distractors]) {
-          const key = choiceKey(content);
-          if (key ? keys.has(key) : keyById.get(id) === '') continue;
-          if (key) keys.add(key);
-          if (!keyById.has(id)) keyById.set(id, key);
-          choices.push({ content, isCorrect: props.showAnswers && pairedTexts.value.has(key) });
-        }
-        return choices;
-      });
+      const poolChoices = computed(() =>
+        resolveAssociateChoices(state.value.pairs, state.value.distractors).pool.map(
+          ({ content }) => ({
+            content,
+            isCorrect: props.showAnswers && pairedTexts.value.has(choiceKey(content)),
+          }),
+        ),
+      );
 
       return {
         EditorImageProcessor,

@@ -309,7 +309,8 @@
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import EditableChipList from '../../components/EditableChipList/index.vue';
   import ShuffledResponsePool from '../../components/ShuffledResponsePool/index.vue';
-  import { choiceKey, hasRichTextContent } from '../../utils/richText';
+  import { hasRichTextContent } from '../../utils/richText';
+  import { resolveMatchAnswers } from './parse';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import { richTextComparisonKey } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
@@ -664,20 +665,13 @@
       const isOnlyRow = computed(() => state.value.rows.length <= 1);
 
       // Kolibri's pool shows each choice of the response match set once.
-      const poolChoices = computed(() => {
-        const answerKeys = new Set();
-        const answers = [];
-        for (const { content } of state.value.rows.flatMap(row => row.matches)) {
-          const key = choiceKey(content);
-          if (answerKeys.has(key)) continue;
-          if (key) answerKeys.add(key);
-          answers.push({ content, isCorrect: props.showAnswers && Boolean(key) });
-        }
-        return [
-          ...answers,
-          ...state.value.distractors.map(({ content }) => ({ content, isCorrect: false })),
-        ];
-      });
+      const poolChoices = computed(() => [
+        ...resolveMatchAnswers(state.value.rows).answers.map(({ content, key }) => ({
+          content,
+          isCorrect: props.showAnswers && Boolean(key),
+        })),
+        ...state.value.distractors.map(({ content }) => ({ content, isCorrect: false })),
+      ]);
 
       return {
         EditorImageProcessor,
