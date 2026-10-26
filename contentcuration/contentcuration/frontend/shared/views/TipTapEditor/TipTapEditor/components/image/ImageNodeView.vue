@@ -169,11 +169,6 @@
         }
       };
 
-      const isRtl = computed(() => {
-        // Cache the RTL check result to avoid repeated DOM traversal
-        return props.editor.view.dom.closest('[dir="rtl"]') !== null;
-      });
-
       const styleWidth = computed(() => (width.value ? `${width.value}px` : 'auto'));
       const isCompact = computed(() => width.value < compactThreshold);
 
@@ -196,14 +191,17 @@
         return null;
       };
 
+      const isHandleRtl = () => getComputedStyle(resizeHandleRef.value).direction === 'rtl';
+
       const onResizeStart = startEvent => {
+        const isRtl = isHandleRtl();
         const startX = startEvent.clientX;
         const startWidth = width.value || containerRef.value.offsetWidth;
 
         const onMouseMove = moveEvent => {
           const deltaX = moveEvent.clientX - startX;
 
-          const newWidth = isRtl.value
+          const newWidth = isRtl
             ? startWidth - deltaX // In RTL, moving right should decrease width
             : startWidth + deltaX; // In LTR, moving right should increase width
 
@@ -244,8 +242,9 @@
         let newWidth = currentWidth;
 
         // Invert keyboard controls for RTL
-        const rightKey = isRtl.value ? 'ArrowLeft' : 'ArrowRight';
-        const leftKey = isRtl.value ? 'ArrowRight' : 'ArrowLeft';
+        const isRtl = isHandleRtl();
+        const rightKey = isRtl ? 'ArrowLeft' : 'ArrowRight';
+        const leftKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
 
         if (event.key === rightKey) {
           newWidth = currentWidth + step;
