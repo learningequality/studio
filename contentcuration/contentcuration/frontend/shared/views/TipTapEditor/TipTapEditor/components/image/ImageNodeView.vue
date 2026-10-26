@@ -390,11 +390,11 @@
     transition:
       opacity 0.2s,
       transform 0.2s ease-in-out;
-    transform-origin: top right;
+    transform-origin: top right /* rtl:ignore */;
   }
 
-  [dir='rtl'] .image-actions {
-    transform-origin: top left;
+  .image-actions:dir(rtl) {
+    transform-origin: top left /* rtl:ignore */;
   }
 
   .image-actions.is-compact {
