@@ -67,6 +67,26 @@ describe('ForgotPassword', () => {
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
   });
 
+  it('should not show validation error while typing', async () => {
+    renderComponent();
+    await fireEvent.update(screen.getByLabelText(/email/i), 'invalid-email');
+    expect(screen.getByTestId('email-field')).not.toHaveTextContent(
+      ForgotPassword.$trs.emailValidationMessage,
+    );
+  });
+
+  it('should show validation error on blur', async () => {
+    renderComponent();
+    const emailInput = screen.getByLabelText(/email/i);
+    await fireEvent.update(emailInput, 'invalid-email');
+    await fireEvent.blur(emailInput);
+    await waitFor(() => {
+      expect(screen.getByTestId('email-field')).toHaveTextContent(
+        ForgotPassword.$trs.emailValidationMessage,
+      );
+    });
+  });
+
   it('should submit form with valid email and navigate to success page', async () => {
     sendPasswordResetLinkMock.mockResolvedValue({});
     const { router } = renderComponent();

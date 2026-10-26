@@ -22,7 +22,8 @@
         autofocus
         data-testid="email-field"
         :label="$tr('emailLabel')"
-        :errorMessages="errors.email ? [emailErrorText] : []"
+        :errorMessages="showEmailError && errors.email ? [emailErrorText] : []"
+        @blur="showEmailError = true"
       />
       <KButton
         primary
@@ -63,6 +64,7 @@
     data() {
       return {
         error: false,
+        showEmailError: false,
       };
     },
     computed: {
@@ -78,6 +80,7 @@
       ...mapActions('account', ['sendPasswordResetLink']),
       submit() {
         this.error = false;
+        this.showEmailError = true;
         const formData = this.clean();
         if (this.validate(formData)) {
           this.sendPasswordResetLink(formData.email)
