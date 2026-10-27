@@ -205,6 +205,9 @@ describe('richTextComparisonKey', () => {
       '<pre><code>if x:\n    return 1</code></pre>',
       '<p>a<br>b</p>',
       '<p>a <br>\n  b</p>',
+      '<p>Solve <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics>' +
+        '<mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>' +
+        ' now</p>',
     ])('%j keys the same', stored => {
       expect(richTextComparisonKey(rewrap(stored))).toBe(richTextComparisonKey(stored));
     });

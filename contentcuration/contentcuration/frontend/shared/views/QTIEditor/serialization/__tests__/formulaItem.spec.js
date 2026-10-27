@@ -115,3 +115,58 @@ it('keeps the text after a formula in a hint once loaded into the editor', () =>
   const item = buildItem(INTERACTIONS[0]);
   expect(load(item.hints[0].content)).toBe(CONTENT);
 });
+
+describe('an item converted from legacy markdown with formulas', () => {
+  const inlineMath = (latex, mathml) =>
+    '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics>' +
+    `<mrow>${mathml}</mrow><annotation encoding="application/x-tex">${latex}</annotation>` +
+    '</semantics></math>';
+  const blockMath = (latex, mathml) =>
+    inlineMath(latex, mathml).replace('display="inline"', 'display="block"');
+  const RAW_DATA =
+    '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" ' +
+    'identifier="item_1" title="Question" xml:lang="en">' +
+    '<qti-response-declaration identifier="RESPONSE" cardinality="single" ' +
+    'base-type="identifier"><qti-correct-response><qti-value>choice_0</qti-value>' +
+    '</qti-correct-response></qti-response-declaration>' +
+    '<qti-item-body><qti-choice-interaction response-identifier="RESPONSE" ' +
+    'max-choices="1"><qti-prompt>' +
+    `<p>What is ${inlineMath('x^2 &lt; 1', '<mi>x</mi>')} when x is 2?</p>` +
+    blockMath('\\frac{a}{b}', '<mi>a</mi>') +
+    '</qti-prompt><qti-simple-choice identifier="choice_0">' +
+    blockMath('\\frac{1}{2}', '<mn>1</mn>') +
+    '</qti-simple-choice><qti-simple-choice identifier="choice_1">' +
+    '<p>Other</p></qti-simple-choice></qti-choice-interaction></qti-item-body>' +
+    '<qti-catalog-info><qti-catalog id="kolibri-hints"><qti-card support="ext:kolibri-hint">' +
+    `<qti-html-content><p>Square it: ${inlineMath('2^2', '<mn>2</mn>')} first</p>` +
+    '</qti-html-content></qti-card></qti-catalog></qti-catalog-info></qti-assessment-item>';
+
+  let item;
+  let state;
+
+  beforeAll(() => {
+    item = parseItem(RAW_DATA);
+    const [interaction] = item.interactions;
+    state = choiceInteractionDescriptor.parse(
+      interaction.bodyXml,
+      interaction.responseDeclarations,
+    );
+  });
+
+  it('loads inline and block formulas in the prompt as editor formulas', () => {
+    expect(load(state.prompt)).toBe(
+      '<p>What is <span data-latex="x^2 < 1"></span> when x is 2?</p>' +
+        '<p><span data-latex="\\frac{a}{b}"></span></p>',
+    );
+  });
+
+  it('loads a formula answer as an editor formula', () => {
+    expect(load(state.choices[0].content)).toBe('<p><span data-latex="\\frac{1}{2}"></span></p>');
+  });
+
+  it('loads a formula in a hint as an editor formula', () => {
+    expect(load(item.hints[0].content)).toBe(
+      '<p>Square it: <span data-latex="2^2"></span> first</p>',
+    );
+  });
+});
