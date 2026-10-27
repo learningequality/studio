@@ -10,7 +10,6 @@ item must never abort the channel publish.
 """
 import json
 import logging
-import math
 from dataclasses import dataclass
 from typing import List
 from typing import Optional
@@ -20,6 +19,7 @@ from lxml import etree
 
 from contentcuration.utils.assessment.qti.catalog import KOLIBRI_HINT_SUPPORT
 from contentcuration.utils.assessment.qti.constants import BaseType
+from contentcuration.utils.assessment.qti.convert import is_finite_double
 from contentcuration.utils.assessment.qti.html_to_markdown import html_to_markdown
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 
@@ -137,7 +137,7 @@ def _accepted_values(declaration) -> List[str]:
             for entry in _children_by_localname(mappings[0], "qti-map-entry")
             if (_as_float(entry.get("mapped-value")) or 0) >= 1
         ]
-    return list(dict.fromkeys(value for value in values if _is_number(value)))
+    return list(dict.fromkeys(value for value in values if is_finite_double(value)))
 
 
 def _as_float(value) -> Optional[float]:
@@ -145,11 +145,6 @@ def _as_float(value) -> Optional[float]:
         return float(value)
     except (TypeError, ValueError):
         return None
-
-
-def _is_number(value) -> bool:
-    number = _as_float(value)
-    return number is not None and math.isfinite(number)
 
 
 def _children_by_localname(el, localname):

@@ -63,6 +63,7 @@ def _text_item(
     prompt="<p>What is 6 times 7?</p>",
     base_type="float",
     map_entries=(),
+    identifier="item_text",
 ):
     correct = ""
     if correct_values:
@@ -78,7 +79,7 @@ def _text_item(
             )
         )
     return _item_xml(
-        "item_text",
+        identifier,
         "Text Item",
         '<qti-response-declaration identifier="RESPONSE" cardinality="{}" '
         'base-type="{}">{}{}</qti-response-declaration>'.format(
@@ -510,6 +511,17 @@ def test_comment_inside_prompt_markup_does_not_change_question(prompt):
         pytest.param(
             _text_item("single", ["1" + "0" * 400]), True, id="float_overflow_integer"
         ),
+        pytest.param(_text_item("single", ["1_000"]), True, id="float_underscore"),
+        pytest.param(
+            _text_item("single", ["1_0E3"]), True, id="float_underscore_exponent"
+        ),
+        pytest.param(_text_item("single", ["٥"]), True, id="float_arabic_indic"),
+        pytest.param(_text_item("single", ["５"]), True, id="float_fullwidth"),
+        pytest.param(_text_item("single", ["1/2"]), True, id="float_fraction"),
+        pytest.param(_text_item("single", ["1,000"]), True, id="float_comma"),
+        pytest.param(_text_item("single", ["50%"]), True, id="float_percent"),
+        pytest.param(_text_item("single", ["+3"]), False, id="float_plus_sign"),
+        pytest.param(_text_item("single", ["1E3"]), False, id="float_exponent"),
         pytest.param(
             _text_item("single", [], map_entries=[("13", "1.0"), ("12", "1.0")]),
             False,
