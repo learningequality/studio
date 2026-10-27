@@ -243,11 +243,24 @@ def is_answerless_numeric_entry(raw_data: str) -> bool:
     return derivable is not None and _is_answerless(derivable)
 
 
+def declares_unreadable_number(raw_data: str) -> bool:
+    """Kolibri's QTI viewer throws on a numeric correct response ``Number()``
+    rejects or reads as non-finite."""
+    root, _ = _parse(raw_data)
+    return root is not None and any(
+        value and not is_finite_double(value)
+        for declaration in root.iter()
+        if _local(declaration) == "qti-response-declaration"
+        and declaration.get("base-type") in _NUMERIC_BASE_TYPES
+        for value in _correct_values(declaration)
+    )
+
+
 def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     """Django ``AssessmentItem`` → ``DerivedAssessmentItem`` proxy, or ``None``.
 
     Returns ``None`` (with a warning) when the item is unparseable or its
-    interaction is not Perseus-expressible, or it is an answerless numeric entry.
+    interaction is not Perseus-expressible.
 
     The proxy's ``assessment_id`` is the QTI item's root ``identifier`` — the
     same id the QTI archive records for the item in the manifest, and hence in
@@ -269,14 +282,6 @@ def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     if derivable is None:
         logger.warning(
             "QTI item %s is not Perseus-expressible; skipping derivation",
-            assessment_item.assessment_id,
-        )
-        return None
-
-    # The QTI archive leaves this item out too, so both archives list the same ids.
-    if _is_answerless(derivable):
-        logger.warning(
-            "QTI item %s has no correct answer; skipping derivation",
             assessment_item.assessment_id,
         )
         return None
