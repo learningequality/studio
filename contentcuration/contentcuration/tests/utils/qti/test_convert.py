@@ -586,6 +586,14 @@ class MarkdownContentConversionTests(unittest.TestCase):
         )
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
+    def test_maths_latex2mathml_rejects_converts_to_a_valid_item(self):
+        for markdown in ("It is $$x_$$ here.", "$${$$", "- $$a<b_$$\n- two"):
+            with self.subTest(markdown=markdown):
+                result = self._convert(markdown)
+
+                self.assertNotIn("<math", result.xml)
+                self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
     def test_maths_in_an_answer(self):
         result = self._convert(answers=[{"answer": "$$x^2$$", "correct": True}])
 

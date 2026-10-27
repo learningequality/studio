@@ -285,6 +285,34 @@ class TestTexMathPluginRoundtrip(TexMathTestMixin, unittest.TestCase):
         )
 
 
+class MalformedMathTests(unittest.TestCase):
+    def test_inline_math_latex2mathml_rejects_renders_as_its_source(self):
+        for latex in ("x_", "{", " "):
+            with self.subTest(latex=latex):
+                self.assertEqual(
+                    render_markdown(f"It is $${latex}$$ here."),
+                    f"<p>It is $${latex}$$ here.</p>\n",
+                )
+
+    def test_block_math_latex2mathml_rejects_renders_as_a_paragraph(self):
+        self.assertEqual(
+            render_markdown("Before\n\n$$x_$$\n\nAfter"),
+            "<p>Before</p>\n<p>$$x_$$</p>\n<p>After</p>\n",
+        )
+
+    def test_source_of_rejected_math_is_escaped(self):
+        self.assertEqual(
+            render_markdown("It is $$a<b&c_$$ here"),
+            "<p>It is $$a&lt;b&amp;c_$$ here</p>\n",
+        )
+
+    def test_stray_ampersand_renders_as_its_source(self):
+        self.assertEqual(
+            render_markdown("It is $$a & c$$ here"),
+            "<p>It is $$a &amp; c$$ here</p>\n",
+        )
+
+
 class SizedImageTests(unittest.TestCase):
     """Perseus images, whose size and alignment suffixes are not valid CommonMark."""
 

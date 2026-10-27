@@ -1,8 +1,10 @@
+import logging
 import re
 import xml.etree.ElementTree as ET
 
 from latex2mathml.converter import convert
 from markdown_it import MarkdownIt
+from markdown_it.common.utils import escapeHtml
 from markdown_it.renderer import RendererProtocol
 from markdown_it.rules_block import StateBlock
 from markdown_it.rules_inline import StateInline
@@ -14,6 +16,8 @@ from contentcuration.utils.assessment.qti.constants import MATHML_NAMESPACE
 from contentcuration.utils.assessment.qti.mathml.core import Annotation
 from contentcuration.utils.assessment.qti.mathml.core import Semantics
 
+
+logger = logging.getLogger(__name__)
 
 # The QTI 3.0 HTML profile has no <s> or <u>, so a decoration is carried as a style
 # on a <span>. Shared with the reverse conversion in qti/html_to_markdown.py and with
@@ -133,13 +137,22 @@ def _escape_mtext(match):
 
 
 def latex_to_mathml(latex, inline=True):
-    markup = convert(latex, display="inline" if inline else "block")
-    # ElementTree serializes a parsed default namespace as ns0: prefixes, so parse
-    # without it and declare it on the root afterwards.
-    markup = markup.replace(f' xmlns="{MATHML_NAMESPACE}"', "")
-    # By default latex2mathml encodes operators that don't need to be encoded
-    # so we parse it with ElementTree and turn it back into a string here for consistency.
-    math_element = ET.fromstring(markup)
+    """Return ``None`` when latex2mathml cannot convert ``latex``."""
+    try:
+        markup = convert(latex, display="inline" if inline else "block")
+        markup = MTEXT_CONTENT_PATTERN.sub(_escape_mtext, markup)
+        # ElementTree serializes a parsed default namespace as ns0: prefixes, so parse
+        # without it and declare it on the root afterwards.
+        markup = markup.replace(f' xmlns="{MATHML_NAMESPACE}"', "")
+        # By default latex2mathml encodes operators that don't need to be encoded
+        # so we parse it with ElementTree and turn it back into a string here for consistency.
+        math_element = ET.fromstring(markup)
+    # latex2mathml 3.78.1 raises a dozen exception classes with no shared base on
+    # malformed input, as well as StopIteration, ValueError and IndexError, and emits
+    # a stray & unescaped, which fails the parse.
+    except Exception:
+        logger.warning("Could not convert LaTeX to MathML: %r", latex)
+        return None
 
     # Create LaTeX annotation
     latex_annotation_element = Annotation(
@@ -157,6 +170,10 @@ def latex_to_mathml(latex, inline=True):
     return ET.tostring(math_element, encoding="unicode")
 
 
+def latex_source(latex):
+    return f"$${latex}$$"
+
+
 def render_math_inline(
     self: RendererProtocol,
     tokens: list[Token],
@@ -165,7 +182,8 @@ def render_math_inline(
     env: EnvType,
 ) -> str:
     """Render inline math to MathML"""
-    return latex_to_mathml(tokens[idx].content)
+    latex = tokens[idx].content
+    return latex_to_mathml(latex) or escapeHtml(latex_source(latex))
 
 
 def render_math_block(
@@ -176,7 +194,11 @@ def render_math_block(
     env: EnvType,
 ) -> str:
     """Render block math to MathML"""
-    return latex_to_mathml(tokens[idx].content, inline=False)
+    latex = tokens[idx].content
+    return (
+        latex_to_mathml(latex, inline=False)
+        or f"<p>{escapeHtml(latex_source(latex))}</p>\n"
+    )
 
 
 def texmath_to_mathml_plugin(md: MarkdownIt) -> None:
