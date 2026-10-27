@@ -3302,6 +3302,22 @@ class TestQTIExerciseCreation(StudioTestCase):
         hint_content = "".join(hint["content"] for hint in item_json["hints"])
         self.assertIn("First hint.", hint_content)
 
+    def test_native_qti_perseus_derivation_keeps_formulas(self):
+        item = self._create_native_qti_item(FORMULA_CHOICE_ITEM)
+
+        self._create_perseus_zip(_exercise_data([item]))
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        with storage.open(exercise_file.file_on_disk.name, "rb") as f:
+            zip_file = zipfile.ZipFile(BytesIO(f.read()))
+        item_json = json.loads(zip_file.read("item_1.json").decode("utf-8"))
+        self.assertIn("Is $x^2$ even?", item_json["question"]["content"])
+        choices = item_json["question"]["widgets"]["radio 1"]["options"]["choices"]
+        self.assertIn("$x^2$", [choice["content"] for choice in choices])
+        self.assertEqual(
+            [hint["content"] for hint in item_json["hints"]], ["Try $x^2$."]
+        )
+
     def test_native_qti_perseus_derivation_resizes_sized_images(self):
         image_file = fileobj_exercise_image(size=(400, 300), color="blue")
         filename = image_file.filename()
