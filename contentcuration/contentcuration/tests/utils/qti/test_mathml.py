@@ -636,7 +636,10 @@ class TestMathMLSerialization(unittest.TestCase):
             children=[Mi(children=["y"])],
         )
         xml_str = obj.to_xml_string()
-        expected_xml_str = '<math display="block" alttext="Equation"><mi>y</mi></math>'
+        expected_xml_str = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"'
+            ' alttext="Equation"><mi>y</mi></math>'
+        )
         self.assertEqual(xml_str, expected_xml_str)
 
     def test_mrow_nested_elements(self):
@@ -898,6 +901,12 @@ class TestErrorHandling(unittest.TestCase):
             ValueError, "No registered class found for tag: unregisteredtag"
         ):
             MathMLElement.from_string(xml_str)
+
+    def test_from_string_foreign_namespace_tag(self):
+        with self.assertRaisesRegex(
+            ValueError, "No registered class found for tag: {urn:foo}mi"
+        ):
+            MathMLElement.from_string('<mi xmlns="urn:foo">x</mi>')
 
     def test_attribute_validation_error_on_creation(self):
         with self.assertRaises(ValueError):  # Pydantic's ValidationError

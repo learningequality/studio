@@ -19,13 +19,14 @@ from .fields import LengthPercentage
 from .fields import MathMLDisplay
 from .fields import MathMLForm
 from contentcuration.utils.assessment.qti.base import TextType
-
+from contentcuration.utils.assessment.qti.constants import MATHML_NAMESPACE
 
 PresentationContentListLength2 = Annotated[PresentationContentList, Len(2, 2)]
 PresentationContentListLength3 = Annotated[PresentationContentList, Len(3, 3)]
 
 
 class Math(MathMLElement):
+    xmlns: str = MATHML_NAMESPACE
     display: Optional[MathMLDisplay] = None
     alttext: Optional[str] = None
     children: PresentationContentList = Field(default_factory=list)

@@ -10,6 +10,7 @@ from markdown_it.token import Token
 from markdown_it.utils import EnvType
 from markdown_it.utils import OptionsDict
 
+from contentcuration.utils.assessment.qti.constants import MATHML_NAMESPACE
 from contentcuration.utils.assessment.qti.mathml.core import Annotation
 from contentcuration.utils.assessment.qti.mathml.core import Semantics
 
@@ -120,11 +121,22 @@ def math_block_func(
     return True
 
 
-def _convert(latex, inline=True):
-    # Remove the namespace declaration for cleaner output
-    markup = convert(latex, display="inline" if inline else "block").replace(
-        ' xmlns="http://www.w3.org/1998/Math/MathML"', ""
-    )
+# latex2mathml 3.78.1 writes the argument of \text and its kin into <mtext> without
+# escaping it; the only character reference it emits there is &#x000A0; for a space.
+MTEXT_CONTENT_PATTERN = re.compile(r"(<mtext(?:\s[^>]*)?(?<!/)>)(.*?)(</mtext>)", re.S)
+UNESCAPED_AMPERSAND_PATTERN = re.compile(r"&(?!#x[0-9A-Fa-f]+;)")
+
+
+def _escape_mtext(match):
+    text = UNESCAPED_AMPERSAND_PATTERN.sub("&amp;", match[2]).replace("<", "&lt;")
+    return f"{match[1]}{text}{match[3]}"
+
+
+def latex_to_mathml(latex, inline=True):
+    markup = convert(latex, display="inline" if inline else "block")
+    # ElementTree serializes a parsed default namespace as ns0: prefixes, so parse
+    # without it and declare it on the root afterwards.
+    markup = markup.replace(f' xmlns="{MATHML_NAMESPACE}"', "")
     # By default latex2mathml encodes operators that don't need to be encoded
     # so we parse it with ElementTree and turn it back into a string here for consistency.
     math_element = ET.fromstring(markup)
@@ -140,6 +152,7 @@ def _convert(latex, inline=True):
         semantics_element.append(child)
     semantics_element.append(latex_annotation_element)
     math_element.append(semantics_element)
+    math_element.attrib = {"xmlns": MATHML_NAMESPACE, **math_element.attrib}
 
     return ET.tostring(math_element, encoding="unicode")
 
@@ -152,7 +165,7 @@ def render_math_inline(
     env: EnvType,
 ) -> str:
     """Render inline math to MathML"""
-    return _convert(tokens[idx].content)
+    return latex_to_mathml(tokens[idx].content)
 
 
 def render_math_block(
@@ -163,7 +176,7 @@ def render_math_block(
     env: EnvType,
 ) -> str:
     """Render block math to MathML"""
-    return _convert(tokens[idx].content, inline=False)
+    return latex_to_mathml(tokens[idx].content, inline=False)
 
 
 def texmath_to_mathml_plugin(md: MarkdownIt) -> None:
