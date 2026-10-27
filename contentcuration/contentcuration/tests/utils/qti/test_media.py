@@ -1,5 +1,11 @@
+from lxml import etree
+
+from contentcuration.tests.utils.qti.test_validation import SINGLE_HINT_CATALOG
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
+from contentcuration.utils.assessment.markdown import latex_to_mathml
+from contentcuration.utils.assessment.qti.constants import MATHML_NAMESPACE
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
+from contentcuration.utils.assessment.qti.media import render_qti_latex_spans
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
@@ -289,3 +295,58 @@ def test_strip_studio_attributes_ignores_lookalikes_in_values_and_text():
         "data-other": "1",
     }
     assert paragraph.text == 'data-studio-prompt=""'
+
+
+def _with_latex_spans(prompt, hint):
+    return VALID_CHOICE_ITEM.replace(
+        "<qti-prompt>Select the correct answer.</qti-prompt>",
+        f"<qti-prompt>{prompt}</qti-prompt>",
+    ).replace(
+        "<qti-response-processing",
+        SINGLE_HINT_CATALOG.format(hint=hint) + "<qti-response-processing",
+    )
+
+
+def _canonical(xml):
+    return etree.tostring(_root(xml), method="c14n")
+
+
+def test_render_latex_spans_puts_mathml_in_the_prompt_and_a_hint():
+    span = '<span data-latex="x^2"></span>'
+    result = render_qti_latex_spans(
+        _with_latex_spans(f"Solve {span} now.", f"Try {span} again.")
+    )
+    mathml = latex_to_mathml("x^2")
+    assert _canonical(result) == _canonical(
+        _with_latex_spans(f"Solve {mathml} now.", f"Try {mathml} again.")
+    )
+    validation = validate_qti_item(result)
+    assert validation.is_valid, validation.errors
+
+
+def test_render_latex_spans_escapes_markup_characters_in_the_annotation():
+    result = render_qti_latex_spans(
+        _with_latex_spans(
+            '<span data-latex="\\begin{matrix}a &lt; b &amp; c\\end{matrix}"></span>',
+            "Hint.",
+        )
+    )
+    annotation = _root(result).find(f".//{{{MATHML_NAMESPACE}}}annotation")
+    assert annotation.text == r"\begin{matrix}a < b & c\end{matrix}"
+    validation = validate_qti_item(result)
+    assert validation.is_valid, validation.errors
+
+
+def test_render_latex_spans_leaves_malformed_latex_as_its_source_text():
+    result = render_qti_latex_spans(
+        _with_latex_spans('Solve <span data-latex="x_"></span> now.', "Hint.")
+    )
+    prompt = _root(result).find(".//{*}qti-prompt")
+    assert list(prompt) == []
+    assert prompt.text == "Solve $$x_$$ now."
+    validation = validate_qti_item(result)
+    assert validation.is_valid, validation.errors
+
+
+def test_render_latex_spans_leaves_an_item_without_formulas_unchanged():
+    assert render_qti_latex_spans(VALID_CHOICE_ITEM) == VALID_CHOICE_ITEM

@@ -25,6 +25,9 @@ logger = logging.getLogger(__name__)
 STRIKETHROUGH_DECORATION = "line-through"
 UNDERLINE_DECORATION = "underline"
 
+# Set by the QTI editor's TipTapEditor/extensions/Math.js.
+LATEX_ATTRIBUTE = "data-latex"
+
 # Regex patterns for $$ delimited math
 INLINE_PATTERN = re.compile(r"^\$\$([\s\S]+?)\$\$")
 BLOCK_PATTERN = re.compile(r"^\$\$([\s\S]+?)\$\$", re.M)
