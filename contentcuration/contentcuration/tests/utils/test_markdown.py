@@ -238,6 +238,31 @@ class TexMathTestMixin:
 
         self._assert_conversion(markdown_text, expected)
 
+    def test_math_at_line_start_followed_by_text_is_inline(self):
+        markdown_text = "$$5$$ exactly"
+        expected = (
+            "<p>"
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mn>5</mn></mrow>'
+            '<annotation encoding="application/x-tex">5</annotation></semantics></math>'
+            " exactly</p>\n"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
+    def test_line_starting_and_ending_with_math_is_inline(self):
+        markdown_text = "$$a$$ and $$b$$"
+        expected = (
+            "<p>"
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>a</mi></mrow>'
+            '<annotation encoding="application/x-tex">a</annotation></semantics></math>'
+            " and "
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>b</mi></mrow>'
+            '<annotation encoding="application/x-tex">b</annotation></semantics></math>'
+            "</p>\n"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
     def test_mo_accented(self):
         """Regression test for missed experimental property on mo tags"""
 

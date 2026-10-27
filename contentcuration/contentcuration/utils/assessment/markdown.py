@@ -30,7 +30,7 @@ LATEX_ATTRIBUTE = "data-latex"
 
 # Regex patterns for $$ delimited math
 INLINE_PATTERN = re.compile(r"^\$\$([\s\S]+?)\$\$")
-BLOCK_PATTERN = re.compile(r"^\$\$([\s\S]+?)\$\$", re.M)
+BLOCK_PATTERN = re.compile(r"^\$\$((?:(?!\$\$)[\s\S])+)\$\$[ \t]*$", re.M)
 
 # Perseus extends the CommonMark image with a trailing size and alignment:
 #   ![alt](<checksum>.<ext> =550x364 align=center)
