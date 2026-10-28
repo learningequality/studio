@@ -168,6 +168,24 @@ describe('useGapMatchPassage announcements', () => {
     expect(announced()).toEqual([gapWithAnswer$({ answer: 'x', number: 1 })]);
   });
 
+  it('names the blank gap Insert adds', async () => {
+    await renderAnnouncerAt('<p>The rises</p>', 5);
+    await clickInsert();
+    expect(announced()).toEqual([gapEmpty$({ number: 1 })]);
+  });
+
+  it('names the gap Insert makes of highlighted text', async () => {
+    await renderAnnouncerAt('<p>The Sun rises</p>', 5, 8);
+    await clickInsert();
+    expect(announced()).toEqual([gapWithAnswer$({ answer: 'Sun', number: 1 })]);
+  });
+
+  it('says nothing about typing into a gap', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_GAPS, 3);
+    input(editor, 'insertText', 'y');
+    expect(announced()).toEqual([]);
+  });
+
   it('says nothing about a caret move within a gap or across text', async () => {
     const { editor } = await renderAnnouncerAt(TWO_GAPS, 3);
     editor.commands.setTextSelection(4);

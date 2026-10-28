@@ -117,15 +117,20 @@ export function useGapMatchPassage({
 
   /** What a screen reader should hear about the gap a change entered or removed, if any. */
   function gapMessage(prevState, state) {
+    const entered = state.selection.$from.parent;
     if (state.doc.eq(prevState.doc)) {
-      const entered = state.selection.$from.parent;
       if (!isGap(entered) || prevState.selection.$from.parent === entered) return null;
       return describeIn(state.doc, entered);
     }
     const removed = removedGaps(prevState.doc, state.doc);
     if (removed.length > 1) return qtiEditorStrings.gapsRemoved$({ count: removed.length });
-    if (!removed.length) return null;
-    return qtiEditorStrings.gapRemoved$({ name: describeIn(prevState.doc, removed[0]) });
+    if (removed.length) {
+      return qtiEditorStrings.gapRemoved$({ name: describeIn(prevState.doc, removed[0]) });
+    }
+    if (isGap(entered) && !gapNumber(prevState.doc, entered.attrs.identifier)) {
+      return describeIn(state.doc, entered);
+    }
+    return null;
   }
 
   // Assertive, so it is read as the caret moves, rather than after it.
