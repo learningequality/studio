@@ -278,9 +278,7 @@
               : this.$tr('channelRemoved');
           this.createSnackbar({
             text: snackbar,
-            autoDismiss: true,
-            announce: true,
-            duration: 6000,
+            announce: false,
           });
           this.setChannelSet({ channels });
         },

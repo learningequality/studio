@@ -100,7 +100,6 @@
         this.acceptInvitation(this.invitationID).then(() => {
           this.createSnackbar({
             text: this.$tr('acceptedSnackbar'),
-            duration: 6000,
             announce: true,
             actionText: this.$tr('goToChannelSnackbarAction'),
             actionCallback: () => {
@@ -114,7 +113,6 @@
           this.dialog = false;
           this.createSnackbar({
             text: this.$tr('declinedSnackbar'),
-            duration: 6000,
             announce: true,
           });
         });

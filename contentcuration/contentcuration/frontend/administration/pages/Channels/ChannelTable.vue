@@ -431,9 +431,7 @@
       async downloadPDF() {
         this.createSnackbar({
           text: 'Generating PDF...',
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         const channelList = await this.getAdminChannelListDetails(this.selected);
         return this.generateChannelsPDF(channelList);
@@ -441,9 +439,7 @@
       async downloadCSV() {
         this.createSnackbar({
           text: 'Generating CSV...',
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         const channelList = await this.getAdminChannelListDetails(this.selected);
         return this.generateChannelsCSV(channelList);

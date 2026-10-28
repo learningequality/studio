@@ -162,9 +162,7 @@
         if (!newShowProgress && oldShowProgress) {
           this.createSnackbar({
             text: this.$tr('syncedSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         }
       },

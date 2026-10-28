@@ -504,9 +504,7 @@
       async onDownloadCSV() {
         this.createSnackbar({
           text: 'Generating CSV...',
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         try {
           const response = await client.get(window.Urls.admin_users_download_csv(), {
@@ -520,16 +518,12 @@
           if (status === 412) {
             this.createSnackbar({
               text: 'No filters applied. Pick at least one filter and try again.',
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           } else {
             this.createSnackbar({
               text: 'CSV download failed. Try again.',
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           }
         }

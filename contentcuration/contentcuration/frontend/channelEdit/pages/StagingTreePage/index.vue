@@ -647,9 +647,7 @@
           });
           this.createSnackbar({
             text: this.$tr('channelDeployed'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
 
@@ -664,19 +662,14 @@
             this.isPublishingDraft = false;
             this.createSnackbar({
               text: this.$tr('draftPublished'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           })
           .catch(error => {
             this.isPublishingDraft = false;
             this.createSnackbar({
               text: error.response?.data?.message || this.$tr('publishDraftError'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
-              color: 'error',
             });
           });
       },

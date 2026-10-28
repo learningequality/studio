@@ -2,6 +2,7 @@ import { render, screen, waitFor, configure, within } from '@testing-library/vue
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
 import TrashModal from '../TrashModal';
@@ -9,13 +10,6 @@ import MoveModal from '../../../components/move/MoveModal';
 import NodePanel from '../../NodePanel';
 import { createTranslator } from 'shared/i18n';
 
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 const tr = createTranslator('TrashModal', TrashModal.$trs);
 const moveTr = createTranslator('MoveModal', MoveModal.$trs);
@@ -107,7 +101,7 @@ async function makeWrapper(items = testChildren, { isLoading = false, hasMore = 
 describe('TrashModal', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
-    mockCreateSnackbar.mockClear();
+    useKSnackbar().clearSnackbar();
   });
 
   describe('on load', () => {
@@ -242,9 +236,7 @@ describe('TrashModal', () => {
       );
 
       await waitFor(() => {
-        expect(mockCreateSnackbar).toHaveBeenCalledWith(
-          expect.objectContaining({ text: tr.$tr("deleteSuccessMessage") }),
-        );
+        expect(useKSnackbar().snackbarOptions.value.text).toBe(tr.$tr('deleteSuccessMessage'));
         expect(loadNodesSpy).toHaveBeenCalled();
       });
     });

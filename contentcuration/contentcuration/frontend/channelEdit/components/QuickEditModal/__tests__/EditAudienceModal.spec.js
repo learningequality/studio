@@ -1,16 +1,9 @@
 import { mount } from '@vue/test-utils';
 import { Store } from 'vuex';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import EditAudienceModal from '../EditAudienceModal';
 import { ResourcesNeededTypes } from 'shared/constants';
 import { RolesNames } from 'shared/leUtils/Roles';
-
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 let nodes;
 
@@ -257,7 +250,7 @@ describe('EditAudienceModal', () => {
     wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('submit');
 
     const animationFrameId = requestAnimationFrame(() => {
-      expect(mockCreateSnackbar).toHaveBeenCalled();
+      expect(useKSnackbar().snackbarOptions.value.text).toBe('Changes saved');
       cancelAnimationFrame(animationFrameId);
     });
   });

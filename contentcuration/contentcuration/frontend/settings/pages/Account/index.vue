@@ -208,9 +208,7 @@
           .catch(() => {
             this.createSnackbar({
               text: this.$tr('exportFailed'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
       },

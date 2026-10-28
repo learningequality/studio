@@ -1,15 +1,9 @@
 import { render, screen, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { Store } from 'vuex';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import DeleteChannelModal from '../index.vue';
 
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 const mockDeleteChannel = jest.fn().mockResolvedValue();
 
@@ -46,6 +40,7 @@ function renderComponent(props = {}) {
 describe('DeleteChannelModal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useKSnackbar().clearSnackbar();
   });
 
   it('renders with correct title and description', () => {
@@ -87,11 +82,11 @@ describe('DeleteChannelModal', () => {
     });
   });
 
-  it('calls the showSnackbarSimple action with correct text when confirmed', async () => {
+  it('shows a snackbar with correct text when confirmed', async () => {
     renderComponent();
     await userEvent.click(screen.getByRole('button', { name: 'Delete channel' }));
     await waitFor(() => {
-      expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Channel deleted' }));
+      expect(useKSnackbar().snackbarOptions.value.text).toBe('Channel deleted');
     });
   });
 

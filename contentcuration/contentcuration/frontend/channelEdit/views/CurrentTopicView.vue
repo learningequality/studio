@@ -912,7 +912,6 @@
           }
           this.createSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
-            duration: 6000,
             actionText: this.$tr('undo'),
             autofocus: true,
             actionCallback: () => changeTracker.revert(),
@@ -929,7 +928,6 @@
           this.clearSelections();
           this.createSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
@@ -941,7 +939,6 @@
       duplicateNodes: withChangeTracker(function (id__in, changeTracker) {
         this.trackClickEvent('Copy');
         this.createSnackbar({
-          duration: null,
           autoDismiss: false,
           text: this.$tr('creatingCopies'),
           announce: true,
@@ -977,7 +974,6 @@
             if (isAllCopySuccess) {
               this.createSnackbar({
                 text: this.$tr('copiedItems'),
-                duration: 6000,
                 actionText: this.$tr('undo'),
                 autofocus: true,
                 actionCallback: () => changeTracker.revert(),

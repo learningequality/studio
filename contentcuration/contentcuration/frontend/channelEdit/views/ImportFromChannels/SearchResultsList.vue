@@ -281,9 +281,7 @@
         this.createSearch(this.savedSearchParams).then(() => {
           this.createSnackbar({
             text: this.$tr('searchSavedSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },

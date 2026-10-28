@@ -186,9 +186,7 @@
         this.createSnackbar({
           /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
           text: commonStrings.$tr('changesSaved'),
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         this.close(this.changed);
       },

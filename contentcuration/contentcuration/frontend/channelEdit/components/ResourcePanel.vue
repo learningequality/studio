@@ -855,9 +855,7 @@
             } else {
               this.createSnackbar({
                 text: this.$tr('sourceContentDoesntExist'),
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
             }
           });

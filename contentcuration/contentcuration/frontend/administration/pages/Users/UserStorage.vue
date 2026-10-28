@@ -136,9 +136,7 @@
             this.$emit('close');
             this.createSnackbar({
               text: 'Changes saved',
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
         } else {

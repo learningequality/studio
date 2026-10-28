@@ -355,7 +355,6 @@
           this.showNewTopicModal = false;
           this.createSnackbar({
             text: this.$tr('topicCreatedMessage'),
-            duration: 6000,
             announce: true,
           });
           this.targetNodeId = id;
@@ -373,7 +372,6 @@
         this.dialog = false;
         this.createSnackbar({
           text: this.$tr('movedMessage', { title: this.currentNode.title }),
-          duration: 6000,
           actionText: this.$tr('goToLocationButton'),
           actionCallback: this.goToLocation,
           announce: true,

@@ -48,9 +48,7 @@
           this.onCancelClick();
           this.createSnackbar({
             text: this.$tr('addedPreviousStepSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },

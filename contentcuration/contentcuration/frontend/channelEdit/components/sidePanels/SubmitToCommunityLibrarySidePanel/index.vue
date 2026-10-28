@@ -585,14 +585,12 @@
             .then(() => {
               createSnackbar({
                 text: submittedSnackbar$(),
-                duration: 6000,
                 announce: true,
               });
             })
             .catch(() => {
               createSnackbar({
                 text: errorSnackbar$(),
-                duration: 6000,
                 announce: true,
               });
             });
@@ -600,7 +598,6 @@
 
         createSnackbar({
           text: submittingSnackbar$(),
-          duration: null,
           autoDismiss: false,
           announce: true,
           actionText: cancelAction$(),

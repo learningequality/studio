@@ -409,9 +409,7 @@
       downloadCSV() {
         this.createSnackbar({
           text: this.$tr('downloadingMessage'),
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         const params = {
           excluded: this.excluded.slice(0),
@@ -423,9 +421,7 @@
       downloadPDF() {
         this.createSnackbar({
           text: this.$tr('downloadingMessage'),
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         const params = {
           excluded: this.excluded.slice(0),

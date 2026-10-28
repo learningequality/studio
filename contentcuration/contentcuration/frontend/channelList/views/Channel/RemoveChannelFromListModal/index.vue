@@ -39,9 +39,7 @@
         this.removeViewer({ channelId: this.channelId, userId: currentUserId }).then(() => {
           this.createSnackbar({
             text: this.$tr('channelRemovedSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
           this.$emit('close');
         });

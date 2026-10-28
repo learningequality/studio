@@ -177,8 +177,6 @@
     } catch (error) {
       createSnackbar({
         text: commonStrings.genericErrorMessage$(),
-        duration: 6000,
-        autoDismiss: true,
         announce: true,
       });
     } finally {

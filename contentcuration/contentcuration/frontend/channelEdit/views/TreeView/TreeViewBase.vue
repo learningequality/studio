@@ -573,7 +573,6 @@
             this.loadChannel().catch(() => {
               this.createSnackbar({
                 text: 'Failed to load channel',
-                duration: 6000,
                 announce: true,
               });
             });
@@ -587,7 +586,6 @@
           const { previewAction$ } = commonStrings;
           const snackbarData = {
             text: draftPublishedNotice$(),
-            duration: 6000,
             announce: true,
           };
           if (this.currentChannel.draft_token) {

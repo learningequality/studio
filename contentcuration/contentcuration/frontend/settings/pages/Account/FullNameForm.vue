@@ -90,17 +90,13 @@
             this.dialog = false;
             this.createSnackbar({
               text: this.$tr('changesSavedMessage'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           })
           .catch(() => {
             this.createSnackbar({
               text: this.$tr('failedToSaveMessage'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
       },

@@ -9,14 +9,6 @@ import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { Channel } from 'shared/data/resources';
 
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
-
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);

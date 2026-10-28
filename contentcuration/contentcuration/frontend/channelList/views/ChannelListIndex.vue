@@ -262,9 +262,7 @@
       if (localStorage.snackbar) {
         this.createSnackbar({
           text: localStorage.snackbar,
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         delete localStorage.snackbar;
       }

@@ -1,3 +1,4 @@
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { Store } from 'vuex';
 import { mount } from '@vue/test-utils';
 import camelCase from 'lodash/camelCase';
@@ -6,14 +7,6 @@ import { metadataTranslationMixin } from 'shared/mixins';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { Categories } from 'shared/constants';
 import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
-
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 let nodes;
 
@@ -247,7 +240,7 @@ describe('EditBooleanMapModal', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
       await wrapper.vm.handleSave();
-      expect(mockCreateSnackbar).toHaveBeenCalled();
+      expect(useKSnackbar().snackbarOptions.value.text).toBe('edited');
     });
   });
 

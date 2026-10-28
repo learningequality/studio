@@ -6,14 +6,6 @@ import VueRouter from 'vue-router';
 import ChannelSharingTable from '../ChannelSharingTable';
 import { SharingPermissions } from 'shared/constants';
 
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
-
 const localVue = createLocalVue();
 localVue.use(Vuex);
 

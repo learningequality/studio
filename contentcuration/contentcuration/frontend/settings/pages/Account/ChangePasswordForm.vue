@@ -95,17 +95,13 @@
             this.dialog = false;
             this.createSnackbar({
               text: this.$tr('paswordChangeSuccess'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           })
           .catch(() => {
             this.createSnackbar({
               text: this.$tr('passwordChangeFailed'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
       },

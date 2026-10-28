@@ -358,7 +358,6 @@
         return this.copyAll({ nodes }).then(() => {
           this.createSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
@@ -400,7 +399,6 @@
         }).then(() => {
           this.createSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
@@ -421,7 +419,6 @@
           this.resetSelectionState();
           this.createSnackbar({
             text: this.$tr('removedFromClipboard'),
-            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),

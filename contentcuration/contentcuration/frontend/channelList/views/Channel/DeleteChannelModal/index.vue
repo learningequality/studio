@@ -38,9 +38,7 @@
         this.deleteChannel(this.channelId).then(() => {
           this.createSnackbar({
             text: this.$tr('channelDeletedSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
           this.$emit('close');
         });

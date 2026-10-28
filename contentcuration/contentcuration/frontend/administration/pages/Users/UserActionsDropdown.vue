@@ -161,9 +161,7 @@
           this.deleteDialog = false;
           this.createSnackbar({
             text: 'User removed',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
           this.$emit('deleted');
         });
@@ -173,9 +171,7 @@
           this.activateDialog = false;
           this.createSnackbar({
             text: 'User activated',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -184,9 +180,7 @@
           this.deactivateDialog = false;
           this.createSnackbar({
             text: 'User deactivated',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -195,9 +189,7 @@
           this.removeAdminPrivilegeDialog = false;
           this.createSnackbar({
             text: 'Admin privilege removed',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -206,9 +198,7 @@
           this.addAdminPrivilegeDialog = false;
           this.createSnackbar({
             text: 'Admin privilege added',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },

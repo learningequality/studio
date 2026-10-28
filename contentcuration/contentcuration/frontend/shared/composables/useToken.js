@@ -41,9 +41,7 @@ export default function useToken() {
       if (errorMessage) {
         createSnackbar({
           text: errorMessage,
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
       }
       if (onError) {
@@ -66,9 +64,7 @@ export default function useToken() {
         if (successMessage) {
           createSnackbar({
             text: successMessage,
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         }
         if (onSuccess) {
@@ -79,9 +75,7 @@ export default function useToken() {
         if (errorMessage) {
           createSnackbar({
             text: errorMessage,
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         }
         if (onError) {

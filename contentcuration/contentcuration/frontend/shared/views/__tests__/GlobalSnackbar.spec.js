@@ -1,4 +1,5 @@
-import { mount } from '@vue/test-utils';
+import { render, screen, within, fireEvent } from '@testing-library/vue';
+import VueRouter from 'vue-router';
 import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import GlobalSnackbar from '../GlobalSnackbar.vue';
 
@@ -10,31 +11,31 @@ describe('GlobalSnackbar', () => {
     actionCallback = jest.fn();
     hideCallback = jest.fn();
     const { clearSnackbar } = useKSnackbar();
-    clearSnackbar(); // ensure clean state
+    clearSnackbar();
   });
 
-  function makeWrapper() {
-    return mount(GlobalSnackbar, {
-      stubs: {
-        KSnackbar: true,
-      },
+  function renderComponent() {
+    return render(GlobalSnackbar, {
+      routes: new VueRouter(),
     });
   }
 
   it('renders the snackbar text', async () => {
     const { createSnackbar } = useKSnackbar();
     createSnackbar({ text: 'Test Snackbar', announce: true });
-    const wrapper = makeWrapper();
-    await wrapper.vm.$nextTick();
-    expect(wrapper.findComponent({ name: 'KSnackbar' }).props('text')).toBe('Test Snackbar');
+    renderComponent();
+
+    const snackbar = screen.getByTestId('snackbar');
+    expect(snackbar).toBeInTheDocument();
+    expect(within(snackbar).getByText('Test Snackbar')).toBeInTheDocument();
   });
 
   it('renders the snackbar action correctly', async () => {
     const { createSnackbar } = useKSnackbar();
     createSnackbar({ text: 'Test Snackbar', actionText: 'Action', announce: true });
-    const wrapper = makeWrapper();
-    await wrapper.vm.$nextTick();
-    expect(wrapper.findComponent({ name: 'KSnackbar' }).props('actionText')).toBe('Action');
+    renderComponent();
+
+    expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument();
   });
 
   it('clicking the action calls the action callback and closes the snackbar', async () => {
@@ -46,11 +47,10 @@ describe('GlobalSnackbar', () => {
       hideCallback,
       announce: true,
     });
-    const wrapper = makeWrapper();
-    await wrapper.vm.$nextTick();
+    renderComponent();
 
-    // Simulate action click on the stub
-    wrapper.findComponent({ name: 'KSnackbar' }).vm.$emit('actionClick');
+    const actionButton = screen.getByRole('button', { name: 'Action' });
+    await fireEvent.click(actionButton);
 
     expect(actionCallback).toHaveBeenCalledTimes(1);
     expect(hideCallback).toHaveBeenCalledTimes(1);
@@ -64,11 +64,10 @@ describe('GlobalSnackbar', () => {
       hideCallback,
       announce: true,
     });
+    renderComponent();
 
-    const wrapper = makeWrapper();
-    await wrapper.vm.$nextTick();
-
-    wrapper.findComponent({ name: 'KSnackbar' }).vm.$emit('close');
+    const snackbar = screen.getByTestId('snackbar');
+    await fireEvent.keyDown(snackbar, { key: 'Escape' });
 
     expect(hideCallback).toHaveBeenCalledTimes(1);
     expect(snackbarIsVisible.value).toBe(false);

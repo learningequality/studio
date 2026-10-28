@@ -1,17 +1,10 @@
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { mount } from '@vue/test-utils';
 import { Store } from 'vuex';
 import flushPromises from 'flush-promises';
 import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
-
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 let nodes;
 
@@ -56,7 +49,7 @@ const makeWrapper = nodeIds => {
 
 describe('EditSourceModal', () => {
   beforeEach(() => {
-    mockCreateSnackbar.mockClear();
+    useKSnackbar().clearSnackbar();
     nodes = {
       node1: {
         id: 'node1',
@@ -264,9 +257,7 @@ describe('EditSourceModal', () => {
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
       await flushPromises();
 
-      expect(mockCreateSnackbar).toHaveBeenCalledWith(
-        expect.objectContaining({ text: 'Changes saved' }),
-      );
+      expect(useKSnackbar().snackbarOptions.value.text).toBe('Changes saved');
     });
 
     test('should emit close event on success submit', async () => {

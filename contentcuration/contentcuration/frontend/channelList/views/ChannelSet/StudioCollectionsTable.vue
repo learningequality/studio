@@ -334,9 +334,7 @@
               this.collectionToDelete = null;
               this.createSnackbar({
                 text: this.$tr('collectionDeleted'),
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
             })
             .catch(() => {
@@ -344,9 +342,7 @@
               this.collectionToDelete = null;
               this.createSnackbar({
                 text: this.$tr('deleteError'),
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
             });
         }

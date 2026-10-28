@@ -367,9 +367,7 @@
             });
             createSnackbar({
               text: draftBeingPublishedNotice$(),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
             emit('close');
           } else {

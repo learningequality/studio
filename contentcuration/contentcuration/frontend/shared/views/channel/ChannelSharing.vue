@@ -163,9 +163,7 @@
             this.sharing = false;
             this.createSnackbar({
               text: this.$tr('invitationSentMessage'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
             this.email = '';
             this.$refs.form.resetValidation();

@@ -1,16 +1,9 @@
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { mount } from '@vue/test-utils';
 import EditLanguageModal from '../EditLanguageModal';
 import { factory } from '../../../store';
 import { LanguagesList } from 'shared/leUtils/Languages';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 const nodes = [
   { id: 'test-en-res', language: 'en' },
@@ -218,7 +211,7 @@ describe('EditLanguageModal', () => {
     await wrapper.vm.handleSave();
     await wrapper.vm.$nextTick();
 
-    expect(mockCreateSnackbar).toHaveBeenCalled();
+    expect(useKSnackbar().snackbarOptions.value.text).toBe('Changes saved');
   });
 
   describe('topic nodes present', () => {

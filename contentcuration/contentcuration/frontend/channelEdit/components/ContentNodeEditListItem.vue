@@ -295,7 +295,6 @@
         });
 
         this.createSnackbar({
-          duration: null,
           autoDismiss: false,
           text: this.$tr('creatingCopies'),
           announce: true,
@@ -314,7 +313,6 @@
           .then(() => {
             this.createSnackbar({
               text: this.$tr('copiedSnackbar'),
-              duration: 6000,
               actionText: this.$tr('undo'),
               autofocus: true,
               actionCallback: () => changeTracker.revert(),

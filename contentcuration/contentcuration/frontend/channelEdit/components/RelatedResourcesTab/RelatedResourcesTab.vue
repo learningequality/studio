@@ -181,9 +181,7 @@
         this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId }).then(() => {
           this.createSnackbar({
             text: this.$tr('removedPreviousStepSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -191,9 +189,7 @@
         this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId }).then(() => {
           this.createSnackbar({
             text: this.$tr('removedNextStepSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },

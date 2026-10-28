@@ -371,9 +371,7 @@
             } else {
               this.createSnackbar({
                 text: this.$tr('changesSaved'),
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
               this.header = this.channel.name;
             }

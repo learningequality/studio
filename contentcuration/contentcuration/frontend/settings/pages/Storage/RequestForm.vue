@@ -430,9 +430,7 @@
           .then(() => {
             this.createSnackbar({
               text: this.$tr('requestSent'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
             this.reset();
             this.$emit('submitted');
@@ -440,9 +438,7 @@
           .catch(() => {
             this.createSnackbar({
               text: this.$tr('requestFailed'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
       },

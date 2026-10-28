@@ -1,13 +1,6 @@
 import { mount } from '@vue/test-utils';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import Account from '../Account/index';
-
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 function makeWrapper(currentUser = {}) {
   return mount(Account, {
@@ -40,6 +33,7 @@ function makeWrapper(currentUser = {}) {
 describe('account tab', () => {
   let wrapper;
   beforeEach(() => {
+    useKSnackbar().clearSnackbar();
     wrapper = makeWrapper();
   });
 
@@ -118,13 +112,10 @@ describe('account tab', () => {
       expect(notice.exists()).toBe(false);
     });
 
-    it(`should call 'createSnackbar' with a correct message`, () => {
-      expect(mockCreateSnackbar).toHaveBeenCalledWith({
-        text: 'Unable to export data. Please try again.',
-        autoDismiss: true,
-        announce: true,
-        duration: 6000,
-      });
+    it(`should show snackbar with a correct message`, () => {
+      expect(useKSnackbar().snackbarOptions.value.text).toBe(
+        'Unable to export data. Please try again.',
+      );
     });
   });
 });

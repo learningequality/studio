@@ -507,7 +507,6 @@
 
             createSnackbar({
               text: snackbarText,
-              duration: 6000,
               announce: true,
             });
             updateStatusInStore(statusChoice.value);
@@ -516,7 +515,6 @@
           } catch (error) {
             createSnackbar({
               text: 'Changing channel status failed',
-              duration: 6000,
               announce: true,
             });
           } finally {
@@ -526,7 +524,6 @@
 
         createSnackbar({
           text: 'Channel status is changing',
-          duration: null,
           autoDismiss: false,
           announce: true,
           actionText: 'Cancel',
@@ -542,7 +539,6 @@
             currentlySubmitting.value = false;
             createSnackbar({
               text: 'Action cancelled',
-              duration: 6000,
               announce: true,
             });
           },

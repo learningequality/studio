@@ -1,14 +1,7 @@
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { mount } from '@vue/test-utils';
 import EditTitleDescriptionModal from '../EditTitleDescriptionModal.vue';
 import storeFactory from 'shared/vuex/baseStore';
-
-const mockCreateSnackbar = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
-  __esModule: true,
-  default: () => ({
-    createSnackbar: mockCreateSnackbar,
-  }),
-}));
 
 const nodeId = 'test-id';
 
@@ -26,7 +19,7 @@ describe('EditTitleDescriptionModal', () => {
   let updateContentNode;
 
   beforeEach(() => {
-    mockCreateSnackbar.mockClear();
+    useKSnackbar().clearSnackbar();
     wrapper = mount(EditTitleDescriptionModal, {
       store: storeFactory({
         modules: {
@@ -112,7 +105,7 @@ describe('EditTitleDescriptionModal', () => {
 
   it("should show 'Changes saved' on a snackbar on success submit", async () => {
     await wrapper.vm.handleSave();
-    expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Changes saved' }));
+    expect(useKSnackbar().snackbarOptions.value.text).toBe('Changes saved');
   });
 
   it("should emit 'close' event on success submit", async () => {

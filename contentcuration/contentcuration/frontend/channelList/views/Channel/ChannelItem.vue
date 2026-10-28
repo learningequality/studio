@@ -372,9 +372,7 @@
             this.deleteDialog = false;
             this.createSnackbar({
               text: this.$tr('channelRemovedSnackbar'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
         } else {
@@ -382,9 +380,7 @@
             this.deleteDialog = false;
             this.createSnackbar({
               text: this.$tr('channelDeletedSnackbar'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
         }

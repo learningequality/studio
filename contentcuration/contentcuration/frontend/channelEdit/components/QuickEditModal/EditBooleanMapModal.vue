@@ -212,9 +212,7 @@
         );
         this.createSnackbar({
           text: this.confirmationMessage || '',
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         this.close(this.changed);
       },

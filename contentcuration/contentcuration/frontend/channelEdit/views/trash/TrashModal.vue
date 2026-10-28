@@ -328,9 +328,7 @@
           this.reset();
           this.createSnackbar({
             text,
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
           // Reload after this to ensure that anything over the pagination fold is loaded now
           this.loadNodes();

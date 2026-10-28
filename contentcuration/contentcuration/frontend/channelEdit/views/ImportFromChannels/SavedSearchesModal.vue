@@ -139,9 +139,7 @@
         this.deleteSearch(this.searchId).then(() => {
           this.createSnackbar({
             text: this.$tr('searchDeletedSnackbar'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
           this.showDelete = false;
           this.searchId = null;

@@ -303,9 +303,7 @@
         }).then(() => {
           this.createSnackbar({
             text: 'Demo URL saved',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -316,9 +314,7 @@
         }).then(() => {
           this.createSnackbar({
             text: 'Source URL saved',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },

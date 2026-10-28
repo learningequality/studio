@@ -227,17 +227,13 @@
           .then(() => {
             this.createSnackbar({
               text: this.$tr('invitationSentMessage'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           })
           .catch(() => {
             this.createSnackbar({
               text: this.$tr('invitationFailedError'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
       },
@@ -246,9 +242,7 @@
           this.showDeleteInvitation = false;
           this.createSnackbar({
             text: this.$tr('invitationDeletedMessage'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -257,9 +251,7 @@
         this.makeEditor({ userId, channelId: this.channelId }).then(() => {
           this.createSnackbar({
             text: this.$tr('editPermissionsGrantedMessage'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -279,9 +271,7 @@
           .then(() => {
             this.createSnackbar({
               text: this.$tr('userRemovedMessage'),
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
       },

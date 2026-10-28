@@ -55,9 +55,7 @@
           navigator.clipboard.writeText(this.value).then(() => {
             this.createSnackbar({
               text: this.successMessage,
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
         }

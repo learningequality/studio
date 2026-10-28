@@ -749,7 +749,6 @@
           .then(() => {
             this.createSnackbar({
               text: this.$tr('copiedToClipboard'),
-              duration: 6000,
               // TODO: implement revert functionality for clipboard
               // actionText: this.$tr('undo'),
               // actionCallback: () => changeTracker.revert(),
@@ -760,7 +759,6 @@
           .catch(error => {
             this.createSnackbar({
               text: this.$tr('copyFailed'),
-              duration: 6000,
               announce: true,
             });
             throw error;
@@ -923,7 +921,6 @@
         if (this.recommendationsInteractionEvent) {
           this.createSnackbar({
             text: this.feedbackConfirmationMessage$(),
-            duration: 6000,
             actionText: this.giveFeedbackText$(),
             actionCallback: () => (this.showFeedbackModal = true),
             announce: true,
@@ -931,7 +928,6 @@
         } else {
           this.createSnackbar({
             text: this.feedbackFailedMessage$(),
-            duration: 6000,
             announce: true,
           });
         }
@@ -977,13 +973,11 @@
           if (rejectedEvent) {
             this.createSnackbar({
               text: this.feedbackSubmittedMessage$(),
-              duration: 6000,
               announce: true,
             });
           } else {
             this.createSnackbar({
               text: this.feedbackFailedMessage$(),
-              duration: 6000,
               announce: true,
             });
           }

@@ -424,9 +424,7 @@
         }).then(() => {
           this.createSnackbar({
             text: value ? 'Feature enabled' : 'Feature disabled',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },

@@ -211,9 +211,7 @@
         } catch (e) {
           this.createSnackbar({
             text: this.$tr('downloadFailed'),
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         }
       },

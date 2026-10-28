@@ -66,9 +66,7 @@
               const text = this.successText || this.$tr('copiedTokenId');
               this.createSnackbar({
                 text,
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
               this.$analytics.trackEvent('copy_token');
               this.$emit('copied');
@@ -76,9 +74,7 @@
             .catch(() => {
               this.createSnackbar({
                 text: this.$tr('copyFailed'),
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
             });
         }

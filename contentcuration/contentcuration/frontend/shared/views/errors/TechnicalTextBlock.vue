@@ -85,17 +85,13 @@
             .then(() => {
               this.createSnackbar({
                 text: this.$tr('copiedToClipboardConfirmation'),
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
             })
             .catch(() => {
               this.createSnackbar({
                 text: this.$tr('copiedToClipboardFailure'),
-                autoDismiss: true,
                 announce: true,
-                duration: 6000,
               });
             });
         }

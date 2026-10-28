@@ -207,9 +207,7 @@
       async downloadPDF() {
         this.createSnackbar({
           text: 'Generating PDF...',
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         const channelList = await this.getAdminChannelListDetails([this.channel.id]);
         return this.generateChannelsPDF(channelList);
@@ -217,9 +215,7 @@
       async downloadCSV() {
         this.createSnackbar({
           text: 'Generating CSV...',
-          autoDismiss: true,
           announce: true,
-          duration: 6000,
         });
         const channelList = await this.getAdminChannelListDetails([this.channel.id]);
         return this.generateChannelsCSV(channelList);
@@ -231,9 +227,7 @@
         }).then(() => {
           this.createSnackbar({
             text: 'Channel restored',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -244,9 +238,7 @@
         }).then(() => {
           this.createSnackbar({
             text: 'Channel deleted',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -255,9 +247,7 @@
         return this.deleteChannel(this.channelId).then(() => {
           this.createSnackbar({
             text: 'Channel deleted permanently',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -268,9 +258,7 @@
         }).then(() => {
           this.createSnackbar({
             text: 'Channel changed to public',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },
@@ -281,9 +269,7 @@
         }).then(() => {
           this.createSnackbar({
             text: 'Channel changed to private',
-            autoDismiss: true,
             announce: true,
-            duration: 6000,
           });
         });
       },

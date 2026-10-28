@@ -294,17 +294,13 @@
             this.close();
             this.createSnackbar({
               text: 'Email sent',
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           })
           .catch(() => {
             this.createSnackbar({
               text: 'Email failed to send',
-              autoDismiss: true,
               announce: true,
-              duration: 6000,
             });
           });
       },
