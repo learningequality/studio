@@ -105,16 +105,25 @@
         return createMultiSelectMessages({
           clearText: clearAllAction$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          cleared: () => this.$tr('allCategoriesCleared'),
+          cleared: () => {
+            this.selected = {};
+            return this.$tr('allCategoriesCleared');
+          },
           partiallySelected: true,
         });
       },
     },
     methods: {
       onKMultiSelectInput(newValues) {
+        const newValueIds = new Set(newValues);
+        const removedIds = Object.keys(this.selected).filter(
+          key => this.selected[key].length === this.nodeIds.length && !newValueIds.has(key),
+        );
         const partial = Object.fromEntries(
           Object.entries(this.selected).filter(
-            ([, selectedNodeIds]) => selectedNodeIds.length !== this.nodeIds.length,
+            ([key, selectedNodeIds]) =>
+              selectedNodeIds.length !== this.nodeIds.length &&
+              !removedIds.some(removedId => key.startsWith(removedId)),
           ),
         );
         this.selected = {

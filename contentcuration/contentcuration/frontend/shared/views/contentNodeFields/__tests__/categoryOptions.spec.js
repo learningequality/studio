@@ -218,11 +218,37 @@ describe('CategoryOptions', () => {
       expect(lastInput(emitted)).toEqual({});
     });
 
+    it('removes a descendant that is only partially applied when its ancestor chip is removed', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [ARTS]: [NODE_1, NODE_2], [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: ARTS_PATH }) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
     it('emits an empty object when the selection is cleared', async () => {
       const { emitted } = renderComponent({
         expanded: true,
         value: { [DANCE]: [NODE_1] },
         nodeIds: [NODE_1],
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: clearAllAction$() }));
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('clears a category that is only partially applied across the edited nodes', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1, NODE_2], [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
       });
 
       await userEvent.click(screen.getByRole('button', { name: clearAllAction$() }));
