@@ -2,7 +2,7 @@
 /* eslint-disable import/no-unresolved */
 import { isHistoryTransaction } from '@tiptap/pm/history';
 import { Fragment, Slice } from '@tiptap/pm/model';
-import { Plugin, TextSelection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 /* eslint-enable import/no-unresolved */
 import {
   Node,
@@ -89,6 +89,48 @@ function targetRange(view, event) {
     to: view.posAtDOM(range.endContainer, range.endOffset),
   };
 }
+
+const PLACEHOLDER = '​';
+const compositionKey = new PluginKey('gapComposition');
+
+function removePlaceholder(view) {
+  const pos = compositionKey.getState(view.state);
+  if (view.isDestroyed || pos === null || view.composing) return;
+  const tr = view.state.tr.setMeta(compositionKey, null).setMeta('addToHistory', false);
+  if (view.state.doc.textBetween(pos, pos + 1) === PLACEHOLDER) tr.delete(pos, pos + 1);
+  view.dispatch(tr);
+}
+
+// Composition cannot be cancelled, and Chrome composes at the edge of a gap on the wrong side
+// of it, or, in a blank gap, outside the node view's content, where ProseMirror never reads it.
+// A placeholder at the caret gives Chrome a text node on the correct side to compose into.
+const compositionPlaceholder = new Plugin({
+  key: compositionKey,
+  state: {
+    init: () => null,
+    apply(tr, pos) {
+      const meta = tr.getMeta(compositionKey);
+      if (meta !== undefined) return meta;
+      return pos === null ? null : tr.mapping.map(pos, -1);
+    },
+  },
+  props: {
+    handleDOMEvents: {
+      compositionstart(view) {
+        const { selection } = view.state;
+        if (!selection.empty || !touchesGap(selection.$from)) return false;
+        const tr = view.state.tr.insertText(PLACEHOLDER);
+        view.dispatch(tr.setMeta(compositionKey, selection.from).setMeta('addToHistory', false));
+        return false;
+      },
+      // ProseMirror ends its composition after this handler runs.
+      compositionend(view) {
+        setTimeout(() => removePlaceholder(view));
+        return false;
+      },
+    },
+  },
+});
 
 export const GapNode = Node.create({
   name: NODE_NAME,
@@ -197,6 +239,7 @@ export const GapNode = Node.create({
 
   addProseMirrorPlugins() {
     return [
+      compositionPlaceholder,
       new Plugin({
         props: {
           handleDOMEvents: {

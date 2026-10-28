@@ -133,6 +133,51 @@ describe('GapNode', () => {
     });
   });
 
+  describe('composition', () => {
+    const PLACEHOLDER = '​';
+
+    const compose = (editor, type) =>
+      editor.view.dom.dispatchEvent(new CompositionEvent(type, { bubbles: true }));
+
+    const afterCompositionEnd = () => new Promise(resolve => setTimeout(resolve));
+
+    async function renderInBlankGap() {
+      const editor = await renderAt(1);
+      editor.commands.insertGap();
+      const [inserted] = gapIdentifiers(editor);
+      return { editor, inserted };
+    }
+
+    it('gives a composition in a blank gap text to compose into, inside the gap', async () => {
+      const { editor, inserted } = await renderInBlankGap();
+
+      compose(editor, 'compositionstart');
+
+      expect(answerOf(editor, inserted)).toBe(PLACEHOLDER);
+      expect(isInGap(editor)).toBe(true);
+      expect(caret(editor).pos).toBe(findGap(editor, inserted).pos + 2);
+    });
+
+    it('removes that text when the composition ends', async () => {
+      const { editor, inserted } = await renderInBlankGap();
+
+      compose(editor, 'compositionstart');
+      compose(editor, 'compositionend');
+      await afterCompositionEnd();
+
+      expect(findGap(editor, inserted).node.content.size).toBe(0);
+      expect(isInGap(editor)).toBe(true);
+    });
+
+    it('adds nothing to a composition inside an answer', async () => {
+      const editor = await renderAt(5);
+
+      compose(editor, 'compositionstart');
+
+      expect(editor.getHTML()).toBe(PASSAGE);
+    });
+  });
+
   describe('Backspace and Delete', () => {
     it('Backspace removes a blank gap', async () => {
       const editor = await renderAt(1);
