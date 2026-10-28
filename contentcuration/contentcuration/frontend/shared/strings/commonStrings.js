@@ -98,4 +98,12 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Move right',
     context: 'Label for the button that moves a resource right in the list. Not visible in the UI.',
   },
+  languageItemsSelectedLabel: {
+    message: '{count, plural, one {# language selected} other {# languages selected}}',
+    context: 'Announced with the number of languages currently selected in a language picker',
+  },
+  languageSelectionsClearedLabel: {
+    message: '{count, plural, one {Cleared # selection} other {Cleared # selections}}',
+    context: 'Announced when all selected languages are cleared from a language picker',
+  },
 });

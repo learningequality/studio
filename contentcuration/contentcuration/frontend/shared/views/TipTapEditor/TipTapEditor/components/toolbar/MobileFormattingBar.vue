@@ -35,71 +35,55 @@
       @touchstart="event => event.stopPropagation()"
       @touchend="event => event.stopPropagation()"
     >
-      <div
-        class="formatting-buttons"
-        role="group"
-        :aria-label="formatSize$()"
-      >
-        <button
-          data-toolbar-item
-          :aria-disabled="canDecreaseFormat ? 'false' : 'true'"
-          :title="decreaseFormatSize$()"
-          :aria-label="decreaseFormatSize$()"
-          class="format-btn"
-          @mousedown.prevent
-          @click="decreaseFormat"
+      <template v-if="!inlineOnly">
+        <div
+          class="formatting-buttons"
+          role="group"
+          :aria-label="formatSize$()"
         >
-          -
-        </button>
-        <img
-          src="../../../assets/icon-formatSize.svg"
-          :alt="formatSize$()"
-          aria-hidden="true"
-        >
-        <button
-          data-toolbar-item
-          :aria-disabled="canIncreaseFormat ? 'false' : 'true'"
-          :title="increaseFormatSize$()"
-          :aria-label="increaseFormatSize$()"
-          class="format-btn"
-          @mousedown.prevent
-          @click="increaseFormat"
-        >
-          +
-        </button>
-      </div>
+          <button
+            data-toolbar-item
+            :aria-disabled="canDecreaseFormat ? 'false' : 'true'"
+            :title="decreaseFormatSize$()"
+            :aria-label="decreaseFormatSize$()"
+            class="format-btn"
+            @mousedown.prevent
+            @click="decreaseFormat"
+          >
+            -
+          </button>
+          <img
+            src="../../../assets/icon-formatSize.svg"
+            :alt="formatSize$()"
+            aria-hidden="true"
+          >
+          <button
+            data-toolbar-item
+            :aria-disabled="canIncreaseFormat ? 'false' : 'true'"
+            :title="increaseFormatSize$()"
+            :aria-label="increaseFormatSize$()"
+            class="format-btn"
+            @mousedown.prevent
+            @click="increaseFormat"
+          >
+            +
+          </button>
+        </div>
 
-      <ToolbarDivider />
+        <ToolbarDivider />
+      </template>
 
-      <ToolbarButton
-        v-for="action in textActions"
-        :key="action.name"
-        :title="action.title"
-        :icon="action.icon"
-        :is-active="action.isActive"
-        @click="action.handler"
-      />
-      <ToolbarDivider />
-      <ToolbarButton
-        v-for="action in listActions"
-        :key="action.name"
-        :title="action.title"
-        :icon="action.icon"
-        :is-active="action.isActive"
-        @click="action.handler"
-      />
-      <!-- Perseus flavoured markdown does not support alignment,
-        so we disable this for now until we stop using markdown as the primary target
-      <ToolbarDivider />
-      <ToolbarButton
-        :title="alignAction.title"
-        :icon="alignAction.icon"
-        :is-active="alignAction.isActive"
-        @click="alignAction.handler"
-      /> -->
-      <!-- Perseus flavoured markdown does not support super and sub script,
-        so we disable this for now until we stop using markdown as the primary target
-      <ToolbarDivider />
+      <template v-for="(group, index) in actionGroups">
+        <ToolbarButton
+          v-for="action in group"
+          :key="action.name"
+          :title="action.title"
+          :icon="action.icon"
+          :is-active="action.isActive"
+          @click="action.handler"
+        />
+        <ToolbarDivider :key="`divider-${index}`" />
+      </template>
       <ToolbarButton
         v-for="action in scriptActions"
         :key="action.name"
@@ -107,14 +91,16 @@
         :icon="action.icon"
         :is-active="action.isActive"
         @click="action.handler"
-      /> -->
+      />
       <ToolbarDivider />
       <ToolbarButton
         v-for="tool in insertTools"
         :key="tool.name"
         :title="tool.title"
         :icon="tool.icon"
+        :k-icon="tool.kIcon"
         :is-active="tool.isActive"
+        :is-available="tool.isAvailable"
         @click="tool.handler($event)"
       />
     </div>
@@ -125,7 +111,7 @@
 
 <script>
 
-  import { defineComponent, ref, onMounted, onUnmounted, inject } from 'vue';
+  import { defineComponent, ref, computed, onMounted, onUnmounted, inject } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { useFormatControls } from '../../composables/useFormatControls';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
@@ -140,6 +126,7 @@
       const isExpanded = ref(true);
       const keyboardOffset = ref(0);
       const editor = inject('editor');
+      const inlineOnly = inject('inlineOnly', false);
       const toolbarRef = ref(null);
 
       useRovingTabIndex(toolbarRef);
@@ -153,7 +140,12 @@
         textFormattingToolbar$,
       } = getTipTapEditorStrings();
 
-      const { textActions, listActions, insertTools } = useToolbarActions(emit);
+      const { textActions, listActions, scriptActions, alignActions, insertTools } =
+        useToolbarActions(emit);
+
+      const actionGroups = computed(() =>
+        [textActions.value, listActions.value, alignActions.value].filter(group => group.length),
+      );
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
         useFormatControls();
@@ -218,10 +210,11 @@
 
       return {
         isExpanded,
+        inlineOnly,
         keyboardOffset,
         toolbarRef,
-        textActions,
-        listActions,
+        actionGroups,
+        scriptActions,
         insertTools,
         toggleToolbar,
         canIncreaseFormat,

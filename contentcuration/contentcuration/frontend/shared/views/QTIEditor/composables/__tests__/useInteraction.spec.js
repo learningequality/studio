@@ -1,13 +1,5 @@
-import { ref, nextTick } from 'vue';
+import Vue, { ref, nextTick } from 'vue';
 import { useInteraction } from '../useInteraction';
-
-jest.mock('lodash/debounce', () => {
-  return jest.fn(fn => {
-    const mocked = jest.fn((...args) => fn(...args));
-    mocked.cancel = jest.fn();
-    return mocked;
-  });
-});
 
 function makeDescriptor({ parseReturn = {}, buildReturn = null, validateReturn = [] } = {}) {
   return {
@@ -103,7 +95,7 @@ describe('useInteraction', () => {
     questionType.value = 'multiSelect';
     runValidation();
 
-    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'multiSelect');
+    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'multiSelect', {});
   });
 
   it('bodyXml recomputes when state changes', () => {
@@ -143,7 +135,7 @@ describe('useInteraction', () => {
     bodyXml.value; // trigger recompute
 
     expect(descriptor.buildXML).toHaveBeenCalledTimes(2);
-    expect(descriptor.buildXML).toHaveBeenLastCalledWith(expect.anything(), 'multiSelect');
+    expect(descriptor.buildXML).toHaveBeenLastCalledWith(expect.anything(), 'multiSelect', {});
   });
 
   it('automatically runs validation when state changes', async () => {
@@ -164,7 +156,26 @@ describe('useInteraction', () => {
     state.value = { prompt: 'updated' };
     await nextTick();
 
-    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'singleSelect');
+    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'singleSelect', {});
     expect(errors.value).toEqual([{ code: 'UPDATED_ERROR' }]);
+  });
+
+  it('does not warn when called without options', async () => {
+    Vue.config.silent = false;
+    const warn = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { state } = useInteraction(
+        makeDescriptor(),
+        { bodyXml: '', responseDeclarations: [] },
+        ref('singleSelect'),
+      );
+      state.value = { prompt: 'updated' };
+      await nextTick();
+
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+      Vue.config.silent = true;
+    }
   });
 });

@@ -5,7 +5,7 @@ import VueRouter from 'vue-router';
 import MobileFormattingBar from '../TipTapEditor/components/toolbar/MobileFormattingBar.vue';
 import TipTapEditor from '../TipTapEditor/TipTapEditor.vue';
 import { getTipTapEditorStrings } from '../TipTapEditor/TipTapEditorStrings';
-import { tabIn } from 'shared/utils/testing';
+import { stubProseMirrorLayout, tabIn } from 'shared/utils/testing';
 
 // The bar only renders in the touch-device layout. `isTouchDevice` reads `window`
 // once as it loads, and a module factory is the only hook that runs at that
@@ -15,17 +15,37 @@ jest.mock('shared/utils/browserInfo.js', () => {
   return jest.requireActual('shared/utils/browserInfo.js');
 });
 
-const { decreaseFormatSize$, textFormattingToolbar$ } = getTipTapEditorStrings();
+const {
+  decreaseFormatSize$,
+  increaseFormatSize$,
+  textFormattingToolbar$,
+  alignRight$,
+  bold$,
+  italic$,
+  underline$,
+  strikethrough$,
+  subscript$,
+  superscript$,
+  mathFormula$,
+  bulletList$,
+  numberedList$,
+  insertImage$,
+  codeBlock$,
+} = getTipTapEditorStrings();
 
 const formattingBar = () => screen.queryByRole('toolbar', { name: textFormattingToolbar$() });
 
-// Every editor read the bar makes: the format level in `useFormatControls`, and
-// the selection the mount hook scrolls into view.
+// Every editor read the bar makes: the format level in `useFormatControls`, the
+// selection the mount hook scrolls into view, and the node under the cursor that the
+// alignment control reads to pick its icon.
 function makeEditorStub({ smallText = false } = {}) {
   return {
     isActive: name => smallText && name === 'small',
     state: { selection: { from: 0, to: 0 } },
-    view: { dom: document.createElement('div') },
+    view: {
+      dom: document.createElement('div'),
+      domAtPos: () => ({ node: document.createElement('div') }),
+    },
   };
 }
 
@@ -65,14 +85,78 @@ describe('MobileFormattingBar roving tabindex', () => {
   });
 });
 
-describe('MobileFormattingBar keyboard reachability', () => {
-  beforeAll(() => {
-    // jsdom implements none of these, and ProseMirror measures the selection to
-    // scroll it into view whenever the editor takes focus.
-    Range.prototype.getClientRects = () => [];
-    Range.prototype.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0 });
-    Element.prototype.scrollIntoView = () => {};
+describe('MobileFormattingBar contributed insert actions', () => {
+  const makeAction = overrides => ({
+    name: 'inline',
+    title: 'Insert inline',
+    icon: 'add',
+    handler: jest.fn(),
+    ...overrides,
   });
+  const inline = makeAction();
+  const prominent = makeAction({ name: 'prominent', title: 'Insert prominent', prominent: true });
+  const blocked = makeAction({
+    name: 'blocked',
+    title: 'Insert blocked',
+    isAvailable: () => false,
+  });
+
+  const insertContext = {
+    editor: makeEditorStub(),
+    selection: { empty: true, spansLines: false, hasCursor: true },
+    canInsertNode: () => true,
+  };
+
+  function renderBar() {
+    const { container } = render(MobileFormattingBar, {
+      provide: {
+        editor: ref(insertContext.editor),
+        insertActions: ref([inline, prominent, blocked]),
+        insertContext: ref(insertContext),
+      },
+      router: new VueRouter(),
+    });
+    return { user: userEvent.setup(), controls: within(container).getAllByRole('button') };
+  }
+
+  it('offers every contributed action, prominent or not', () => {
+    renderBar();
+
+    expect(screen.getByRole('button', { name: 'Insert inline' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Insert prominent' })).toBeInTheDocument();
+  });
+
+  it('keeps an unavailable contributed control in the arrow order', async () => {
+    const { user, controls } = renderBar();
+    const button = screen.getByRole('button', { name: 'Insert blocked' });
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    controls[controls.indexOf(button) - 1].focus();
+
+    await user.keyboard('{ArrowRight}');
+
+    expect(button).toHaveFocus();
+  });
+
+  it("shows a contributed action's KDS icon", () => {
+    renderBar();
+
+    const button = screen.getByRole('button', { name: 'Insert inline' });
+    expect(button.querySelector('svg')).not.toBeNull();
+    expect(button.querySelector('img')).toBeNull();
+  });
+
+  it("runs a contributed action's handler", async () => {
+    const { user } = renderBar();
+
+    await user.click(screen.getByRole('button', { name: 'Insert inline' }));
+
+    expect(inline.handler).toHaveBeenCalledTimes(1);
+    expect(inline.handler).toHaveBeenCalledWith(insertContext);
+  });
+});
+
+describe('MobileFormattingBar keyboard reachability', () => {
+  stubProseMirrorLayout();
 
   async function renderMobileEditor() {
     const { container } = render(TipTapEditor, {
@@ -119,5 +203,69 @@ describe('MobileFormattingBar keyboard reachability', () => {
     await nextTick();
 
     expect(formattingBar()).not.toBeInTheDocument();
+  });
+});
+
+describe('MobileFormattingBar alignment control', () => {
+  it('renders the alignment control', async () => {
+    render(MobileFormattingBar, {
+      provide: { editor: ref(makeEditorStub()) },
+      router: new VueRouter(),
+    });
+    await nextTick();
+
+    expect(screen.getByRole('button', { name: alignRight$() })).toBeInTheDocument();
+  });
+});
+
+describe('MobileFormattingBar in an inline-only editor', () => {
+  const INLINE_TOOLS = [
+    bold$(),
+    italic$(),
+    underline$(),
+    strikethrough$(),
+    subscript$(),
+    superscript$(),
+    mathFormula$(),
+  ];
+  const BLOCK_TOOLS = [
+    decreaseFormatSize$(),
+    increaseFormatSize$(),
+    bulletList$(),
+    numberedList$(),
+    alignRight$(),
+    insertImage$(),
+    codeBlock$(),
+  ];
+
+  function renderBar({ inlineOnly }) {
+    return render(MobileFormattingBar, {
+      provide: { editor: ref(makeEditorStub()), inlineOnly },
+      router: new VueRouter(),
+    });
+  }
+
+  it('offers the inline tools', () => {
+    renderBar({ inlineOnly: true });
+
+    for (const name of INLINE_TOOLS) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
+  });
+
+  it('leaves out every block tool', () => {
+    renderBar({ inlineOnly: true });
+
+    for (const name of BLOCK_TOOLS) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+  });
+
+  it('keeps the block tools in an editor that is not inline-only', () => {
+    renderBar({ inlineOnly: false });
+
+    for (const name of BLOCK_TOOLS) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
   });
 });

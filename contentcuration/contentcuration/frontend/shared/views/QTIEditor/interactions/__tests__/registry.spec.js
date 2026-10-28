@@ -1,0 +1,46 @@
+import { descriptors, editors, registry } from '../index';
+import { HEADLESS_INTERACTIONS, isInlineInteraction } from '../descriptors';
+import { Placement, QtiInteraction } from '../../constants';
+
+/**
+ * An interaction is registered in two places: its descriptor in `descriptors.js` and its
+ * editor in `index.js`. That split keeps the editors out of the parse/validate import
+ * graph, at the cost of two lists that have to agree — so these assert they do. A new
+ * interaction that only got half-registered fails here rather than at the moment an author
+ * opens the question.
+ */
+describe('interaction registry', () => {
+  const editable = descriptors.filter(d => !HEADLESS_INTERACTIONS.includes(d.type));
+
+  it('registers an editor for every descriptor', () => {
+    const missing = editable.filter(d => !editors[d.type]).map(d => d.type);
+    expect(missing).toEqual([]);
+  });
+
+  it('registers a descriptor for every editor', () => {
+    const orphans = Object.keys(editors).filter(type => !registry[type]);
+    expect(orphans).toEqual([]);
+  });
+
+  it('holds the same number of descriptors and editors', () => {
+    expect(Object.keys(editors)).toHaveLength(editable.length);
+  });
+
+  it('keys the registry by every descriptor type', () => {
+    expect(Object.keys(registry).sort()).toEqual(descriptors.map(d => d.type).sort());
+  });
+
+  describe('isInlineInteraction', () => {
+    it('reports the placement each descriptor declares', () => {
+      for (const descriptor of descriptors) {
+        expect(isInlineInteraction(descriptor.type)).toBe(
+          descriptor.placement === Placement.INLINE,
+        );
+      }
+    });
+
+    it('reports an interaction with no descriptor as not inline', () => {
+      expect(isInlineInteraction(QtiInteraction.EXTENDED_TEXT)).toBe(false);
+    });
+  });
+});

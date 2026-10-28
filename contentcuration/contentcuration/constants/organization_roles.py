@@ -8,6 +8,9 @@ organization_role_choices = (
     (ORGANIZATION_VIEWER, "Viewer"),
 )
 
+# Viewing is ORGANIZATION_VIEWER alone; admins/editors are already admitted via the edit check.
+ORGANIZATION_CHANNEL_EDIT_ROLES = (ORGANIZATION_ADMIN, ORGANIZATION_EDITOR)
+
 ORGANIZATION_ROLE_STATUS_ACTIVE = "active"
 ORGANIZATION_ROLE_STATUS_INACTIVE = "inactive"
 ORGANIZATION_ROLE_STATUS_PENDING = "pending"

@@ -2,7 +2,7 @@
 // The eslint-dom matchers reject XML nodes produced by DOMParser(..., 'text/xml').
 // Native DOM APIs (getAttribute, textContent) work correctly on XML elements.
 
-import { choiceInteractionDescriptor } from '../ChoiceInteractionDescriptor';
+import { choiceInteractionDescriptor } from '../Descriptor';
 
 import {
   CHOICE_SINGLE_SELECT_XML,

@@ -1,6 +1,8 @@
 import VueRouter from 'vue-router';
 import CommunityChannelDetailsModal from './views/Channel/CommunityLibraryList/CommunityChannelDetailsModal.vue';
 import StudioMyChannels from './views/Channel/StudioMyChannels';
+import StudioMyOrganizations from './views/Organization/StudioMyOrganizations.vue';
+import OrganizationEditPage from './views/Organization/OrganizationEditPage.vue';
 import StudioStarredChannels from './views/Channel/StudioStarredChannels';
 import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels';
 import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
@@ -19,6 +21,33 @@ const router = new VueRouter({
       name: RouteNames.CHANNELS_EDITABLE,
       path: '/my-channels',
       component: StudioMyChannels,
+    },
+    {
+      name: RouteNames.MY_ORGANIZATIONS,
+      path: '/my-organizations',
+      alias: '/organizations',
+      component: StudioMyOrganizations,
+    },
+    {
+      name: RouteNames.NEW_ORGANIZATION,
+      path: '/organization/new',
+      alias: '/organizations/new',
+      component: OrganizationEditPage,
+      props: true,
+    },
+    {
+      path: '/organizations/:organizationId',
+      redirect: to => ({
+        name: RouteNames.ORGANIZATION_EDIT,
+        params: { organizationId: to.params.organizationId, tab: 'details' },
+        query: to.query,
+      }),
+    },
+    {
+      name: RouteNames.ORGANIZATION_EDIT,
+      path: '/organization/:organizationId/:tab',
+      component: OrganizationEditPage,
+      props: true,
     },
     {
       name: RouteNames.CHANNEL_SETS,

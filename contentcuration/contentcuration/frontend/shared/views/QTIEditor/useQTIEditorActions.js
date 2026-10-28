@@ -5,7 +5,6 @@ import { qtiEditorStrings } from './qtiEditorStrings';
  */
 export default function useQTIEditorActions({
   items,
-  activeId,
   windowIsSmall,
   openItem,
   moveItemUp,
@@ -22,9 +21,14 @@ export default function useQTIEditorActions({
     toolbarLabelDelete$,
   } = qtiEditorStrings;
 
-  function getToolbarActions(item, idx) {
+  /**
+   * @param {Object} item
+   * @param {number} idx
+   * @param {Object} opts
+   * @param {boolean} opts.canOpen whether the item's card can be opened for editing
+   */
+  function getToolbarActions(item, idx, { canOpen }) {
     const result = [];
-    const isEditMode = activeId.value === item.assessment_id;
 
     result.push({
       id: 'edit',
@@ -32,7 +36,9 @@ export default function useQTIEditorActions({
       label: toolbarLabelEdit$(),
       handler: () => openItem(item.assessment_id),
       collapsed: false,
-      disabled: isEditMode,
+      // Items the card cannot open (authored elsewhere, e.g. Perseus, or unreadable) can
+      // still be moved or removed.
+      disabled: !canOpen,
     });
 
     result.push({

@@ -4,7 +4,7 @@
 import CorrectResponse from '../../declarations/correctResponse.js';
 import { QTIDeclaration } from '../../QTIDeclaration.js';
 import { CAPABILITY } from '../../declarations/index.js';
-import { parseXML, reparse } from '../testUtils.js';
+import { normalizeXML, parseXML, reparse } from '../testUtils.js';
 
 function makeDeclaration() {
   return new QTIDeclaration({
@@ -110,10 +110,10 @@ describe('CorrectResponse', () => {
       expect(values).toEqual(['ChoiceA', 'ChoiceC']);
     });
 
-    it('produces an empty qti-correct-response when values is empty', () => {
-      expect(
-        new CorrectResponse([], makeDeclaration()).getXML().querySelectorAll('qti-value').length,
-      ).toBe(0);
+    it('produces no element at all when values is empty', () => {
+      // The schema requires at least one qti-value inside qti-correct-response, so an
+      // answer-less declaration omits the element instead of emitting an empty one.
+      expect(new CorrectResponse([], makeDeclaration()).getXML()).toBeNull();
     });
 
     it('round-trips: qti-value child carries correct text', () => {
@@ -188,6 +188,34 @@ describe('CorrectResponse', () => {
       const cr = new CorrectResponse(['A & B'], makeDeclaration());
       const reparsed = reparse(cr.getXML());
       expect(reparsed.querySelector('qti-value').textContent).toBe('A & B');
+    });
+  });
+
+  describe('getScoringRule', () => {
+    const EXPECTED_RULE = `
+      <qti-response-condition>
+        <qti-response-if>
+          <qti-match>
+            <qti-variable identifier="RESPONSE"/>
+            <qti-correct identifier="RESPONSE"/>
+          </qti-match>
+          <qti-set-outcome-value identifier="OUTCOME">
+            <qti-sum>
+              <qti-variable identifier="OUTCOME"/>
+              <qti-base-value base-type="float">1.0</qti-base-value>
+            </qti-sum>
+          </qti-set-outcome-value>
+        </qti-response-if>
+      </qti-response-condition>`;
+
+    it('adds 1.0 to the outcome when the response matches the correct response', () => {
+      const cr = new CorrectResponse(['ChoiceA'], makeDeclaration());
+      expect(cr.getScoringRule('OUTCOME')).toEqual(parseXML(normalizeXML(EXPECTED_RULE)));
+    });
+
+    it('returns null when there is no correct response', () => {
+      const cr = new CorrectResponse([], makeDeclaration());
+      expect(cr.getScoringRule('OUTCOME')).toBeNull();
     });
   });
 });

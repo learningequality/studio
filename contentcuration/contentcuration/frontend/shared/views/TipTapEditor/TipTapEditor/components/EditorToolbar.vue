@@ -30,15 +30,17 @@
     <ToolbarDivider />
 
     <!-- Format dropdown -->
-    <div
-      role="group"
-      class="formatting-group toolbar-group"
-      :aria-label="textFormattingOptions$()"
-    >
-      <FormatDropdown />
-    </div>
+    <template v-if="!inlineOnly">
+      <div
+        role="group"
+        class="formatting-group toolbar-group"
+        :aria-label="textFormattingOptions$()"
+      >
+        <FormatDropdown />
+      </div>
 
-    <ToolbarDivider />
+      <ToolbarDivider />
+    </template>
 
     <!-- Collapsible toolbar groups -->
     <KListWithOverflow
@@ -62,6 +64,7 @@
               :key="`button-${action.name}`"
               :title="action.title"
               :icon="action.icon"
+              :kIcon="action.kIcon"
               :is-active="action.isActive"
               :isAvailable="action.isAvailable"
               :rtlIcon="action.rtlIcon"
@@ -97,8 +100,10 @@
             aria-hidden="true"
             class="more-button-icon"
           >
+          <!-- Not kept inside the toolbar, which scrolls when too narrow, as its other menus -->
           <KDropdownMenu
             :options="flatOverflowOptions(overflowItems)"
+            :constrainToScrollParent="false"
             @select="onOverflowSelect"
           >
             <template #option="{ option }">
@@ -113,7 +118,13 @@
                     : null
                 "
               >
+                <KIcon
+                  v-if="option.kIcon"
+                  :icon="option.kIcon"
+                  class="dropdown-item-icon"
+                />
                 <img
+                  v-else
                   :src="option.icon"
                   class="dropdown-item-icon"
                   aria-hidden="true"
@@ -125,6 +136,26 @@
         </button>
       </template>
     </KListWithOverflow>
+
+    <!-- `aria-disabled` rather than `disabled`, which would drop its tab stop. In a small window
+         it shows only its icon, for the toolbar to fit. -->
+    <KButton
+      v-for="action in prominentInsertTools"
+      :key="action.name"
+      class="prominent-button"
+      :class="{ 'icon-only': windowIsSmall }"
+      primary
+      appearance="raised-button"
+      :text="windowIsSmall ? '' : action.title"
+      :title="action.title"
+      :aria-label="windowIsSmall ? action.title : null"
+      :icon="action.kIcon"
+      data-toolbar-item
+      :aria-disabled="String(!action.isAvailable)"
+      :appearanceOverrides="action.isAvailable ? {} : unavailableProminentStyle"
+      @mousedown.native.prevent
+      @click="action.handler()"
+    />
 
     <ToolbarButton
       class="minimize-button"
@@ -139,10 +170,11 @@
 
 <script>
 
-  import { ref, computed } from 'vue';
+  import { ref, computed, inject } from 'vue';
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
-  import { useDropdowns } from '../composables/useDropdowns';
   import { useRovingTabIndex } from '../composables/useRovingTabIndex';
   import ToolbarButton from './toolbar/ToolbarButton.vue';
   import FormatDropdown from './toolbar/FormatDropdown.vue';
@@ -160,21 +192,22 @@
     setup(props, { emit }) {
       const toolbarRef = ref(null);
       useRovingTabIndex(toolbarRef);
+      const inlineOnly = inject('inlineOnly', false);
+      const { windowIsSmall } = useKResponsiveWindow();
 
       const {
         handleCopy,
         handleClearFormat,
         canClearFormat,
         historyActions,
-        alignAction,
+        alignActions,
         textActions,
         listActions,
         insertTools,
         minimizeAction,
         scriptActions,
+        pasteActions,
       } = useToolbarActions(emit);
-
-      const { pasteOptions } = useDropdowns();
 
       const {
         copy$,
@@ -233,16 +266,13 @@
             {
               name: 'pasteDropdown',
               component: PasteDropdown,
-              dropdownActions: pasteOptions.value,
+              dropdownActions: pasteActions.value,
             },
           ],
         },
         {
           name: 'align',
-          groupActions: [alignAction.value],
-          // Perseus flavoured markdown does not support alignment,
-          // so we disable this for now until we stop using markdown as the primary target
-          hide: true,
+          groupActions: alignActions.value,
         },
         {
           name: 'clearFormat',
@@ -267,20 +297,24 @@
           role: 'group',
           label: scriptFormatting$(),
           groupActions: scriptActions.value,
-          // Perseus flavoured markdown does not support super and sub script,
-          // so we disable this for now until we stop using markdown as the primary target
-          hide: true,
         },
         {
           name: 'insert',
           role: 'group',
           label: insertTools$(),
-          groupActions: insertTools.value.map(tool => ({
-            ...tool,
-            handler: (e, { fromOverflow } = {}) => onInsertToolClick(tool, e, { fromOverflow }),
-          })),
+          groupActions: insertTools.value
+            .filter(tool => !tool.prominent)
+            .map(tool => ({
+              ...tool,
+              handler: (e, { fromOverflow } = {}) => onInsertToolClick(tool, e, { fromOverflow }),
+            })),
         },
       ]);
+
+      // Outside KListWithOverflow, so they never collapse into More.
+      const prominentInsertTools = computed(() => insertTools.value.filter(tool => tool.prominent));
+      // An unavailable action keeps its colour on hover, so it doesn't offer a click.
+      const unavailableProminentStyle = { ':hover': { backgroundColor: themeTokens().primary } };
 
       // Flattens the visible overflow groups into a KDropdownMenu-compatible
       // options array. Maps `title` → `label` and `isAvailable` → `disabled`.
@@ -320,12 +354,10 @@
        */
       const toolbarGroupsWithDividers = computed(() => {
         const groups = [];
-        toolbarGroups.value.forEach((group, index) => {
-          if (group.hide) {
-            return;
-          }
+        const nonEmptyGroups = toolbarGroups.value.filter(group => group.groupActions.length);
+        nonEmptyGroups.forEach((group, index) => {
           groups.push(group);
-          if (index < toolbarGroups.value.length - 1) {
+          if (index < nonEmptyGroups.length - 1) {
             groups.push({ type: 'divider' });
           }
         });
@@ -333,18 +365,18 @@
       });
 
       const onOverflowSelect = (option, event) => {
-        // Stop propagation to avoid triggering RTE on outside click handler that
-        // minimizes the editor because KDropdownMenu is attached to an overlay layer,
-        // i.e. not a descendant of the editor.
-        event.stopPropagation();
         option.handler(event, { fromOverflow: true });
       };
 
       return {
         toolbarRef,
+        inlineOnly,
         toolbarGroupsWithDividers,
         flatOverflowOptions,
         historyActions,
+        prominentInsertTools,
+        unavailableProminentStyle,
+        windowIsSmall,
         minimizeAction,
         onOverflowSelect,
         textFormattingToolbar$,
@@ -366,12 +398,47 @@
     gap: 6px;
     align-items: center;
     padding: 8px;
+
+    /* A last resort: the overflow list gives up tools first, but too narrow a window can
+       still leave what remains wider than the toolbar. */
+    overflow-x: auto;
+    overflow-y: hidden;
     border-radius: 8px 8px 0 0;
   }
 
+  /* Never narrower than More, which would otherwise overlap minimize. */
   .overflow-list {
-    flex: 1;
+    flex: 2;
+    min-width: min-content;
+  }
+
+  /* Visible items stay out of min-content, so they can still collapse. */
+  .overflow-list ::v-deep .list {
+    flex-grow: 1;
+    width: 0;
     min-width: 0;
+  }
+
+  /* Never collapses into More; the overflow list gives up tools instead. */
+  .toolbar .prominent-button {
+    flex: none;
+  }
+
+  .prominent-button.icon-only {
+    min-width: 36px;
+    padding: 0 6px;
+
+    /* KButton keeps its empty label, with a margin that would push the icon off centre. */
+    ::v-deep .link-text {
+      display: none;
+    }
+  }
+
+  /* Matches the disabled toolbar buttons. */
+  .prominent-button[aria-disabled='true'] {
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.3;
   }
 
   .toolbar-group {
@@ -387,6 +454,8 @@
   }
 
   .dropdown-item-icon {
+    /* Undoes KIcon's inline-text nudge, which misaligns it with the img icons. */
+    top: 0;
     flex-shrink: 0;
     width: 20px;
     height: 20px;

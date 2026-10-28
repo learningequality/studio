@@ -1,5 +1,8 @@
 """Tests for organization and organization membership API endpoints."""
+import uuid
+
 from django.urls import reverse
+from le_utils.constants import file_formats
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -16,10 +19,15 @@ from contentcuration.constants.organization_roles import (
 )
 from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.models import Channel
+from contentcuration.models import ContentNode
+from contentcuration.models import File
 from contentcuration.models import Organization
 from contentcuration.models import OrganizationRole
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
+from contentcuration.viewsets.sync.constants import CONTENTNODE
 
 
 class OrganizationAPITestCase(StudioAPITestCase):
@@ -115,6 +123,27 @@ class OrganizationListCreateTestCase(OrganizationAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
+
+    def test_member_filter_excludes_public_organizations_the_user_does_not_belong_to(
+        self,
+    ):
+        self.organization.public = True
+        self.organization.save(update_fields=["public"])
+        self.authenticate_as(self.other_user)
+
+        response = self.client.get(self.organization_list_url, {"member": True})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"], [])
+
+    def test_member_filter_includes_the_users_own_organizations(self):
+        self.authenticate_as(self.organization_admin)
+
+        response = self.client.get(self.organization_list_url, {"member": True})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], self.organization.name)
 
     def test_inactive_membership_does_not_grant_organization_access(self):
         self.authenticate_as(self.inactive_user)
@@ -602,7 +631,7 @@ class OrganizationMembershipDeleteTestCase(OrganizationAPITestCase):
         )
 
 
-class OrganizationChannelPermissionTestCase(OrganizationAPITestCase):
+class OrganizationChannelPermissionTestCase(SyncTestMixin, OrganizationAPITestCase):
     def setUp(self):
         super().setUp()
         self.channel = Channel.objects.create(
@@ -702,6 +731,71 @@ class OrganizationChannelPermissionTestCase(OrganizationAPITestCase):
         self.assertFalse(self._viewable_channel(self.pending_user).exists())
         self.assertFalse(self._editable_channel(self.pending_user).exists())
 
+    def test_org_role_channel_content_permissions(self):
+        node = self.channel.main_tree
+        self.assertTrue(
+            ContentNode.filter_edit_queryset(
+                ContentNode.objects.filter(pk=node.pk), self.editor_user
+            ).exists()
+        )
+        self.assertFalse(
+            ContentNode.filter_edit_queryset(
+                ContentNode.objects.filter(pk=node.pk), self.viewer_user
+            ).exists()
+        )
+        self.assertTrue(
+            ContentNode.filter_view_queryset(
+                ContentNode.objects.filter(pk=node.pk), self.viewer_user
+            ).exists()
+        )
+
+    def test_channel_detail_reports_edit_view_by_org_role(self):
+        detail_url = reverse("channel-detail", kwargs={"pk": self.channel.id})
+
+        self.authenticate_as(self.editor_user)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["edit"])
+
+        self.authenticate_as(self.viewer_user)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["edit"])
+        self.assertTrue(response.data["view"])
+
+    def test_org_editor_channel_list_filters(self):
+        self.authenticate_as(self.editor_user)
+
+        response = self.client.get(reverse("channel-list"), {"view": True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(
+            str(self.channel.id), [result["id"] for result in response.data]
+        )
+
+        response = self.client.get(reverse("channel-list"), {"edit": True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(str(self.channel.id), [result["id"] for result in response.data])
+
+    def test_org_editor_can_edit_channel_content_via_sync(self):
+        self.authenticate_as(self.editor_user)
+        node = self.channel.main_tree
+        new_title = "Updated by org editor"
+
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    node.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=self.channel.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        node.refresh_from_db()
+        self.assertEqual(node.title, new_title)
+
 
 class OrganizationPaginationTestCase(OrganizationAPITestCase):
     def test_organization_list_is_paginated(self):
@@ -740,3 +834,141 @@ class OrganizationPaginationTestCase(OrganizationAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 29)
         self.assertEqual(len(response.data["results"]), 20)
+
+
+class OrganizationChannelsTestCase(OrganizationAPITestCase):
+    def setUp(self):
+        super().setUp()
+        self.small_channel = self._organization_channel("Alpha", size=10)
+        self.large_channel = self._organization_channel("Beta", size=560)
+
+    def _organization_channel(self, name, size, **kwargs):
+        channel = testdata.channel(name=name)
+        channel.organization = kwargs.pop("organization", self.organization)
+        for field, value in kwargs.items():
+            setattr(channel, field, value)
+        channel.save(actor_id=self.organization_admin.id)
+        files = File.objects.filter(contentnode__tree_id=channel.main_tree.tree_id)
+        files.update(file_size=0)
+        sized_file = files.first()
+        sized_file.file_size = size
+        sized_file.checksum = uuid.uuid4().hex
+        sized_file.save(set_by_file_on_disk=False)
+        return channel
+
+    def organization_channels_url(self, organization=None):
+        organization = organization or self.organization
+        return reverse("organization-channels", kwargs={"pk": organization.id})
+
+    def test_member_gets_channel_sizes_and_total(self):
+        self.authenticate_as(self.viewer_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
+        self.assertEqual(response.data["size"], 570)
+        self.assertEqual(
+            [(c["id"], c["name"], c["size"]) for c in response.data["channels"]],
+            [
+                (self.small_channel.id, "Alpha", 10),
+                (self.large_channel.id, "Beta", 560),
+            ],
+        )
+        self.assertIn("description", response.data["channels"][0])
+
+    def test_duplicate_checksum_in_channel_is_counted_once(self):
+        sized_file = File.objects.get(
+            contentnode__tree_id=self.small_channel.main_tree.tree_id, file_size=10
+        )
+        duplicate = File.objects.filter(
+            contentnode__tree_id=self.small_channel.main_tree.tree_id, file_size=0
+        ).first()
+        duplicate.checksum = sized_file.checksum
+        duplicate.file_size = sized_file.file_size
+        duplicate.save(set_by_file_on_disk=False)
+        self.authenticate_as(self.viewer_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(response.data["channels"][0]["size"], 10)
+        self.assertEqual(response.data["size"], 570)
+
+    def test_excludes_files_that_do_not_count_towards_storage(self):
+        unsized_file = File.objects.filter(
+            contentnode__tree_id=self.small_channel.main_tree.tree_id, file_size=0
+        ).first()
+        unsized_file.file_format_id = file_formats.PERSEUS
+        unsized_file.checksum = uuid.uuid4().hex
+        unsized_file.file_size = 1000
+        unsized_file.save(set_by_file_on_disk=False)
+        self.authenticate_as(self.viewer_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(response.data["channels"][0]["size"], 10)
+
+    def test_file_shared_by_two_channels_counts_in_each(self):
+        sized_file = File.objects.get(
+            contentnode__tree_id=self.small_channel.main_tree.tree_id, file_size=10
+        )
+        File.objects.filter(
+            contentnode__tree_id=self.large_channel.main_tree.tree_id, file_size=560
+        ).update(checksum=sized_file.checksum)
+        self.authenticate_as(self.viewer_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        # The total is the sum of the listed channel sizes, as in the design.
+        self.assertEqual(response.data["size"], 570)
+
+    def test_excludes_deleted_and_other_organization_channels(self):
+        self._organization_channel("Deleted", size=5, deleted=True)
+        self._organization_channel(
+            "Elsewhere",
+            size=7,
+            organization=Organization.objects.create(name="Other Organization"),
+        )
+        self.authenticate_as(self.viewer_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(
+            [c["name"] for c in response.data["channels"]], ["Alpha", "Beta"]
+        )
+        self.assertEqual(response.data["size"], 570)
+
+    def test_channel_without_files_has_zero_size(self):
+        File.objects.filter(
+            contentnode__tree_id=self.large_channel.main_tree.tree_id
+        ).delete()
+        self.authenticate_as(self.viewer_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(response.data["channels"][1]["size"], 0)
+        self.assertEqual(response.data["size"], 10)
+
+    def test_nonmember_cannot_get_private_organization_channels(self):
+        self.authenticate_as(self.other_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_nonmember_only_gets_viewable_channels_of_public_organization(self):
+        self.organization.public = True
+        self.organization.save()
+        self.large_channel.public = True
+        self.large_channel.save()
+        self.authenticate_as(self.other_user)
+
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
+        self.assertEqual([c["name"] for c in response.data["channels"]], ["Beta"])
+        self.assertEqual(response.data["size"], 560)
+
+    def test_requires_authentication(self):
+        response = self.client.get(self.organization_channels_url())
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

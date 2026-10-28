@@ -47,7 +47,7 @@ import {
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
-import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
+import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { getMergedMapFields } from 'shared/utils/helpers';
 
@@ -606,8 +606,7 @@ class IndexedDBResource {
   }
 
   /**
-   * Method to remove the NEW_OBJECT and DELAYED_VALIDATION symbols
-   * property so we don't commit it to IndexedDB
+   * Method to remove the NEW_OBJECT symbol property so we don't commit it to IndexedDB
    * @param {Object} obj
    * @return {Object}
    */
@@ -616,7 +615,6 @@ class IndexedDBResource {
       ...obj,
     };
     delete out[NEW_OBJECT];
-    delete out[DELAYED_VALIDATION];
     return out;
   }
 
@@ -1166,6 +1164,20 @@ export const Bookmark = new Resource({
 export const Channel = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
+  checkOrganizationMigration(id, organization) {
+    return client
+      .get(this.getUrlFunction('organization_migration')(id), {
+        params: organization ? { organization } : {},
+      })
+      .then(response => response.data);
+  },
+  async migrateOrganization(id, organization) {
+    const response = await client.post(this.getUrlFunction('organization_migration')(id), {
+      organization,
+    });
+    await this.transaction({ mode: 'rw' }, () => this.table.update(id, response.data));
+    return response.data;
+  },
   indexFields: ['name', 'language'],
   searchCatalog(params) {
     params.page_size = params.page_size || 100;
@@ -2055,6 +2067,26 @@ export const ChannelSet = new CreateModelResource({
 export const Invitation = new Resource({
   tableName: TABLE_NAMES.INVITATION,
   urlName: 'invitation',
+  where(params = {}, doRefresh = true) {
+    return Resource.prototype.where.call(this, params, doRefresh).then(data => {
+      const filter = items =>
+        items.filter(item =>
+          params.migration
+            ? Boolean(item.channel && item.organization)
+            : !(item.channel && item.organization),
+        );
+      return Array.isArray(data) ? filter(data) : { ...data, results: filter(data.results) };
+    });
+  },
+  async createMigration(channel, organization) {
+    const response = await client.post(this.getUrlFunction('migration')(), {
+      channel,
+      organization,
+    });
+    await this.transaction({ mode: 'rw' }, () => this.table.put(response.data));
+    this._requests = {};
+    return response.data;
+  },
   indexFields: ['channel'],
 
   accept(id) {
@@ -2065,12 +2097,30 @@ export const Invitation = new Resource({
     const changes = { declined: true };
     return this._handleInvitation(id, window.Urls.invitationDecline(id), changes);
   },
+  revoke(id) {
+    const changes = { revoked: true };
+    return this._handleInvitation(id, window.Urls.invitationRevoke(id), changes);
+  },
   _handleInvitation(id, url, changes) {
     return client.post(url).then(() => {
+      this._requests = {};
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
+  },
+  sendOrganizationInvitation({ organizationId, email, shareMode }) {
+    return client
+      .post(window.Urls.send_organization_invitation_email(), {
+        user_email: email,
+        organization_id: organizationId,
+        share_mode: shareMode,
+      })
+      .then(response => {
+        return this.transaction({ mode: 'rw' }, () => {
+          return this.table.put(response.data);
+        }).then(() => response.data);
+      });
   },
   getChannelId(obj) {
     return obj.channel;
@@ -2423,6 +2473,42 @@ export const CommunityLibrarySubmission = new APIResource({
     return client.post(this.collectionUrl(), params).then(response => {
       return response.data;
     });
+  },
+});
+
+export const Organization = new APIResource({
+  urlName: 'organization',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return (response.data && response.data.results) || [];
+    });
+  },
+  fetchModel(id) {
+    return client.get(this.modelUrl(id)).then(response => response.data);
+  },
+  create(data) {
+    return client.post(this.collectionUrl(), data).then(response => response.data);
+  },
+  update(id, data) {
+    return client.patch(this.modelUrl(id), data).then(response => response.data);
+  },
+  fetchChannels(id) {
+    return client.get(this.getUrlFunction('channels')(id)).then(response => response.data);
+  },
+});
+
+export const OrganizationRole = new APIResource({
+  urlName: 'organization_members',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return (response.data && response.data.results) || [];
+    });
+  },
+  update(id, data) {
+    return client.patch(this.modelUrl(id), data).then(response => response.data);
+  },
+  delete(id) {
+    return client.delete(this.modelUrl(id));
   },
 });
 

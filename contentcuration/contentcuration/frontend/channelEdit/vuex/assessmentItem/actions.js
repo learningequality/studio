@@ -50,18 +50,12 @@ export function loadAssessmentItems(context, params = {}) {
 }
 
 export function addAssessmentItem(context, assessmentItem) {
-  // API accepts answers and hints as strings
-  const stringifiedAssessmentItem = {
-    ...assessmentItem,
-    answers: JSON.stringify(assessmentItem.answers || []),
-    hints: JSON.stringify(assessmentItem.hints || []),
-  };
-
+  // Questions are authored as QTI, whose content lives in raw_data.
   return db.transaction(
     'rw',
     [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.ASSESSMENTITEM, TABLE_NAMES.CHANGES_TABLE],
     () => {
-      return AssessmentItem.add(stringifiedAssessmentItem).then(([contentnode, assessment_id]) => {
+      return AssessmentItem.add(assessmentItem).then(([contentnode, assessment_id]) => {
         context.commit('UPDATE_ASSESSMENTITEM', {
           ...assessmentItem,
           contentnode,
@@ -91,19 +85,9 @@ export function updateAssessmentItems(context, assessmentItems) {
     () => {
       return Promise.all(
         assessmentItems.map(assessmentItem => {
-          // API accepts answers and hints as strings
-          const stringifiedAssessmentItem = {
-            ...assessmentItem,
-          };
-          if (assessmentItem.answers) {
-            stringifiedAssessmentItem.answers = JSON.stringify(assessmentItem.answers);
-          }
-          if (assessmentItem.hints) {
-            stringifiedAssessmentItem.hints = JSON.stringify(assessmentItem.hints);
-          }
           return AssessmentItem.update(
             [assessmentItem.contentnode, assessmentItem.assessment_id],
-            stringifiedAssessmentItem,
+            assessmentItem,
           ).then(() => {
             updateNodeComplete(assessmentItem.contentnode, context);
           });

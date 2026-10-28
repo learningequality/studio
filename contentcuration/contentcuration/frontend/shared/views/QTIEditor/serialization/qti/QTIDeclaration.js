@@ -4,11 +4,13 @@
  * Reads identifier, base-type, cardinality and capability children (correctResponse,
  * defaultValue, mapping, areaMapping) from XML, holds them as plain JS data with
  * native JS types (number, boolean, string) based on the declaration's base-type,
- * and serializes back to XML on demand. Carries no runtime value state or scoring logic.
+ * and serializes back to XML on demand. Carries no runtime value state. Scoring leaves
+ * only as response-processing rules or templates (getScoringRule,
+ * getResponseProcessingTemplate); it is never evaluated here.
  *
  */
-import { buildXmlNode } from '../assembleItem.js';
-import { BaseType, Cardinality } from '../../constants.js';
+import { buildXmlNode } from '../xml.js';
+import { BaseType, Cardinality, RESPONSE_IDENTIFIER } from '../../constants.js';
 import { declarationParsers, CAPABILITY } from './declarations/index.js';
 
 /**
@@ -17,6 +19,28 @@ import { declarationParsers, CAPABILITY } from './declarations/index.js';
  * Distinguished from container arrays (multiple/ordered cardinality, N elements).
  */
 const COMPOUND_VALUE_TYPES = new Set([BaseType.POINT, BaseType.PAIR, BaseType.DIRECTED_PAIR]);
+
+/**
+ * Capabilities that can score a response, preferred first. Registration follows the
+ * XML's child order, so it cannot decide between a correct response and a mapping.
+ *
+ * A mapping comes before the correct response because it says more: text entry writes one
+ * to keep each accepted answer's case sensitivity, which matching against the correct
+ * response alone would ignore.
+ */
+const SCORING_PRECEDENCE = Object.freeze([
+  CAPABILITY.MAPPING,
+  CAPABILITY.AREA_MAPPING,
+  CAPABILITY.CORRECT_RESPONSE,
+]);
+
+/**
+ * @typedef {object} Capability
+ * @property {function(): *} get
+ * @property {function(): (Element|null)} getXML
+ * @property {function(string): (Element|null)} [getScoringRule]
+ * @property {function(): (string|null)} [getResponseProcessingTemplate]
+ */
 
 export class QTIDeclaration {
   /**
@@ -73,7 +97,7 @@ export class QTIDeclaration {
     this.baseType = baseType;
     this.cardinality = cardinality;
 
-    /** @type {Object.<string, { get(): *, getXML(): Element }>} */
+    /** @type {Object.<string, Capability>} */
     this._capabilities = {};
   }
 
@@ -86,7 +110,7 @@ export class QTIDeclaration {
    * Called as a side-effect by declaration strategy classes during their constructors.
    *
    * @param {string} name - One of the CAPABILITY constants
-   * @param {{ get(): *, getXML(): Element }} declarationObject
+   * @param {Capability} declarationObject
    */
   registerCapability(name, declarationObject) {
     this._capabilities[name] = declarationObject;
@@ -116,6 +140,47 @@ export class QTIDeclaration {
     return this._capabilities[CAPABILITY.AREA_MAPPING]?.get() ?? null;
   }
 
+  /**
+   * The first non-null result of a scoring method, asked of this declaration's
+   * capabilities in SCORING_PRECEDENCE order. Every scoring method goes through here, so
+   * the rule and the template for a declaration always come from the same capability.
+   *
+   * @param {string} method - The capability method to call
+   * @param {...*} args - Arguments for it
+   * @returns {*|null}
+   */
+  _fromScoringCapability(method, ...args) {
+    for (const name of SCORING_PRECEDENCE) {
+      const result = this._capabilities[name]?.[method]?.(...args);
+      if (result) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * @param {string} outcomeIdentifier
+   * @returns {Element|null} null when no capability in SCORING_PRECEDENCE can score
+   */
+  getScoringRule(outcomeIdentifier) {
+    return this._fromScoringCapability('getScoringRule', outcomeIdentifier);
+  }
+
+  /**
+   * The standard response processing template that scores this declaration on its own.
+   * Every standard template reads the response named RESPONSE, so a declaration named
+   * anything else has none, and is scored by its rule instead.
+   *
+   * @returns {string|null} One of ResponseProcessingTemplate, or null when no template fits
+   */
+  getResponseProcessingTemplate() {
+    if (this.identifier !== RESPONSE_IDENTIFIER) {
+      return null;
+    }
+    return this._fromScoringCapability('getResponseProcessingTemplate');
+  }
+
   // ---------------------------------------------------------------------------
   // Value coercion and formatting
   // ---------------------------------------------------------------------------
@@ -137,7 +202,7 @@ export class QTIDeclaration {
    *
    * Follows the Kolibri QTI implementation — each base-type maps to a
    * specific JS primitive or 2-element array (point/pair/directedPair).
-   * Returns null for empty, null, undefined, or 'NULL' inputs.
+   * Returns null for empty, null, or undefined inputs.
    *
    * @param {string|null|undefined} raw  - Raw text from a <qti-value> element
    * @param {string|null}           baseType - One of BaseType.* constants
@@ -146,7 +211,7 @@ export class QTIDeclaration {
    */
   static coerceValue(raw, baseType) {
     // QTI treats empty / null as NULL — see qti-is-null spec
-    if (raw === null || raw === undefined || raw === '' || raw === 'NULL') {
+    if (raw === null || raw === undefined || raw === '') {
       return null;
     }
 
@@ -330,7 +395,11 @@ export class QTIDeclaration {
       attrs['base-type'] = this.baseType;
     }
 
-    const children = Object.values(this._capabilities).map(cap => cap.getXML());
+    // A capability returns null when it has nothing valid to serialize (e.g. a correct
+    // response with no values); those are dropped rather than emitted empty.
+    const children = Object.values(this._capabilities)
+      .map(cap => cap.getXML())
+      .filter(Boolean);
 
     return buildXmlNode({ tag: this.tag, attrs, children });
   }

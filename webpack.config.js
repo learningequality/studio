@@ -1,9 +1,6 @@
 /* eslint-env node */
 
 const path = require('node:path');
-const process = require('node:process');
-const fs = require('node:fs');
-const { execSync } = require('node:child_process');
 
 const baseConfig = require('kolibri-build/src/webpack.config.base');
 const { merge } = require('webpack-merge');
@@ -16,41 +13,13 @@ const WebpackRTLPlugin = require('kolibri-build/src/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
-const DEFAULT_WEBPACK_DEV_HOST = '127.0.0.1';
-
-/**
- * Function to detect if running in WSL
- * @return {boolean}
- */
-function isWSL() {
-  try {
-    const version = fs.readFileSync('/proc/version', 'utf8');
-    return version.toLowerCase().includes('microsoft');
-  } catch (err) {
-    return false;
-  }
-}
-
-/**
- * Get the host for the webpack dev server.
- * @return {string}
- */
-function getWebpackDevHost() {
-  if (process.env.WEBPACK_DEV_HOST) {
-    return process.env.WEBPACK_DEV_HOST;
-  }
-
-  if (!isWSL()) {
-    return DEFAULT_WEBPACK_DEV_HOST;
-  }
-
-  try {
-    return execSync('hostname -I').toString().trim().split(' ')[0];
-  } catch (err) {
-    console.warn('Failed to get WSL IP address:', err);
-    return DEFAULT_WEBPACK_DEV_HOST;
-  }
-}
+// Bind versus advertised address: see webpackDevServerAddress.js. settings.py mirrors it.
+const {
+  getWebpackDevHost,
+  getWebpackDevPort,
+  getWebpackDevPublicHost,
+  getWebpackDevPublicPort,
+} = require('./webpackDevServerAddress');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
@@ -74,9 +43,11 @@ module.exports = (env = {}) => {
   // a hoisted node_modules directory.
   const pnpmNodeModules = path.join(rootDir, 'node_modules', '.pnpm', 'node_modules');
 
-  // Determine the appropriate dev server host and public path based on environment
   const devServerHost = getWebpackDevHost();
-  const devPublicPath = `http://${devServerHost}:4000/dist/`;
+  const devServerPort = getWebpackDevPort();
+  const devPublicHost = getWebpackDevPublicHost();
+  const devPublicPort = getWebpackDevPublicPort();
+  const devPublicPath = `http://${devPublicHost}:${devPublicPort}/dist/`;
 
   const workboxPlugin = new InjectManifest({
     swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
@@ -125,16 +96,19 @@ module.exports = (env = {}) => {
       pathinfo: dev,
     },
     devServer: {
-      port: 4000,
+      port: devServerPort,
       host: devServerHost,
+      client: {
+        // Otherwise the socket URL derives from the bind address, which the browser cannot reach.
+        webSocketURL: {
+          hostname: devPublicHost,
+          port: devPublicPort,
+        },
+      },
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
-      allowedHosts: [
-        '127.0.0.1',
-        'localhost',
-        getWebpackDevHost(),
-      ]
+      allowedHosts: [...new Set(['127.0.0.1', 'localhost', devServerHost, devPublicHost])]
     },
     module: {
       rules: [

@@ -17,5 +17,5 @@
             <qti-simple-choice identifier="choice_3" show-hide="show" fixed="false"><p>9</p></qti-simple-choice>
         </qti-choice-interaction>
     </qti-item-body>
-    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />
 </qti-assessment-item>

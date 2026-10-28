@@ -68,10 +68,4 @@ export const Small = Node.create({
         },
     };
   },
-
-  addKeyboardShortcuts() {
-    return {
-      'Mod-Shift-S': () => this.editor.commands.toggleSmall(),
-    };
-  },
 });

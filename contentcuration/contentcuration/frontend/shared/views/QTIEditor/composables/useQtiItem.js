@@ -17,7 +17,9 @@ import { assembleItemXml } from '../serialization/assembleItem';
  *   identifier: import('vue').Ref<string>,
  *   title: import('vue').Ref<string>,
  *   language: import('vue').Ref<string>,
+ *   itemBodyXml: import('vue').Ref<string>,
  *   interactions: import('vue').Ref<Array<{ bodyXml: string, responseDeclarations: string[] }>>,
+ *   hints: import('vue').Ref<Array<{ id: string, content: string }>>,
  *   parseError: import('vue').Ref<string | null>,
  *   rawData: import('vue').ComputedRef<string>,
  * }}
@@ -25,8 +27,15 @@ import { assembleItemXml } from '../serialization/assembleItem';
 export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {}) {
   const identifier = ref('');
   const title = ref('');
+  const label = ref('');
   const language = ref('');
+  const itemBodyXml = ref('');
   const interactions = ref([]);
+  /**
+   * Hints belong to the item, not to any one interaction, so they live here beside
+   * identifier and title — mutable, and read back by the rawData computed below.
+   */
+  const hints = ref([]);
   const parseError = ref(null);
 
   if (rawXml) {
@@ -34,8 +43,11 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
       const model = parseItem(rawXml);
       identifier.value = model.identifier;
       title.value = model.title;
+      label.value = model.label;
       language.value = model.language;
+      itemBodyXml.value = model.itemBodyXml;
       interactions.value = model.interactions;
+      hints.value = model.hints;
     } catch (e) {
       parseError.value = e.message;
     }
@@ -43,18 +55,29 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
 
   /**
    * Re-assembles the full QTI item XML whenever identifier, title, language,
-   * bodyXml, or responseDeclarations change. Only available when the caller
-   * passes in bodyXml and responseDeclarations refs.
+   * hints, bodyXml, or responseDeclarations change. The interaction parts are
+   * only present when the caller passes in bodyXml and responseDeclarations refs.
    */
   const rawData = computed(() =>
     assembleItemXml({
       identifier: identifier.value,
       title: title.value,
+      label: label.value,
       language: language.value,
       bodyXml: bodyXml?.value ?? '',
       responseDeclarations: responseDeclarations?.value ?? [],
+      hints: hints.value,
     }),
   );
 
-  return { identifier, title, language, interactions, parseError, rawData };
+  return {
+    identifier,
+    title,
+    language,
+    itemBodyXml,
+    interactions,
+    hints,
+    parseError,
+    rawData,
+  };
 }

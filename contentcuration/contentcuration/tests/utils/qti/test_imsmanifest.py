@@ -1,7 +1,13 @@
 import unittest
+import zipfile
+from io import BytesIO
 
+from contentcuration.utils.assessment.qti.constants import ResourceType
 from contentcuration.utils.assessment.qti.imsmanifest import Dependency
 from contentcuration.utils.assessment.qti.imsmanifest import File
+from contentcuration.utils.assessment.qti.imsmanifest import (
+    get_assessment_item_resources_from_manifest,
+)
 from contentcuration.utils.assessment.qti.imsmanifest import Item
 from contentcuration.utils.assessment.qti.imsmanifest import Manifest
 from contentcuration.utils.assessment.qti.imsmanifest import Metadata
@@ -135,7 +141,7 @@ class TestManifestXMLOutput(unittest.TestCase):
                 resources=[
                     Resource(
                         identifier="t1-test-entry-item1",
-                        type_="imsqti_item_xmlv3p0",
+                        type_=ResourceType.ASSESSMENT_ITEM.value,
                         href="items/choice-single-cardinality.xml",
                         files=[File(href="items/choice-single-cardinality.xml")],
                         dependencies=[Dependency(identifierref="image_resource_1")],
@@ -148,25 +154,25 @@ class TestManifestXMLOutput(unittest.TestCase):
                     ),
                     Resource(
                         identifier="t1-test-entry-item2",
-                        type_="imsqti_item_xmlv3p0",
+                        type_=ResourceType.ASSESSMENT_ITEM.value,
                         href="items/choice-multiple-cardinality.xml",
                         files=[File(href="items/choice-multiple-cardinality.xml")],
                     ),
                     Resource(
                         identifier="t1-test-entry-item3",
-                        type_="imsqti_item_xmlv3p0",
+                        type_=ResourceType.ASSESSMENT_ITEM.value,
                         href="items/text-entry.xml",
                         files=[File(href="items/text-entry.xml")],
                     ),
                     Resource(
                         identifier="t1-test-entry-item4",
-                        type_="imsqti_item_xmlv3p0",
+                        type_=ResourceType.ASSESSMENT_ITEM.value,
                         href="items/extended-text.xml",
                         files=[File(href="items/extended-text.xml")],
                     ),
                     Resource(
                         identifier="t1-test-entry",
-                        type_="imsqti_test_xmlv3p0",
+                        type_=ResourceType.ASSESSMENT_TEST.value,
                         href="assessment.xml",
                         files=[File(href="assessment.xml")],
                     ),
@@ -202,3 +208,50 @@ class TestManifestXMLOutput(unittest.TestCase):
             "</manifest>"
         )
         self.assertEqual(manifest.to_xml_string(), expected_xml)
+
+
+class TestGetAssessmentItemResourcesFromManifest(unittest.TestCase):
+    def _zip_with(self, resources):
+        manifest = Manifest(
+            identifier="pkg", resources=Resources(resources=resources)
+        ).to_xml_string()
+        buffer = BytesIO()
+        with zipfile.ZipFile(buffer, "w") as zf:
+            zf.writestr("imsmanifest.xml", manifest)
+        return zipfile.ZipFile(buffer)
+
+    def test_items_in_manifest_order_with_dependencies(self):
+        zf = self._zip_with(
+            [
+                Resource(
+                    identifier="zzz",
+                    type_=ResourceType.ASSESSMENT_ITEM.value,
+                    href="items/zzz.xml",
+                    files=[
+                        File(href="items/zzz.xml"),
+                        File(href="images/a.png"),
+                    ],
+                ),
+                Resource(
+                    identifier="aaa",
+                    type_=ResourceType.ASSESSMENT_ITEM.value,
+                    href="items/aaa.xml",
+                    files=[File(href="items/aaa.xml")],
+                ),
+                Resource(
+                    identifier="t",
+                    type_=ResourceType.ASSESSMENT_TEST.value,
+                    href="tests/t.xml",
+                ),
+            ]
+        )
+
+        resources = get_assessment_item_resources_from_manifest(zf)
+
+        self.assertEqual(
+            [(r.href, r.dependency_hrefs) for r in resources],
+            [
+                ("items/zzz.xml", ["images/a.png"]),
+                ("items/aaa.xml", []),
+            ],
+        )

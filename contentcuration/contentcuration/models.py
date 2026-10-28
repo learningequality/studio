@@ -29,6 +29,7 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
+from django.db.models import ExpressionWrapper
 from django.db.models import F
 from django.db.models import Index
 from django.db.models import JSONField
@@ -48,7 +49,10 @@ from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
 from django.db.models.sql import Query
 from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
+from django.utils import translation
 from django.utils.translation import gettext as _
 from django_cte import CTEManager
 from django_cte import CTEQuerySet
@@ -80,6 +84,7 @@ from contentcuration.constants import feedback
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_CHANNEL_EDIT_ROLES
 from contentcuration.constants.organization_roles import ORGANIZATION_EDITOR
 from contentcuration.constants.organization_roles import organization_role_choices
 from contentcuration.constants.organization_roles import ORGANIZATION_ROLE_STATUS_ACTIVE
@@ -97,7 +102,9 @@ from contentcuration.db.models.functions import Unnest
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
 from contentcuration.utils.cache import delete_public_channel_cache_keys
+from contentcuration.utils.i18n import closest_supported_locale
 from contentcuration.utils.parser import load_json_string
+from contentcuration.utils.urls import canonical_url
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
@@ -134,6 +141,17 @@ def to_pk(model_or_pk):
     if isinstance(model_or_pk, models.Model):
         return model_or_pk.pk
     return model_or_pk
+
+
+def filter_storage_billable_files(queryset):
+    """
+    Perseus exports would not be included in storage calculations.
+    """
+    if queryset is None:
+        return queryset
+    return queryset.exclude(file_format_id__isnull=True).exclude(
+        file_format_id=file_formats.PERSEUS
+    )
 
 
 class UserManager(BaseUserManager):
@@ -434,7 +452,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
-        new_staging_files_qs = self._filter_storage_billable_files(new_staging_files_qs)
+        new_staging_files_qs = filter_storage_billable_files(new_staging_files_qs)
 
         unique_staging_ids = (
             new_staging_files_qs.order_by("checksum", "id")
@@ -475,16 +493,23 @@ class User(AbstractBaseUser, PermissionsMixin):
             .aggregate(size=Sum("file_size"))["size"]
             or 0
         )
-        return float(max(self.disk_space - space_used, 0))
+        return float(max(self.get_effective_disk_space() - space_used, 0))
 
     def get_available_space(self, active_files=None):
         return float(
-            max(self.disk_space - self.get_space_used(active_files=active_files), 0)
+            max(
+                self.get_effective_disk_space()
+                - self.get_space_used(active_files=active_files),
+                0,
+            )
         )
 
     def get_user_active_trees(self):
-        return self.editable_channels.exclude(deleted=True).values(
-            tree_id=F("main_tree__tree_id")
+        # Organization channels count towards the organization's storage, not the user's.
+        return (
+            self.editable_channels.exclude(deleted=True)
+            .filter(organization__isnull=True)
+            .values(tree_id=F("main_tree__tree_id"))
         )
 
     def get_user_active_files(self):
@@ -519,7 +544,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
-        base_files_qs = self._filter_storage_billable_files(base_files_qs)
+        base_files_qs = filter_storage_billable_files(base_files_qs)
 
         unique_file_ids = (
             base_files_qs.order_by("checksum", "id").distinct("checksum").values("id")
@@ -528,16 +553,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         files_qs = base_files_qs.filter(id__in=Subquery(unique_file_ids))
 
         return files_qs
-
-    def _filter_storage_billable_files(self, queryset):
-        """
-        Perseus exports would not be included in storage calculations.
-        """
-        if queryset is None:
-            return queryset
-        return queryset.exclude(file_format_id__isnull=True).exclude(
-            file_format_id=file_formats.PERSEUS
-        )
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
@@ -873,8 +888,8 @@ def generate_storage_url(filename, request=None, *args):
     # 1. In normal kubernetes, nginx will proxy for us. We'll know we're in kubernetes when the
     # environment variable RUN_MODE=k8s
     #
-    # 2. In Docker Compose and bare metal runserver, we'll be running in runserver, and minio
-    # will be exposed in port 9000 in the host's localhost network.
+    # 2. In Docker Compose and bare metal runserver, minio is exposed to the browser at
+    # settings.AWS_S3_PUBLIC_ENDPOINT_URL, or localhost:9000 when that is unset.
 
     # Note (aron): returning the true storage URL (e.g. https://storage.googleapis.com/storage/a.mp4)
     # isn't too important, because we have CDN in front of our servers, so it should be cached.
@@ -890,16 +905,14 @@ def generate_storage_url(filename, request=None, *args):
             path=path,
         )
 
-    # if we're in docker-compose or in baremetal, just return the object storage URL as localhost:9000
+    # if we're in docker-compose or in baremetal, hand the browser the object storage URL directly
     elif run_mode == "docker-compose" or run_mode is None:
         # generate the minio storage URL, so we can get the GET parameters that give everyone
         # access even if they don't need to log in
         params = urllib.parse.urlparse(default_storage.url(path)).query
-        host = "localhost"
-        port = 9000  # hardcoded to the default minio IP address
-        url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
-            host=host,
-            port=port,
+        endpoint = settings.AWS_S3_PUBLIC_ENDPOINT_URL or "http://localhost:9000"
+        url = "{endpoint}/{bucket}/{path}?{params}".format(
+            endpoint=endpoint.rstrip("/"),
             bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
             params=params,
@@ -1006,29 +1019,63 @@ class PermissionCTE(With):
     tree_id_fields = [
         "channel__{}__tree_id".format(tree_name) for tree_name in CHANNEL_TREES
     ]
+    channel_tree_id_fields = [
+        "{}__tree_id".format(tree_name) for tree_name in CHANNEL_TREES
+    ]
 
-    def __init__(self, model, user_id, **kwargs):
-        queryset = model.objects.filter(user_id=user_id).annotate(
-            tree_id=Unnest(
-                ArrayRemove(Array(*self.tree_id_fields), None),
-                output_field=models.IntegerField(),
+    @classmethod
+    def _personal_channels(cls, model, user_id):
+        return (
+            model.objects.filter(user_id=user_id)
+            .annotate(
+                tree_id=Unnest(
+                    ArrayRemove(Array(*cls.tree_id_fields), None),
+                    output_field=models.IntegerField(),
+                )
             )
+            .values("user_id", "channel_id", "tree_id")
         )
-        super(PermissionCTE, self).__init__(
-            queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs
+
+    @classmethod
+    def _organization_channels(cls, user_id, roles):
+        # Organizations grant channel permissions to their members, on top of
+        # whatever personal editor/viewer access a user already has.
+        return (
+            Channel.objects.filter(
+                organization__user_roles__user_id=user_id,
+                organization__user_roles__role__in=roles,
+                organization__user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+            )
+            .annotate(
+                user_id=Value(user_id, output_field=models.IntegerField()),
+                channel_id=F("id"),
+                tree_id=Unnest(
+                    ArrayRemove(Array(*cls.channel_tree_id_fields), None),
+                    output_field=models.IntegerField(),
+                ),
+            )
+            .values("user_id", "channel_id", "tree_id")
         )
 
     @classmethod
     def editable_channels(cls, user_id):
-        return PermissionCTE(
-            User.editable_channels.through, user_id, name="editable_channels_cte"
+        queryset = cls._personal_channels(
+            User.editable_channels.through, user_id
+        ).union(
+            cls._organization_channels(user_id, ORGANIZATION_CHANNEL_EDIT_ROLES),
+            all=True,
         )
+        return PermissionCTE(queryset, name="editable_channels_cte")
 
     @classmethod
     def view_only_channels(cls, user_id):
-        return PermissionCTE(
-            User.view_only_channels.through, user_id, name="view_only_channels_cte"
+        queryset = cls._personal_channels(
+            User.view_only_channels.through, user_id
+        ).union(
+            cls._organization_channels(user_id, (ORGANIZATION_VIEWER,)),
+            all=True,
         )
+        return PermissionCTE(queryset, name="view_only_channels_cte")
 
     def exists(self, *filters):
         return Exists(self.queryset().filter(*filters).values("user_id"))
@@ -1209,6 +1256,7 @@ class Channel(models.Model):
             "public",
             "main_tree_id",
             "version",
+            "organization_id",
         ]
     )
 
@@ -1217,6 +1265,17 @@ class Channel(models.Model):
     @classmethod
     def get_editable(cls, user, channel_id):
         return cls.filter_edit_queryset(cls.objects.all(), user).get(id=channel_id)
+
+    @classmethod
+    def _organization_role_exists(cls, user_id, roles):
+        return Exists(
+            OrganizationRole.objects.filter(
+                user_id=user_id,
+                organization_id=OuterRef("organization_id"),
+                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+                role__in=roles,
+            )
+        )
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
@@ -1231,16 +1290,8 @@ class Channel(models.Model):
                 user_id=user_id, channel_id=OuterRef("id")
             )
         )
-        organization_edit = Exists(
-            OrganizationRole.objects.filter(
-                user_id=user_id,
-                organization_id=OuterRef("organization_id"),
-                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-                role__in=(
-                    ORGANIZATION_ADMIN,
-                    ORGANIZATION_EDITOR,
-                ),
-            )
+        organization_edit = cls._organization_role_exists(
+            user_id, ORGANIZATION_CHANNEL_EDIT_ROLES
         )
         queryset = queryset.annotate(
             edit=edit,
@@ -1263,13 +1314,10 @@ class Channel(models.Model):
                 user_id=user_id, channel_id=OuterRef("id")
             )
         )
-        organization_delete = Exists(
-            OrganizationRole.objects.filter(
-                user_id=user_id,
-                organization_id=OuterRef("organization_id"),
-                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-                role=ORGANIZATION_ADMIN,
-            )
+        # Deleting a channel is restricted to organization admins, unlike
+        # editing it, which organization editors may also do.
+        organization_delete = cls._organization_role_exists(
+            user_id, (ORGANIZATION_ADMIN,)
         )
         queryset = queryset.annotate(
             edit=edit,
@@ -1289,40 +1337,26 @@ class Channel(models.Model):
         if user_id:
             filters = dict(user_id=user_id, channel_id=OuterRef("id"))
 
-            edit = Exists(
-                User.editable_channels.through.objects.filter(**filters).values(
-                    "user_id"
-                )
+            # Fold organization grants into edit/view (viewer-only for view; an org editor/admin is admitted via the edit check instead).
+            edit = ExpressionWrapper(
+                Q(Exists(User.editable_channels.through.objects.filter(**filters)))
+                | Q(
+                    cls._organization_role_exists(
+                        user_id, ORGANIZATION_CHANNEL_EDIT_ROLES
+                    )
+                ),
+                output_field=models.BooleanField(),
             )
-
-            view = Exists(
-                User.view_only_channels.through.objects.filter(**filters).values(
-                    "user_id"
-                )
-            )
-
-            organization_view = Exists(
-                OrganizationRole.objects.filter(
-                    user_id=user_id,
-                    organization_id=OuterRef("organization_id"),
-                    status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-                    role__in=(
-                        ORGANIZATION_ADMIN,
-                        ORGANIZATION_EDITOR,
-                        ORGANIZATION_VIEWER,
-                    ),
-                )
+            view = ExpressionWrapper(
+                Q(Exists(User.view_only_channels.through.objects.filter(**filters)))
+                | Q(cls._organization_role_exists(user_id, (ORGANIZATION_VIEWER,))),
+                output_field=models.BooleanField(),
             )
         else:
             edit = boolean_val(False)
             view = boolean_val(False)
-            organization_view = boolean_val(False)
 
-        queryset = queryset.annotate(
-            edit=edit,
-            view=view,
-            organization_view=organization_view,
-        )
+        queryset = queryset.annotate(edit=edit, view=view)
 
         if user_id and user.is_admin:
             return queryset
@@ -1338,10 +1372,7 @@ class Channel(models.Model):
             ).values_list("channel_id", flat=True)
 
             permission_filter = (
-                Q(view=True)
-                | Q(edit=True)
-                | Q(organization_view=True)
-                | Q(deleted=False, id__in=pending_channels)
+                Q(view=True) | Q(edit=True) | Q(deleted=False, id__in=pending_channels)
             )
 
         return queryset.filter(permission_filter | Q(deleted=False, public=True))
@@ -1365,8 +1396,7 @@ class Channel(models.Model):
             return cached_data
         tree_id = self.main_tree.tree_id
         files = (
-            File.objects.select_related("contentnode", "assessment_item")
-            .filter(contentnode__tree_id=tree_id)
+            File.objects.filter(contentnode__tree_id=tree_id)
             .values("checksum", "file_size")
             .distinct()
             .aggregate(resource_size=Sum("file_size"))
@@ -1416,8 +1446,6 @@ class Channel(models.Model):
             delete_public_channel_cache_keys()
 
     def on_update(self):  # noqa C901
-        from contentcuration.utils.user import calculate_user_storage
-
         original_values = self._field_updates.changed()
 
         blacklist = set(
@@ -1425,6 +1453,7 @@ class Channel(models.Model):
                 "public",
                 "main_tree_id",
                 "version",
+                "organization_id",
             ]
         )
 
@@ -1444,11 +1473,6 @@ class Channel(models.Model):
         ):
             filename, ext = os.path.splitext(original_values["thumbnail"])
             delete_empty_file_reference(filename, ext[1:])
-
-        # Refresh storage for all editors on the channel
-        if "deleted" in original_values:
-            for editor in self.editors.all():
-                calculate_user_storage(editor.pk)
 
         if "deleted" in original_values and not original_values["deleted"]:
             self.pending_editors.all().delete()
@@ -1487,8 +1511,14 @@ class Channel(models.Model):
             )
 
     def save(self, *args, **kwargs):
+        from contentcuration.utils.user import calculate_user_storage
+
         self._actor_id = kwargs.pop("actor_id", None)
         creating = self._state.adding
+        # Deleted and organization channels don't count towards their editors' storage.
+        editors_storage_changed = not creating and bool(
+            {"deleted", "organization_id"} & set(self._field_updates.changed())
+        )
         if creating:
             if self._actor_id is None:
                 raise ValueError("No actor_id passed to save method")
@@ -1502,6 +1532,11 @@ class Channel(models.Model):
             self.history.create(
                 actor_id=self._actor_id, action=channel_history.CREATION
             )
+
+        # Refresh storage for all editors on the channel, once the change is saved
+        if editors_storage_changed:
+            for editor in self.editors.all():
+                calculate_user_storage(editor.pk)
 
     def get_thumbnail(self):
         return get_channel_thumbnail(self)
@@ -1786,13 +1821,27 @@ class ChannelVersion(models.Model):
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
+        live_in_community_library = Q(
+            Exists(
+                CommunityLibrarySubmission.objects.filter(
+                    channel=OuterRef("channel"),
+                    channel_version=OuterRef("version"),
+                    status=community_library_submission.STATUS_LIVE,
+                )
+            )
+        )
+
         if user.is_anonymous:
-            return queryset.none()
+            return queryset.filter(live_in_community_library)
 
         if user.is_admin:
             return queryset
 
-        return queryset.filter(Q(channel__viewers=user) | Q(channel__editors=user))
+        return queryset.filter(
+            live_in_community_library
+            | Q(channel__viewers=user)
+            | Q(channel__editors=user)
+        )
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
@@ -3299,6 +3348,49 @@ class CommunityLibrarySubmission(models.Model):
             editors = editors.exclude(id=exclude_user_id)
 
         User.notify_users(editors, date=self.date_updated)
+
+    def send_resolution_email(self):
+        """
+        Send an email to the submission author letting them know their
+        Community Library submission has been resolved (approved or
+        rejected).
+        """
+        is_approved = self.status == community_library_submission.STATUS_APPROVED
+
+        channel_language = self.channel.language
+        locale_code = (
+            closest_supported_locale(channel_language.lang_code)
+            if channel_language
+            else None
+        ) or settings.LANGUAGE_CODE
+        with translation.override(locale_code):
+            if is_approved:
+                subject_text = _("Your Community Library submission has been approved")
+            else:
+                subject_text = _("Your Community Library submission needs changes")
+
+            subject = render_to_string(
+                "registration/custom_email_subject.txt",
+                {"subject": subject_text},
+            )
+            subject = "".join(subject.splitlines())
+
+            message = render_to_string(
+                "community_library/submission_resolved_email.html",
+                {
+                    "name": self.author.get_full_name(),
+                    "channel": self.channel,
+                    "channel_url": canonical_url(
+                        reverse("channel", kwargs={"channel_id": self.channel.pk})
+                    ),
+                    "approved": is_approved,
+                    "feedback_notes": self.feedback_notes,
+                },
+            )
+
+        self.author.email_user(
+            subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message
+        )
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):

@@ -87,6 +87,11 @@
     RouteNames.CATALOG_FAQ,
   ];
 
+  const COMMUNITY_LIBRARY_PAGES = [
+    RouteNames.COMMUNITY_LIBRARY_ITEMS,
+    RouteNames.COMMUNITY_LIBRARY_DETAILS,
+  ];
+
   const CHANNEL_SETS = 'channel_sets';
   const ListTypeToAnalyticsLabel = {
     [ChannelListTypes.EDITABLE]: 'EDITABLE',
@@ -122,8 +127,6 @@
       ...mapGetters('channelList', ['invitations']),
 
       navigationTabs() {
-        if (!this.loggedIn) return [];
-
         const tabs = [];
 
         this.lists.forEach(listType => {
@@ -134,6 +137,16 @@
             badgeValue: this.invitationsByListCounts[listType] || 0,
             analyticsLabel: ListTypeToAnalyticsLabel[listType],
           });
+
+          if (listType === ChannelListTypes.EDITABLE) {
+            tabs.push({
+              id: 'myOrganizations',
+              label: this.$tr('myOrganizations'),
+              to: this.myOrganizationsLink,
+              badgeValue: 0,
+              analyticsLabel: 'MY_ORGANIZATIONS',
+            });
+          }
         });
 
         tabs.push({
@@ -152,13 +165,15 @@
           analyticsLabel: 'COMMUNITY_LIBRARY',
         });
 
-        tabs.push({
-          id: CHANNEL_SETS,
-          label: this.$tr('channelSets'),
-          to: this.channelSetLink,
-          badgeValue: 0,
-          analyticsLabel: CHANNEL_SETS,
-        });
+        if (this.loggedIn) {
+          tabs.push({
+            id: CHANNEL_SETS,
+            label: this.$tr('channelSets'),
+            to: this.channelSetLink,
+            badgeValue: 0,
+            analyticsLabel: CHANNEL_SETS,
+          });
+        }
 
         return tabs;
       },
@@ -179,13 +194,19 @@
         return this.$route.name === RouteNames.COMMUNITY_LIBRARY_ITEMS;
       },
       toolbarHeight() {
-        return this.loggedIn && !this.isFAQPage ? 112 : 64;
+        return this.libraryMode || this.isFAQPage ? 64 : 112;
       },
       contentOffset() {
         return this.toolbarHeight + (this.offline ? 48 : 0);
       },
       lists() {
+        if (!this.loggedIn) {
+          return [];
+        }
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
+      },
+      anonymousPages() {
+        return this.libraryMode ? CATALOG_PAGES : [...CATALOG_PAGES, ...COMMUNITY_LIBRARY_PAGES];
       },
       invitationsByListCounts() {
         const inviteMap = {};
@@ -199,6 +220,9 @@
       channelSetLink() {
         return { name: RouteNames.CHANNEL_SETS };
       },
+      myOrganizationsLink() {
+        return { name: RouteNames.MY_ORGANIZATIONS };
+      },
       catalogLink() {
         return { name: RouteNames.CATALOG_ITEMS };
       },
@@ -211,10 +235,12 @@
     },
     watch: {
       $route(route) {
-        if (route.name === RouteNames.CHANNELS_EDITABLE) {
-          this.loggedIn
-            ? this.loadInvitationList()
-            : this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
+        if (!this.loggedIn) {
+          if (!this.anonymousPages.includes(route.name)) {
+            this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
+          }
+        } else if (route.name === RouteNames.CHANNELS_EDITABLE) {
+          this.loadInvitationList();
         }
         if (this.fullPageError) {
           this.$store.dispatch('errors/clearError');
@@ -228,7 +254,7 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else if (!CATALOG_PAGES.includes(this.$route.name)) {
+      } else if (!this.anonymousPages.includes(this.$route.name)) {
         this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
       }
     },
@@ -254,6 +280,8 @@
         const routeName = this.$route.name;
         if (routeName === RouteNames.CHANNEL_SETS) {
           title = this.$tr('channelSets');
+        } else if (routeName === RouteNames.MY_ORGANIZATIONS) {
+          title = this.$tr('myOrganizations');
         } else if (routeName === RouteNames.CATALOG_ITEMS) {
           title = this.translateConstant('public');
         } else if (routeName === RouteNames.CHANNELS_VIEW_ONLY) {
@@ -274,6 +302,7 @@
     },
     $trs: {
       channelSets: 'Collections',
+      myOrganizations: 'My organizations',
       catalog: 'Kolibri Library',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',

@@ -1,7 +1,7 @@
 import { computed, readonly } from 'vue';
 import { QuestionType } from '../constants';
 import { generateRandomSlug } from '../utils/generateRandomSlug';
-import { choiceInteractionDescriptor } from '../interactions/choice/ChoiceInteractionDescriptor';
+import { choiceInteractionDescriptor } from '../interactions/choice/Descriptor';
 import { useInteraction } from './useInteraction';
 
 /**

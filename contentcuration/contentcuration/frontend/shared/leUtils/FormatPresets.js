@@ -346,7 +346,7 @@ const FormatPresetsMap = new Map([
       thumbnail: false,
       subtitle: false,
       display: false,
-      order: 1,
+      order: 0,
       kind_id: 'exercise',
       allowed_formats: ['zip'],
       associated_mimetypes: ['.zip'],

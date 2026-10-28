@@ -29,6 +29,20 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Show answers',
     context: 'Checkbox label to toggle displaying answers/previews',
   },
+  incompleteItemIndicatorLabel: {
+    message: 'Incomplete',
+    context: 'Shown in a question card header when the question is missing something',
+  },
+  unsupportedItemMessage: {
+    message: 'This question cannot be edited here',
+    context:
+      'Shown in place of the editor for questions authored elsewhere, or whose content could not be read',
+  },
+  deleteUnsupportedItemMessage: {
+    message: 'This question cannot be edited or published. Delete it from the Options menu.',
+    context:
+      "Shown in place of the editor for a question whose content is unreadable or has no answer area. Deleting it is the only fix. 'Options' is the question card's menu, labelled by the generic 'Options' string",
+  },
   singleSelectLabel: {
     message: 'Single Choice',
     context: 'Display name for a single-select question type',
@@ -96,9 +110,167 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Duplicate items are not allowed',
     context: 'Validation error when two or more ordering items have identical content',
   },
+
+  associateLabel: {
+    message: 'Associate',
+    context: 'Display name for an associate question type shown in the question type selector',
+  },
+  associateDescription: {
+    message: 'Learners must associate pairs of items.',
+    context: 'Description for the associate question type in the info modal',
+  },
+  correctPairsLabel: {
+    message: 'Matching pairs',
+    context: 'Section header above the list of correctly associated pairs',
+  },
+  correctPairsDescription: {
+    message:
+      'Learners match responses from a shuffled set to each prompt. Include distractors to increase difficulty.',
+    context: 'Subtitle under the matching pairs header',
+  },
+  distractorsLabel: {
+    message: 'Distractors (optional)',
+    context: 'Section header above the choices that belong to no correct pair',
+  },
+  distractorsDescription: {
+    message: "Extra items shown in the response pool that don't match any prompt",
+    context: 'Subtitle under the distractors header',
+  },
+  responsePoolLabel: {
+    message: 'Response pool (shuffled)',
+    context: 'Header above the shuffled pool of choices learners will pick from',
+  },
+  correctAnswersLabel: {
+    message: 'Answers',
+    context: 'Header above the list of correct pairs shown when answers are revealed',
+  },
+  pairNumberLabel: {
+    message: 'Pair {number}',
+    context: 'Label to the left of a pair row, e.g. "Pair 2"',
+  },
+  addPairBtn: {
+    message: 'Add pair',
+    context: 'Button that appends a new pair',
+  },
+  deletePairBtn: {
+    message: 'Delete pair {number}',
+    context: 'Accessible label for the delete icon button next to a pair row',
+  },
+  addDistractorBtn: {
+    message: 'Add distractor',
+    context: 'Button that opens the editor for a new distractor',
+  },
+  deleteDistractorBtn: {
+    message: 'Delete distractor {number}',
+    context: 'Accessible label for the delete icon button on a distractor',
+  },
+  saveChipBtn: {
+    message: 'Save',
+    context:
+      'Button that saves the answer or distractor being edited and closes its editor; a new one joins its list',
+  },
+  editPairItemLabel: {
+    message: 'Edit pair {number}, item {position}',
+    context: 'Accessible label for the clickable region to edit one item of a pair',
+  },
+  editDistractorLabel: {
+    message: 'Edit distractor {number}',
+    context: 'Accessible label for the clickable region to edit a distractor',
+  },
+  errorTooFewPairs: {
+    message: '1 or more valid pairs are required',
+    context: 'Validation error when no pair has two distinct, non-empty items',
+  },
+  errorDuplicatePairContent: {
+    message: 'Answers within a pair cannot be the same',
+    context: 'Validation error when both items of a pair have identical content',
+  },
+  errorDuplicateDistractorContent: {
+    message: 'Distractors cannot repeat another item',
+    context:
+      'Validation error when a distractor has the same content as another distractor or as an item in a pair',
+  },
+  matchingRowsLabel: {
+    message: 'Prompts and responses',
+    context: 'Section header above the list of prompts and their correct answers',
+  },
+  matchingRowsDescription: {
+    message:
+      'Learners match responses from a shuffled set to a fixed prompt. Include distractors to increase difficulty.',
+    context: 'Subtitle under the matching rows header',
+  },
+  addRowBtn: {
+    message: 'Add row',
+    context: 'Button that appends a new matching row',
+  },
+  deleteRowBtn: {
+    message: 'Delete row {number}',
+    context: 'Accessible label for the delete icon button next to a matching row',
+  },
+  editRowLabel: {
+    message: 'Edit row {number} prompt',
+    context: "Accessible label for the clickable region to edit a matching row's prompt",
+  },
+  promptColumnLabel: {
+    message: 'Prompt',
+    context: 'Column header above the prompts of the matching rows',
+  },
+  answersColumnLabel: {
+    message: 'Correct matches',
+    context: 'Column header above the correct answers of the matching rows',
+  },
+  answerPlaceholder: {
+    message: 'Enter an answer',
+    context: 'Placeholder shown in a matching row answer that has no content yet',
+  },
+  rowPromptPlaceholder: {
+    message: 'Enter a prompt',
+    context: 'Placeholder shown in a matching row prompt that has no content yet',
+  },
+  rowAnswersLabel: {
+    message: 'Answers for row {number}',
+    context: 'Accessible label for the list of correct answers in a matching row',
+  },
+  addMatchLabel: {
+    message: 'Add answer to row {number}',
+    context: 'Accessible label for the area that starts a new answer in a matching row',
+  },
+  editMatchLabel: {
+    message: 'Edit row {number}, answer {position}',
+    context: 'Accessible label for the clickable region to edit one answer of a matching row',
+  },
+  deleteMatchBtn: {
+    message: 'Delete row {number}, answer {position}',
+    context: "Accessible label for the delete icon button on a matching row's answer",
+  },
+  errorEmptyRowContent: {
+    message: 'Prompt cannot be blank',
+    context: "Validation error when a matching row's prompt is empty",
+  },
+  errorRowWithoutMatch: {
+    message: 'Add at least one answer',
+    context: 'Validation error when a matching row has no non-blank answer',
+  },
+  errorTooFewRows: {
+    message: '1 or more valid rows are required',
+    context: 'Validation error when no row has both a prompt and an answer',
+  },
+  errorDuplicateMatchContent: {
+    message: 'Answers within a row cannot be the same',
+    context: 'Validation error when two answers in one row have identical content',
+  },
+  errorDuplicateRowContent: {
+    message: 'Rows cannot repeat the same prompt',
+    context: 'Validation error when two rows have identical prompts',
+  },
   matchLabel: {
     message: 'Match',
-    context: 'Display name for a match question type',
+    context: 'Display name for a match question type shown in the question type selector',
+  },
+  matchDescription: {
+    message:
+      'Learners match each item in one list to one or more correct items in another, where items can have multiple valid matches, and distractors can be included to increase difficulty.',
+    context: 'Description for the match question type in the info modal',
   },
   extendedTextLabel: {
     message: 'Extended text',
@@ -144,6 +316,10 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Edit answer option {number}',
     context: 'Accessible label for the clickable region to edit an answer choice',
   },
+  editHintLabel: {
+    message: 'Edit hint {number}',
+    context: 'Accessible label for the clickable region to edit a hint',
+  },
   deleteChoiceBtn: {
     message: 'Delete choice',
     context: 'Accessible label for the delete-choice icon button',
@@ -157,6 +333,34 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Mark as correct answer',
     context: 'Accessible label for radio / checkbox that marks a choice as correct',
   },
+  hintsLabel: {
+    message: 'Hints',
+    context: 'Header of the collapsible hints section of a question',
+  },
+  noHintsPlaceholder: {
+    message: 'Question has no hints',
+    context: 'Shown in the hints section when the question has no hints',
+  },
+  hintPlaceholder: {
+    message: 'Enter hint {index}...',
+    context: 'Placeholder shown in place of a hint that has no text yet',
+  },
+  addHintBtn: {
+    message: 'Add hint',
+    context: 'Button that appends a new hint to the question',
+  },
+  deleteHintBtn: {
+    message: 'Delete hint',
+    context: 'Accessible label for the delete-hint icon button',
+  },
+  moveHintUpBtn: {
+    message: 'Move hint up',
+    context: 'Accessible label for the move-hint-up icon button',
+  },
+  moveHintDownBtn: {
+    message: 'Move hint down',
+    context: 'Accessible label for the move-hint-down icon button',
+  },
   errorPromptRequired: {
     message: 'Question is required',
     context: 'Validation error shown when the prompt is empty',
@@ -165,9 +369,19 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Choose a correct answer',
     context: 'Validation error when no choice is marked correct',
   },
+  errorTooFewInlineChoiceOptions: {
+    message: 'Add at least {count, number} options',
+    context:
+      'Validation error when an answer dropdown in an inline choice question has fewer options than it needs. {count} is the minimum, 2. Also shown on the dropdown itself',
+  },
   errorTooManyCorrectAnswers: {
     message: 'Only one correct answer is allowed for single-choice questions.',
     context: 'Validation error when multiple choices are marked correct for single-select',
+  },
+  warningSingleChoice: {
+    message: 'This question has only one answer option. Did you mean to add more?',
+    context:
+      'Warning shown when a single-choice or multiple-select question has only one answer option. It does not block saving the question.',
   },
   errorEmptyChoiceContent: {
     message: 'Answer cannot be blank',
@@ -204,6 +418,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   freeResponseLabel: {
     message: 'Free response',
     context: 'Display name for a free-response text-entry question type',
+  },
+  errorFreeResponseNotAllowed: {
+    message: 'Free response is only available on surveys. Choose another type.',
+    context:
+      'Validation error shown under the type selector when a question is a free response but the exercise scores its questions',
   },
   freeResponseDescription: {
     message: 'Learners can write an open-ended response. No correct answer is enforced.',
@@ -243,8 +462,9 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context: 'Placeholder inside a text-entry answer input field',
   },
   errorInvalidNumericValue: {
-    message: 'Must be a valid number (e.g. 12, 0.5, -3.14)',
-    context: 'Validation error shown when an answer value is not a valid number',
+    message: 'Must be a valid number (e.g. "{integer}", "{decimal}", "{negative}")',
+    context:
+      'Validation error shown when an answer value is not a valid number. The placeholders are example numbers written the way the exercise language writes them, and may contain commas or periods. Keep each one inside quotation marks, using the quotation marks your language normally uses.',
   },
   errorParsingQuestion: {
     message: 'This question could not be loaded',
@@ -302,5 +522,125 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message:
       'When enabled, learners see a hint below the answer options so they know how many answers to choose. Toggle this off to increase question difficulty.',
     context: 'Modal body explaining answer count hint',
+  },
+  insertInlineChoice: {
+    message: 'Insert',
+    context:
+      'Button in the passage toolbar that adds an answer dropdown at the cursor, or turns the highlighted text into one',
+  },
+  answerDropdownWithCorrect: {
+    message:
+      '{label}, correct answer, answer dropdown, {count, plural, one {# option} other {# options}}',
+    context:
+      'Accessible name of an answer dropdown chip in the passage that has a correct answer. {label} is the correct answer, as the chip shows it',
+  },
+  answerDropdownNoCorrect: {
+    message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer. {label} is the chip's label, the error its options show, such as 'Choose a correct answer'",
+  },
+  answerDropdownWithCorrectNeedsAttention: {
+    message:
+      '{label}, correct answer, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
+    context:
+      'Accessible name of an answer dropdown chip in the passage that has a correct answer and validation errors. {label} is the correct answer, as the chip shows it',
+  },
+  answerDropdownNoCorrectNeedsAttention: {
+    message:
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's label, the error its options show, such as 'Choose a correct answer'",
+  },
+  answerDropdownRemoved: {
+    message: '{label}, answer dropdown, removed',
+    context:
+      "Announced to screen readers when an answer dropdown is deleted from the passage. {label} is what the chip showed: its correct answer, or the error its options show, such as 'Choose a correct answer'",
+  },
+  answerDropdownsRemoved: {
+    message: '{count, plural, one {# answer dropdown removed} other {# answer dropdowns removed}}',
+    context:
+      'Announced to screen readers when several answer dropdowns are deleted from the passage at once',
+  },
+  answerDropdownHidden: {
+    message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
+  },
+  answerDropdownHiddenNeedsAttention: {
+    message:
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip with a problem to fix, in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
+  },
+  chooseAnswer: {
+    message: 'Choose…',
+    context:
+      'Label on an answer dropdown in a question preview that hides the correct answers, where the learner would pick one',
+  },
+  inlineChoiceLabel: {
+    message: 'Inline choice',
+    context: 'Display name for an inline choice question type shown in the question type selector',
+  },
+  inlineChoiceDescription: {
+    message: 'Learners choose the correct answer from dropdowns placed within a passage.',
+    context: 'Description for the inline choice question type in the info modal',
+  },
+  questionOptionalLabel: {
+    message: 'Question (optional)',
+    context: 'Section header for a question prompt that authors may leave empty',
+  },
+  passageEditorLabel: {
+    message: 'Passage editor',
+    context: 'Section header for the passage that holds the inline choice dropdowns',
+  },
+  passageLabel: {
+    message: 'Passage',
+    context: 'Section header for the passage of an inline choice question, as a preview shows it',
+  },
+  passageEditorDescription: {
+    message: 'Inline choice widgets can be inserted blank or converted from highlighted text.',
+    context: 'Instruction under the passage editor header of an inline choice question',
+  },
+  editPassageLabel: {
+    message: 'Edit passage',
+    context: 'Accessible label for the clickable region that opens the passage for editing',
+  },
+  inlineChoiceOptionsLabel: {
+    message: 'Inline choice answer options',
+    context: 'Section header above the answer options of the open inline choice dropdown',
+  },
+  inlineChoiceOptionsDialogLabel: {
+    message: 'Answer options for dropdown {number}',
+    context:
+      'Accessible name of the panel that edits the options of one inline choice dropdown. {number} is its position in the passage',
+  },
+  closeInlineChoiceOptions: {
+    message: 'Close answer options',
+    context: 'Button that closes the panel editing the options of an inline choice dropdown',
+  },
+  inlineChoiceOptionLabel: {
+    message: 'Option {number}',
+    context:
+      'Names an inline choice option row: its text field, its reorder controls, and the announcement after it moves',
+  },
+  markInlineChoiceOptionCorrect: {
+    message: 'Mark option {number} as correct',
+    context: 'Accessible label for the radio button that marks an inline choice option correct',
+  },
+  addInlineChoiceOptionBtn: {
+    message: 'Add option',
+    context: 'Button that appends a new option to the open inline choice dropdown',
+  },
+  deleteInlineChoiceOptionBtn: {
+    message: 'Delete option {number}',
+    context: 'Accessible label for the delete icon button next to an inline choice option',
+  },
+  errorInlineChoiceOptionProblems: {
+    message: 'One or more inline choice options have problems',
+    context: 'Validation error above the passage when any of its dropdowns needs attention',
+  },
+  errorNoInlineChoice: {
+    message: 'Insert at least one inline choice',
+    context: 'Validation error when the passage of an inline choice question has no dropdown',
   },
 });

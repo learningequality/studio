@@ -1,6 +1,5 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { getPromptHTML, parseXML } from '../../serialization/parseItem';
-import { buildXmlNode } from '../../serialization/assembleItem';
+import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { Orientation, RESPONSE_IDENTIFIER } from '../../constants';
@@ -80,7 +79,7 @@ export function parseOrderingInteraction(bodyXml, responseDeclarations) {
 
   const rawItems = [...root.querySelectorAll('qti-simple-choice')].map(el => ({
     id: el.getAttribute('identifier') || generateRandomSlug('order'),
-    content: el.innerHTML,
+    content: getContentHTML(el),
     fixed: el.getAttribute('fixed') === 'true',
   }));
 

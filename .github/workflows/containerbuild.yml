@@ -15,24 +15,35 @@ permissions:
   packages: write
 
 jobs:
-  pre_postgres:
-    name: Path match check - postgres
+  pre_job:
+    name: Path match check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     # Map a step output to a job output
     outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      postgres: ${{ steps.filter.outputs.postgres }}
+      nginx: ${{ steps.filter.outputs.nginx }}
     steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
+      # paths-filter needs a checkout to diff push events
+      - uses: actions/checkout@v7
+      - id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
-          skip_after_successful_duplicate: false
-          github_token: ${{ github.token }}
-          paths: '["docker/Dockerfile.postgres.dev", ".github/workflows/containerbuild.yml"]'
+          filters: |
+            postgres:
+              - 'docker/Dockerfile.postgres.dev'
+              - '.github/workflows/containerbuild.yml'
+            nginx:
+              - 'docker/Dockerfile.nginx.prod'
+              - 'docker/nginx/*'
+              - '.github/workflows/containerbuild.yml'
 
   build_and_push_postgres:
     name: Postgres - build and push Docker image to GitHub Container Registry
-    needs: pre_postgres
-    if: ${{ needs.pre_postgres.outputs.should_skip != 'true' }}
+    needs: pre_job
+    if: ${{ github.ref_type == 'tag' || needs.pre_job.outputs.postgres == 'true' }}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout codebase
@@ -71,24 +82,10 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         annotations: ${{ steps.meta.outputs.annotations }}
 
-  pre_nginx:
-    name: Path match check - nginx
-    runs-on: ubuntu-latest
-    # Map a step output to a job output
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          skip_after_successful_duplicate: false
-          github_token: ${{ github.token }}
-          paths: '["docker/Dockerfile.nginx.prod", "docker/nginx/*", ".github/workflows/containerbuild.yml"]'
-
   build_nginx:
     name: nginx - test build of nginx Docker image
-    needs: pre_nginx
-    if: ${{ needs.pre_nginx.outputs.should_skip != 'true' }}
+    needs: pre_job
+    if: ${{ github.ref_type == 'tag' || needs.pre_job.outputs.nginx == 'true' }}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout codebase

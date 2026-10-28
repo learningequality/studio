@@ -61,6 +61,7 @@ export function getChannelInvitations(state) {
     return Object.values(state.invitationsMap).filter(
       invitation =>
         invitation.channel === channelId &&
+        !invitation.organization &&
         invitation.share_mode === shareMode &&
         !invitation.accepted &&
         !invitation.declined &&
@@ -84,6 +85,7 @@ export function checkInvitations(state) {
     return Object.values(state.invitationsMap).some(
       invitation =>
         invitation.channel === channelId &&
+        !invitation.organization &&
         invitation.email.toLowerCase() === email.toLowerCase() &&
         !invitation.revoked &&
         !invitation.declined &&

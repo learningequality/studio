@@ -1,9 +1,13 @@
 from django.db import transaction
+from django.db.models import OuterRef
+from django.db.models import Subquery
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework import NumberFilter
 from django_filters.rest_framework import UUIDFilter
 from rest_framework import serializers
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -14,6 +18,9 @@ from contentcuration.constants.organization_roles import (
     organization_role_status_choices,
 )
 from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
+from contentcuration.models import Channel
+from contentcuration.models import File
+from contentcuration.models import filter_storage_billable_files
 from contentcuration.models import Organization
 from contentcuration.models import OrganizationRole
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
@@ -23,6 +30,7 @@ from contentcuration.viewsets.base import RESTCreateModelMixin
 from contentcuration.viewsets.base import RESTDestroyModelMixin
 from contentcuration.viewsets.base import RESTUpdateModelMixin
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 
 
@@ -98,10 +106,19 @@ class OrganizationMemberSerializer(BulkModelSerializer):
 
 class OrganizationFilter(FilterSet):
     name = CharFilter(field_name="name", lookup_expr="icontains")
+    member = BooleanFilter(method="filter_member")
 
     class Meta:
         model = Organization
         fields = ("name", "public")
+
+    def filter_member(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(
+            user_roles__user=self.request.user,
+            user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        ).distinct()
 
 
 class OrganizationMemberFilter(FilterSet):
@@ -150,12 +167,51 @@ class OrganizationViewSet(
         "public",
         "created_at",
         "updated_at",
+        "role",
     )
 
     def get_queryset(self):
         return Organization.filter_view_queryset(
             Organization.objects.all(),
             self.request.user,
+        )
+
+    def annotate_queryset(self, queryset):
+        role = OrganizationRole.objects.filter(
+            organization=OuterRef("id"),
+            user=self.request.user,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        return queryset.annotate(role=Subquery(role.values("role")[:1]))
+
+    @action(detail=True, methods=["get"])
+    def channels(self, request, pk=None):
+        """
+        List the organization's channels the user can view, each with its size,
+        and their total size. A channel's size counts each file checksum once and,
+        like user storage, leaves out files that don't count towards storage.
+        """
+        organization = self.get_object()
+        file_sizes = (
+            filter_storage_billable_files(
+                File.objects.filter(contentnode__tree_id=OuterRef("main_tree__tree_id"))
+            )
+            .order_by("checksum")
+            .distinct("checksum")
+        )
+        channels = (
+            Channel.filter_view_queryset(Channel.objects.all(), request.user)
+            .filter(organization=organization, deleted=False)
+            .annotate(size=SQSum(file_sizes, field="file_size"))
+            .order_by("name")
+            .values("id", "name", "description", "size")
+        )
+        channels = [{**channel, "size": channel["size"] or 0} for channel in channels]
+        return Response(
+            {
+                "channels": channels,
+                "size": sum(channel["size"] for channel in channels),
+            }
         )
 
     def perform_create(self, serializer, change=None):

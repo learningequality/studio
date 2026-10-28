@@ -1,7 +1,7 @@
 /**
  * Shared XML parse helper for declaration tests.
  */
-import { parseXML as parseXMLDocument } from '../../parseItem';
+import { parseXML as parseXMLDocument } from '../../xml';
 
 const serializer = new XMLSerializer();
 
@@ -12,6 +12,16 @@ const serializer = new XMLSerializer();
  */
 export function parseXML(xmlString) {
   return parseXMLDocument(xmlString).documentElement;
+}
+
+/**
+ * Drop the indentation between tags, so expected XML can be written pretty-printed and
+ * still match serializer output.
+ * @param {string} xmlString
+ * @returns {string}
+ */
+export function normalizeXML(xmlString) {
+  return xmlString.replace(/>\s+</g, '><').trim();
 }
 
 /**

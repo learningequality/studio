@@ -8,12 +8,12 @@ from pydantic import Field
 from contentcuration.utils.assessment.qti.html.base import BlockContentElement
 from contentcuration.utils.assessment.qti.html.base import HTMLElement
 from contentcuration.utils.assessment.qti.html.content_types import FlowContent
-from contentcuration.utils.assessment.qti.html.content_types import FlowContentList
+from contentcuration.utils.assessment.qti.html.content_types import FlowGroupList
 
 
 class Li(HTMLElement):
     value: Optional[int] = None
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class OlType(Enum):
@@ -37,11 +37,11 @@ class Ul(BlockContentElement):
 
 class Dt(HTMLElement):
     # There are restrictions on allowed descendants
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class Dd(HTMLElement):
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class Dl(BlockContentElement):

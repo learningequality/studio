@@ -7,23 +7,26 @@
     >
       {{ parseError }}
     </p>
-    <div v-else>
+    <div v-else-if="descriptor">
       <QuestionTypeSelector
         v-if="mode === 'edit'"
         :questionType="questionType"
         :settingsTargetId="settingsTargetId"
+        :allowFreeResponse="allowFreeResponse"
         @update:questionType="onUpdateQuestionType"
       />
 
       <component
-        :is="descriptor.editorComponent"
+        :is="editorComponent"
         :key="descriptor.type"
         :questionType="questionType"
         :interaction="interaction"
         :mode="mode"
         :showAnswers="showAnswers"
         :teleportTargetId="settingsTargetId"
+        :language="language"
         @update:interaction="onUpdateInteraction"
+        @update:errors="errors => $emit('update:errors', errors)"
       />
     </div>
   </div>
@@ -37,7 +40,7 @@
   import useInteractionDescriptor from '../../composables/useInteractionDescriptor';
   import QuestionTypeSelector from '../QuestionTypeSelector/index.vue';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
-  import { descriptors } from '../../interactions';
+  import { descriptors, editors } from '../../interactions';
 
   export default {
     name: 'InteractionSection',
@@ -81,8 +84,11 @@
 
       const settingsTargetId = generateRandomSlug('answer-settings');
 
+      const editorComponent = computed(() => editors[descriptor.value.type]);
+
       return {
         descriptor,
+        editorComponent,
         questionType,
         parseError,
         onUpdateQuestionType,
@@ -112,9 +118,25 @@
         type: Boolean,
         default: false,
       },
+      /**
+       * Whether a question with no correct answer is acceptable here. Passed straight to the
+       * type selector, which is the only part of an interaction this concerns.
+       */
+      allowFreeResponse: {
+        type: Boolean,
+        default: true,
+      },
+      /**
+       * The exercise's language, which numeric answers are read and shown in. Empty means
+       * they are read and shown as stored.
+       */
+      language: {
+        type: String,
+        default: '',
+      },
     },
 
-    emits: ['update:questionType', 'update:interaction'],
+    emits: ['update:questionType', 'update:interaction', 'update:errors'],
   };
 
 </script>

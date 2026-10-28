@@ -608,12 +608,14 @@ class TestHTMLStringIntegration(unittest.TestCase):
         self.assertEqual(div.class_, "test-class")
         self.assertEqual(div.id_, "test-id")
 
+        # The source is indented, and whitespace between two inline elements is a word
+        # gap rather than markup, so it is carried as a TextNode between the two.
+        a, img = (child for child in div.children if not isinstance(child, TextNode))
+
         # Test link attributes
-        a = div.children[0]
         self.assertEqual(a.href, "file.html?query=test")
 
         # Test image attributes
-        img = div.children[1]
         self.assertEqual(img.src, "image.png")
         self.assertEqual(img.alt, "Alt text")
         self.assertEqual(img.width, 100)

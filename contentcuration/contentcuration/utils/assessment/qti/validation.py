@@ -54,14 +54,21 @@ def secure_parser() -> etree.XMLParser:
     )
 
 
-def parse_qti_xml(xml: bytes) -> etree._Element:
-    return etree.parse(BytesIO(xml), parser=secure_parser())
+def parse_qti_xml(xml: Union[str, bytes]) -> etree._Element:
+    if isinstance(xml, str):
+        # lxml refuses text that carries an encoding declaration.
+        xml = xml.encode("utf-8")
+    doc = etree.parse(BytesIO(xml), parser=secure_parser())
+    # Unresolved entity nodes crash schema validation and derivation.
+    entity = next(doc.iter(etree.Entity), None)
+    if entity is not None:
+        raise etree.XMLSyntaxError(
+            "entity references are not supported", 0, entity.sourceline or 0, 1
+        )
+    return doc
 
 
 def validate_qti_item(xml: Union[str, bytes]) -> QTIValidationResult:
-    if isinstance(xml, str):
-        xml = xml.encode("utf-8")
-
     try:
         doc = parse_qti_xml(xml)
     except etree.XMLSyntaxError as exc:

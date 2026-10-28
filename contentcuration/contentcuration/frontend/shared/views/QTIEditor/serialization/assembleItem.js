@@ -1,65 +1,150 @@
 /**
- * XML node builder for QTI serialization.
- *
- * Used by QTIDeclaration.getXML() and all declaration strategy classes
- * to produce DOM nodes. A module-level XML document is created once so
- * all nodes share the same owner document, avoiding adoptNode requirements
- * when assembling trees. Callers serialize to a string only at the boundary
- * (e.g. XMLSerializer.serializeToString).
+ * Assembles a full QTI assessment item from its parts: response declarations, the item
+ * body, hints, and the outcome declarations and response processing that score it.
  */
 
-import { parseXML } from './parseItem';
+import { HINT_CATALOG_ID, HINT_SUPPORT, hintHasContent } from './hints';
+import { QTIDeclaration } from './qti/QTIDeclaration';
+import { QTI_SCHEMA_LOCATION, XSI_NS, buildFloatNode, buildXmlNode, parseXML } from './xml';
 
-const xmlDoc = new DOMParser().parseFromString('<root/>', 'text/xml');
 const serializer = new XMLSerializer();
 
 /**
- * Build an XML element node.
+ * Build the `<qti-catalog-info>` holding the item's hints, or null when there is nothing
+ * to write. A catalog has to hold at least one card, so an item whose hints are all empty
+ * carries no catalog at all rather than an empty one.
  *
- * @param {object} options
- * @param {string}            options.tag - Element tag name (e.g. 'qti-response-declaration')
- * @param {Object.<string,*>}  [options.attrs]    - Attribute name→value pairs;
- *                                                  null/undefined values are skipped
- * @param {Array.<Node|string>} [options.children] - Child nodes or plain strings; mutually
- *                                                  exclusive with innerHTML
- * @param {string}             [options.innerHTML] - Raw HTML/XML string to parse and append
- *                                                  as children; mutually exclusive with children
+ * @param {Array<{ content: string }>} hints
+ * @returns {Element|null}
+ */
+function buildHintCatalogNode(hints) {
+  const cards = hints.filter(hintHasContent).map(hint =>
+    buildXmlNode({
+      tag: 'qti-card',
+      attrs: { support: HINT_SUPPORT },
+      children: [buildXmlNode({ tag: 'qti-html-content', innerHTML: hint.content })],
+    }),
+  );
+
+  if (!cards.length) {
+    return null;
+  }
+
+  return buildXmlNode({
+    tag: 'qti-catalog-info',
+    children: [
+      buildXmlNode({ tag: 'qti-catalog', attrs: { id: HINT_CATALOG_ID }, children: cards }),
+    ],
+  });
+}
+
+const SCORE = 'SCORE';
+const RAW_SCORE = 'RAW_SCORE';
+
+/** A float outcome: SCORE is the item's final score, RAW_SCORE the sum it averages. */
+function buildOutcomeDeclarationNode(identifier) {
+  return buildXmlNode({
+    tag: 'qti-outcome-declaration',
+    attrs: { identifier, cardinality: 'single', 'base-type': 'float' },
+  });
+}
+
+/**
+ * A declaration as QTIDeclaration reads it, or null when it cannot: a declaration it
+ * rejects has no rule or template to score it by.
+ *
+ * @param {Element} node
+ * @returns {QTIDeclaration|null}
+ */
+function readDeclaration(node) {
+  try {
+    return QTIDeclaration.fromXML(node);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build `<qti-response-processing>` holding the given rules, starting from the outcome reset
+ * to 0.0: outcomes with no default start as NULL, and qti-sum with a NULL operand is NULL.
+ *
+ * @param {string} outcomeIdentifier
+ * @param {Element[]} rules
  * @returns {Element}
  */
-export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
-  if (children !== undefined && innerHTML !== undefined) {
-    throw new Error('buildXmlNode: "children" and "innerHTML" are mutually exclusive');
+function buildRulesNode(outcomeIdentifier, rules) {
+  return buildXmlNode({
+    tag: 'qti-response-processing',
+    children: [
+      buildXmlNode({
+        tag: 'qti-set-outcome-value',
+        attrs: { identifier: outcomeIdentifier },
+        children: [buildFloatNode(0)],
+      }),
+      ...rules,
+    ],
+  });
+}
+
+/**
+ * Regenerated on every save rather than carried over: an author's edit can invalidate the
+ * rules a previous tool recorded. No response declaration — nothing to answer — means no
+ * processing, as the converter does.
+ *
+ * One declaration is scored by its standard template when one fits, and otherwise by its
+ * rule adding straight into SCORE; with neither, as for a free response, there is nothing
+ * to score it against and no processing. Several are each scored by their declaration's
+ * rule and averaged; if any cannot be scored there is no processing, since an average that
+ * skips a response would misgrade the item.
+ *
+ * @param {Element[]} declNodes
+ * @returns {{ outcomeDeclarations: Element[], responseProcessing: Element|null }}
+ */
+function buildScoringNodes(declNodes) {
+  const outcomeDeclarations = [buildOutcomeDeclarationNode(SCORE)];
+  if (!declNodes.length) {
+    return { outcomeDeclarations, responseProcessing: null };
   }
 
-  const el = xmlDoc.createElement(tag);
-
-  for (const [name, value] of Object.entries(attrs)) {
-    if (value !== null && value !== undefined) {
-      el.setAttribute(name, String(value));
+  if (declNodes.length === 1) {
+    const declaration = readDeclaration(declNodes[0]);
+    const template = declaration?.getResponseProcessingTemplate();
+    if (template) {
+      return {
+        outcomeDeclarations,
+        responseProcessing: buildXmlNode({ tag: 'qti-response-processing', attrs: { template } }),
+      };
     }
+    const rule = declaration?.getScoringRule(SCORE);
+    return { outcomeDeclarations, responseProcessing: rule ? buildRulesNode(SCORE, [rule]) : null };
   }
 
-  if (innerHTML !== undefined) {
-    const htmlDoc = parseXML(`<!DOCTYPE html><body>${innerHTML}</body>`, 'text/html');
-    for (const child of [...htmlDoc.body.childNodes]) {
-      el.appendChild(xmlDoc.importNode(child, true));
-    }
-  } else {
-    for (const child of children ?? []) {
-      if (typeof child === 'string') {
-        el.appendChild(xmlDoc.createTextNode(child));
-      } else {
-        // DOM nodes created outside this module (e.g. by a separate DOMParser call
-        // or in a browser document) have a different ownerDocument. Appending a
-        // foreign node throws a HierarchyRequestError in some environments, so we
-        // adopt it into xmlDoc first via importNode.
-        const childNode = child.ownerDocument === xmlDoc ? child : xmlDoc.importNode(child, true);
-        el.appendChild(childNode);
-      }
-    }
+  const rules = declNodes.map(node => readDeclaration(node)?.getScoringRule(RAW_SCORE) ?? null);
+  // Expected while an item is still being written, such as an inline choice dropdown with no
+  // correct answer yet; validation reports that to the author, so it is not logged here.
+  if (rules.includes(null)) {
+    return { outcomeDeclarations, responseProcessing: null };
   }
 
-  return el;
+  return {
+    outcomeDeclarations: [...outcomeDeclarations, buildOutcomeDeclarationNode(RAW_SCORE)],
+    responseProcessing: buildRulesNode(RAW_SCORE, [
+      ...rules,
+      buildXmlNode({
+        tag: 'qti-set-outcome-value',
+        attrs: { identifier: SCORE },
+        children: [
+          buildXmlNode({
+            tag: 'qti-divide',
+            children: [
+              buildXmlNode({ tag: 'qti-variable', attrs: { identifier: RAW_SCORE } }),
+              buildFloatNode(declNodes.length),
+            ],
+          }),
+        ],
+      }),
+    ]),
+  };
 }
 
 /**
@@ -73,12 +158,22 @@ export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
  * @param {object}   params
  * @param {string}   params.identifier            - Item identifier attribute
  * @param {string}   params.title                 - Item title attribute
- * @param {string}   params.language              - xml:lang attribute value
+ * @param {string}   [params.label]               - Item label attribute, or '' to omit it
+ * @param {string}   params.language              - Language tag, or '' to omit it
  * @param {string}   params.bodyXml               - Serialized interaction element XML string
  * @param {string[]} params.responseDeclarations  - Array of serialized declaration XML strings
+ * @param {Array<{ content: string }>} [params.hints] - Item hints, in order
  * @returns {string} Full QTI XML string
  */
-export function assembleItemXml({ identifier, title, language, bodyXml, responseDeclarations }) {
+export function assembleItemXml({
+  identifier,
+  title,
+  label,
+  language,
+  bodyXml,
+  responseDeclarations,
+  hints = [],
+}) {
   // Parse each serialized declaration string back into a DOM node so it can be
   // adopted into the assessment item tree via buildXmlNode's importNode logic.
   const declNodes = (responseDeclarations || []).map(declXml => {
@@ -96,21 +191,38 @@ export function assembleItemXml({ identifier, title, language, bodyXml, response
           children: [bodyRoot],
         });
 
+  const catalogInfoNode = buildHintCatalogNode(hints);
+  const { outcomeDeclarations, responseProcessing } = buildScoringNodes(declNodes);
+
   const assessmentItemNode = buildXmlNode({
     tag: 'qti-assessment-item',
     attrs: {
       xmlns: 'http://www.imsglobal.org/xsd/imsqtiasi_v3p0',
-      // TODO: We will need to properly generate the identifier and title
-      // on the useQtiItem composable when we integrate the question type selector
-      // and have the add question button working.
+      // New items get their identifier and title from createBlankItem.js; these fallbacks
+      // only cover items assembled from XML that never carried them.
       identifier: identifier || 'item',
       title: title || '',
+      label: label || null,
       adaptive: 'false',
       'time-dependent': 'false',
-      'xml:lang': language || 'en',
+      // Omitted rather than guessed when the item has no language: the schema allows an
+      // item without one.
+      'xml:lang': language || null,
+      // As the converter writes them (utils/assessment/qti/assessment_item.py).
+      'tool-name': 'kolibri',
+      'tool-version': '0.1',
     },
-    children: [...declNodes, itemBodyNode],
+    // The schema fixes this order: declarations, the body, the catalog, the processing.
+    children: [
+      ...declNodes,
+      ...outcomeDeclarations,
+      itemBodyNode,
+      ...(catalogInfoNode ? [catalogInfoNode] : []),
+      ...(responseProcessing ? [responseProcessing] : []),
+    ],
   });
+  // As the converter writes it; setAttribute would leave it outside the xsi namespace.
+  assessmentItemNode.setAttributeNS(XSI_NS, 'xsi:schemaLocation', QTI_SCHEMA_LOCATION);
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n${serializer.serializeToString(assessmentItemNode)}`;
 }

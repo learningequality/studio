@@ -4,8 +4,16 @@
 import AreaMapping from '../../declarations/areaMapping.js';
 import { QTIDeclaration } from '../../QTIDeclaration.js';
 import { CAPABILITY } from '../../declarations/index.js';
-import { parseXML, reparse } from '../testUtils.js';
+import { ResponseProcessingTemplate } from '../../../../constants.js';
+import { normalizeXML, parseXML, reparse } from '../testUtils.js';
 import { AREA_MAPPING_WITH_BOUNDS_XML, AREA_MAPPING_XML } from './fixtures.js';
+
+const AREA_MAPPING_DATA = {
+  defaultValue: 0,
+  lowerBound: null,
+  upperBound: null,
+  entries: [{ shape: 'circle', coords: '102,113,16', mappedValue: 1 }],
+};
 
 function makeDeclaration() {
   return new QTIDeclaration({ identifier: 'RESPONSE', baseType: 'point', cardinality: 'single' });
@@ -160,6 +168,42 @@ describe('AreaMapping', () => {
       );
       expect(reparsed.getAttribute('lower-bound')).toBe('-2');
       expect(reparsed.getAttribute('upper-bound')).toBe('3');
+    });
+  });
+
+  describe('getScoringRule', () => {
+    it('adds the mapped value of the response to the outcome', () => {
+      const scorer = new AreaMapping(AREA_MAPPING_DATA, makeDeclaration());
+      expect(scorer.getScoringRule('OUTCOME')).toEqual(
+        parseXML(
+          normalizeXML(`
+            <qti-set-outcome-value identifier="OUTCOME">
+              <qti-sum>
+                <qti-variable identifier="OUTCOME"/>
+                <qti-map-response-point identifier="RESPONSE"/>
+              </qti-sum>
+            </qti-set-outcome-value>`),
+        ),
+      );
+    });
+
+    it('returns null when there are no entries', () => {
+      const scorer = new AreaMapping({ ...AREA_MAPPING_DATA, entries: [] }, makeDeclaration());
+      expect(scorer.getScoringRule('OUTCOME')).toBeNull();
+    });
+  });
+
+  describe('getResponseProcessingTemplate', () => {
+    it('is map_response_point', () => {
+      const scorer = new AreaMapping(AREA_MAPPING_DATA, makeDeclaration());
+      expect(scorer.getResponseProcessingTemplate()).toBe(
+        ResponseProcessingTemplate.MAP_RESPONSE_POINT,
+      );
+    });
+
+    it('returns null when there are no entries', () => {
+      const scorer = new AreaMapping({ ...AREA_MAPPING_DATA, entries: [] }, makeDeclaration());
+      expect(scorer.getResponseProcessingTemplate()).toBeNull();
     });
   });
 });

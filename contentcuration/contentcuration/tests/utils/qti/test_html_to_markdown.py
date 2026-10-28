@@ -41,6 +41,19 @@ def test_image_gets_content_storage_prefix():
     assert expected in result
 
 
+def test_image_without_a_pixel_size_pair_carries_no_suffix():
+    expected = "![d]({})".format(exercises.CONTENT_STORAGE_FORMAT.format("abc123.png"))
+    for size in (
+        "",
+        'width="200"',
+        'height="150"',
+        'width="50%" height="150"',
+        'width="0" height="150"',
+    ):
+        result = _markdown_from_html(f'<p><img alt="d" src="abc123.png" {size}/></p>')
+        assert result == expected, size
+
+
 def test_interaction_is_dropped_from_prompt():
     fragment = "<p>Fill <qti-text-entry-interaction/> in</p>"
     assert html_to_markdown(_elements(fragment)) == "Fill  in"
@@ -59,8 +72,66 @@ def test_headings():
 def test_inline_emphasis_styles():
     assert _markdown_from_html("<p><strong>b</strong></p>") == "**b**"
     assert _markdown_from_html("<p><em>i</em></p>") == "*i*"
-    assert _markdown_from_html("<p><s>gone</s></p>") == "~~gone~~"
+    assert (
+        _markdown_from_html(
+            '<p><span style="text-decoration: line-through">gone</span></p>'
+        )
+        == "~~gone~~"
+    )
     assert _markdown_from_html("<p><code>x = 1</code></p>") == "`x = 1`"
+
+
+def test_raw_decoration_tags_are_read_as_their_mark():
+    # The forward conversion writes a decorated span, but a foreign QTI package is
+    # free to send the tag itself, so both spellings are read.
+    for tag in ("s", "del", "strike"):
+        assert _markdown_from_html(f"<p><{tag}>gone</{tag}></p>") == "~~gone~~"
+
+
+def test_underlined_span_becomes_a_perseus_underline():
+    # ``gfm-like`` has no underline, but Perseus simple-markdown reads __text__ as
+    # one, and the derived exercise is rendered by it — so the decoration survives.
+    assert (
+        _markdown_from_html('<p><span style="text-decoration: underline">a</span></p>')
+        == "__a__"
+    )
+
+
+def test_span_carrying_both_decorations_keeps_both():
+    assert (
+        _markdown_from_html(
+            '<p><span style="text-decoration: underline line-through">a</span></p>'
+        )
+        == "~~__a__~~"
+    )
+
+
+def test_a_decoration_is_read_whatever_its_casing():
+    # A foreign QTI package is under no obligation to write its CSS in lowercase,
+    # and CSS does not require it to: both the property and the keyword are
+    # case-insensitive.
+    assert (
+        _markdown_from_html(
+            '<p><span style="TEXT-DECORATION: LINE-THROUGH">a</span></p>'
+        )
+        == "~~a~~"
+    )
+    assert (
+        _markdown_from_html('<p><span style="Text-Decoration: Underline">a</span></p>')
+        == "__a__"
+    )
+
+
+def test_span_without_a_markdown_equivalent_unwraps():
+    # Neither flavour can express a colour, so the text survives and the style does
+    # not — the same as any other span the forward conversion never writes.
+    assert _markdown_from_html('<p><span style="color: red">a</span></p>') == "a"
+
+
+def test_alignment_is_dropped():
+    # Perseus markdown cannot express an alignment either, and a block renderer
+    # reads an element's content, never its attributes.
+    assert _markdown_from_html('<p style="text-align: right">a</p>') == "a"
 
 
 def test_link():
@@ -109,10 +180,14 @@ CANONICAL_MARKDOWN = "\n\n".join(
         "# Heading level 1",
         "## Heading level 2",
         (
-            "A paragraph with **bold**, *italic*, ~~strikethrough~~, `inline code`, "
-            "a [link](https://example.com), and math $$x^2 + y^2$$ inline."
+            "A paragraph with **bold**, *italic*, ~~strikethrough~~, __underline__, "
+            "`inline code`, a [link](https://example.com), and math $$x^2 + y^2$$ "
+            "inline."
         ),
         "![alt text]({})".format(exercises.CONTENT_STORAGE_FORMAT.format("abc123.png")),
+        "![sized]({} =200x150)".format(
+            exercises.CONTENT_STORAGE_FORMAT.format("abc123.png")
+        ),
         "> A blockquote paragraph.",
         "- First bullet\n- Second bullet\n  - Nested bullet\n- Third bullet",
         "1. First numbered\n2. Second numbered",

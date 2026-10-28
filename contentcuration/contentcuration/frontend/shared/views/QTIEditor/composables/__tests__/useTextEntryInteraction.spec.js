@@ -3,11 +3,15 @@ import { useTextEntryInteraction } from '../useTextEntryInteraction';
 import { QuestionType, ValidationError } from '../../constants';
 
 function makeNumericBlock(answerValues = ['12']) {
-  const values = answerValues.map(v => `<qti-value>${v}</qti-value>`).join('');
-  const cardinality = answerValues.length > 1 ? 'multiple' : 'single';
+  const correct = answerValues.length ? `<qti-value>${answerValues[0]}</qti-value>` : '';
+  const mapping = answerValues.length
+    ? `<qti-mapping default-value="0">${answerValues
+        .map(v => `<qti-map-entry map-key="${v}" mapped-value="1"/>`)
+        .join('')}</qti-mapping>`
+    : '';
 
   const bodyXml = `<qti-item-body><div><p>What is 3 \xd7 4?</p><p><qti-text-entry-interaction response-identifier="RESPONSE"/></p></div></qti-item-body>`;
-  const declaration = `<qti-response-declaration identifier="RESPONSE" cardinality="${cardinality}" base-type="float"><qti-correct-response>${values}</qti-correct-response></qti-response-declaration>`;
+  const declaration = `<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"><qti-correct-response>${correct}</qti-correct-response>${mapping}</qti-response-declaration>`;
 
   return { bodyXml, responseDeclarations: [declaration] };
 }
@@ -36,11 +40,16 @@ describe('useTextEntryInteraction', () => {
       expect(state.value.answers[0].value).toBe('12');
     });
 
-    it('starts with empty errors', () => {
+    it('starts with no errors when the parsed state is already valid', () => {
       const { errors } = setupNumeric();
-      // errors populates asynchronously via debounced watcher;
-      // immediately after setup it is still empty.
+
       expect(errors.value).toEqual([]);
+    });
+
+    it('reports errors for an invalid parsed state', () => {
+      const { errors } = setupNumeric([]);
+
+      expect(errors.value.map(e => e.code)).toContain(ValidationError.NO_CORRECT_ANSWER);
     });
   });
 

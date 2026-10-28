@@ -219,13 +219,15 @@
           <LanguageDropdown
             ref="language"
             v-model="language"
-            class="mb-2"
-            :hint="languageHint"
             :placeholder="getPlaceholder('language')"
-            clearable
-            persistent-hint
             @focus="trackClick('Language')"
           />
+          <p
+            class="language-hint"
+            :style="{ color: $themeTokens.annotation }"
+          >
+            {{ languageHint }}
+          </p>
 
           <!-- Visibility -->
           <VisibilityDropdown
@@ -1020,6 +1022,10 @@
   // alignment of help and info icons
   ::v-deep .v-input__append-outer {
     margin-top: 6px !important;
+  }
+
+  .language-hint {
+    margin: 0 0 16px;
   }
 
   ::v-deep a,

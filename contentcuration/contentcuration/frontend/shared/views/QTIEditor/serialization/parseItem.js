@@ -1,70 +1,35 @@
-import { QTI_INTERACTION_TAGS, INLINE_INTERACTION_TAGS } from '../constants';
+import { QTI_INTERACTION_TAGS } from '../constants';
+import { isInlineInteraction } from '../interactions/descriptors';
+import { parseHints } from './hints';
+import { parseXML } from './xml';
 
 const serializer = new XMLSerializer();
-const parser = new DOMParser();
-
-/**
- * Parses a QTI XML or HTML string into a Document.
- *
- * @param {string} xmlString - Raw QTI XML (or HTML fragment) string
- * @param {string} [mimeType='text/xml'] - Parse mode. `'text/xml'` runs the
- *   `parsererror` check; `'text/html'` parses leniently and never throws.
- * @returns {Document} Parsed XML or HTML Document
- * @throws {Error} If parsing as `'text/xml'` and the input is malformed or
- *   contains a parsererror. HTML parsing never throws.
- */
-export function parseXML(xmlString, mimeType = 'text/xml') {
-  let input = xmlString;
-  if (mimeType === 'text/xml') {
-    input = xmlString.replace(/ xmlns="[^"]*"/, '');
-  }
-
-  const doc = parser.parseFromString(input, mimeType);
-
-  // DOMParser never throws — it signals failure via a <parsererror> node. This
-  // only applies to XML: the HTML parser recovers silently and never emits one,
-  // so an HTML document literally containing a <parsererror> must not trip it.
-  if (mimeType === 'text/xml') {
-    const error = doc.querySelector('parsererror');
-    if (error) {
-      throw new Error(`QTI XML parse error: ${error.textContent.trim()}`);
-    }
-  }
-
-  return doc;
-}
-
-/**
- * Extract the inner HTML of the first <qti-prompt> child of an interaction element.
- * Returns an empty string when no prompt element is present.
- * Using innerHTML (not textContent) preserves rich inline markup (<p>, <strong>, etc.)
- * for round-trip fidelity.
- *
- * @param {Element} interactionEl - The <qti-*-interaction> root element
- * @returns {string}
- */
-export function getPromptHTML(interactionEl) {
-  const promptEl = interactionEl.querySelector('qti-prompt');
-  return promptEl ? promptEl.innerHTML : '';
-}
 
 /**
  * Parses a raw QTI XML string into the structured ItemModel.
  *
- * Each interaction block in the item body becomes one entry in `interactions`.
+ * Each block interaction in the item body becomes one entry in `interactions`.
  * A response declaration belongs to an interaction when the declaration's
  * `identifier` matches the interaction's `response-identifier` attribute.
  *
- * For descriptors with `placement: 'inline'`, `bodyXml` is the serialized
- * `<qti-item-body>` rather than the interaction element alone, so the
- * interaction's parse() function can recover prompt content from body siblings.
+ * Inline interactions of one type share one entry, holding all their declarations
+ * in body order. Its `bodyXml` is the serialized `<qti-item-body>` rather than an
+ * interaction element, so its parse() can recover prompt content from body siblings.
+ *
+ * Hints belong to the item rather than to any one interaction, so they come back
+ * alongside `interactions` rather than inside them. So does the body: an item can carry
+ * content with no interaction this editor recognises, and a caller that reassembles the
+ * item needs its body whether or not it found one.
  *
  * @param {string} rawData - Raw QTI XML string (the full assessment item XML)
  * @returns {{
  *   identifier: string,
  *   title: string,
+ *   label: string,
  *   language: string,
- *   interactions: Array<{ bodyXml: string, responseDeclarations: string[] }>
+ *   itemBodyXml: string,
+ *   interactions: Array<{ bodyXml: string, responseDeclarations: string[] }>,
+ *   hints: Array<{ id: string, content: string }>
  * }}
  */
 export function parseItem(rawData) {
@@ -73,7 +38,9 @@ export function parseItem(rawData) {
   const root = doc.querySelector('qti-assessment-item');
   const identifier = root?.getAttribute('identifier') ?? '';
   const title = root?.getAttribute('title') ?? '';
-  const language = root?.getAttribute('xml:lang') ?? '';
+  const label = root?.getAttribute('label') ?? '';
+  // Items converted before c51c5e035 carry the root language as `language`.
+  const language = root?.getAttribute('xml:lang') ?? root?.getAttribute('language') ?? '';
 
   const body = doc.querySelector('qti-item-body');
 
@@ -86,21 +53,39 @@ export function parseItem(rawData) {
     const selector = QTI_INTERACTION_TAGS.join(', ');
     const interactionEls = [...body.querySelectorAll(selector)];
 
+    // Inline tag name → its block and the response identifiers already in it
+    const inlineBlocks = new Map();
     for (const el of interactionEls) {
+      const tagName = el.tagName.toLowerCase();
       const responseId = el.getAttribute('response-identifier');
 
       const responseDeclarations = allDeclarations
         .filter(d => d.getAttribute('identifier') === responseId)
         .map(d => serializer.serializeToString(d));
 
-      const isInline = INLINE_INTERACTION_TAGS.has(el.tagName.toLowerCase());
-
-      interactions.push({
-        bodyXml: isInline ? serializer.serializeToString(body) : serializer.serializeToString(el),
-        responseDeclarations,
-      });
+      if (!isInlineInteraction(tagName)) {
+        interactions.push({ bodyXml: serializer.serializeToString(el), responseDeclarations });
+      } else if (inlineBlocks.has(tagName)) {
+        const { block, responseIds } = inlineBlocks.get(tagName);
+        if (!responseIds.has(responseId)) {
+          responseIds.add(responseId);
+          block.responseDeclarations.push(...responseDeclarations);
+        }
+      } else {
+        const block = { bodyXml: serializer.serializeToString(body), responseDeclarations };
+        inlineBlocks.set(tagName, { block, responseIds: new Set([responseId]) });
+        interactions.push(block);
+      }
     }
   }
 
-  return { identifier, title, language, interactions };
+  return {
+    identifier,
+    title,
+    label,
+    language,
+    itemBodyXml: body ? serializer.serializeToString(body) : '',
+    interactions,
+    hints: parseHints(doc),
+  };
 }

@@ -62,38 +62,20 @@ describe('useInteractionDescriptor', () => {
   });
 
   describe('with an unrecognized interaction type', () => {
-    it('falls back to the default descriptor without a parse error', async () => {
+    it('resolves no descriptor and no parse error', async () => {
       const { result } = renderDescriptor(UNKNOWN_INTERACTION_XML);
       await nextTick();
+      expect(result.descriptor.value).toBeNull();
       expect(result.parseError.value).toBeNull();
-    });
-
-    it('still returns a defined fallback descriptor', async () => {
-      const { result } = renderDescriptor(UNKNOWN_INTERACTION_XML);
-      await nextTick();
-      expect(result.descriptor.value).toBeDefined();
-      expect(typeof result.descriptor.value.matches).toBe('function');
     });
   });
 
   describe('with a null or empty bodyXmlRef', () => {
-    it('returns the default descriptor when bodyXmlRef is null', async () => {
-      const { result } = renderDescriptor(null);
+    it.each([null, ''])('resolves no descriptor for %p', async xml => {
+      const { result } = renderDescriptor(xml);
       await nextTick();
-      expect(result.descriptor.value).toBeDefined();
-      expect(result.parseError.value).toBeNull();
-    });
-
-    it('returns null questionType when bodyXmlRef is null', async () => {
-      const { result } = renderDescriptor(null);
-      await nextTick();
+      expect(result.descriptor.value).toBeNull();
       expect(result.questionType.value).toBeNull();
-    });
-
-    it('returns the default descriptor when bodyXmlRef is an empty string', async () => {
-      const { result } = renderDescriptor('');
-      await nextTick();
-      expect(result.descriptor.value).toBeDefined();
       expect(result.parseError.value).toBeNull();
     });
   });
@@ -106,10 +88,10 @@ describe('useInteractionDescriptor', () => {
       expect(result.parseError.value).toBe('This question could not be loaded');
     });
 
-    it('still returns a defined fallback descriptor on parse error', async () => {
+    it('resolves no descriptor on parse error', async () => {
       const { result } = renderDescriptor('<bad xml!!{');
       await nextTick();
-      expect(result.descriptor.value).toBeDefined();
+      expect(result.descriptor.value).toBeNull();
     });
   });
 

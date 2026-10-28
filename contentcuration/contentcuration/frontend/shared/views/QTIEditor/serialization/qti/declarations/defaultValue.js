@@ -5,7 +5,7 @@
  * to its native JS type (number, boolean, or string) based on the parent
  * declaration's base-type. Re-serializes values back to XML strings on demand.
  */
-import { buildXmlNode } from '../../assembleItem.js';
+import { buildXmlNode } from '../../xml.js';
 import { CAPABILITY } from './capabilities.js';
 
 export default class DefaultValue {
@@ -40,9 +40,15 @@ export default class DefaultValue {
   }
 
   /**
-   * @returns {Element}
+   * Like `qti-correct-response`, the element is optional but must hold at least one
+   * `qti-value`, so an empty one is omitted rather than emitted.
+   *
+   * @returns {Element|null}
    */
   getXML() {
+    if (!this._values.length) {
+      return null;
+    }
     return buildXmlNode({
       tag: 'qti-default-value',
       children: this._declaration

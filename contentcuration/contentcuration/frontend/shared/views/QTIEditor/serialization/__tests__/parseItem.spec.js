@@ -1,6 +1,16 @@
 /* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
-import { parseXML, parseItem } from '../parseItem';
-import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
+import { parseItem } from '../parseItem';
+import { parseXML } from '../xml';
+import {
+  VALID_CHOICE_ITEM_DOCUMENT,
+  TWO_INTERACTIONS_DOCUMENT,
+  UNDESCRIBED_INTERACTION,
+  UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
+  MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+} from '../../utils/testingFixtures';
+
+const declarationIdentifiers = declarations =>
+  declarations.map(xml => parseXML(xml).documentElement.getAttribute('identifier'));
 
 // Fixtures
 const ITEM_NO_INTERACTIONS = `<?xml version="1.0" encoding="UTF-8"?>
@@ -14,46 +24,6 @@ const ITEM_NO_INTERACTIONS = `<?xml version="1.0" encoding="UTF-8"?>
 >
   <qti-item-body></qti-item-body>
 </qti-assessment-item>`;
-
-// parseXML
-describe('parseXML', () => {
-  it('parses valid XML into a Document', () => {
-    const doc = parseXML(VALID_CHOICE_ITEM_DOCUMENT);
-    expect(doc).toBeInstanceOf(Document);
-    expect(doc.querySelector('qti-assessment-item')).not.toBeNull();
-  });
-
-  it('throws for malformed XML', () => {
-    expect(() => parseXML('<unclosed')).toThrow(/QTI XML parse error/i);
-  });
-
-  it('throws for XML with a parsererror node', () => {
-    // An extra closing tag causes a parsererror in jsdom
-    expect(() => parseXML('<root></root></extra>')).toThrow(/QTI XML parse error/i);
-  });
-
-  it('parses valid XML when text/xml is passed explicitly', () => {
-    const doc = parseXML(VALID_CHOICE_ITEM_DOCUMENT, 'text/xml');
-    expect(doc.querySelector('qti-assessment-item')).not.toBeNull();
-  });
-
-  it('parses HTML leniently into a Document when text/html is passed', () => {
-    const doc = parseXML('<b>bold</b>', 'text/html');
-    expect(doc).toBeInstanceOf(Document);
-    // doc.body is a DOMParser-realm node, not a testing-library node, so
-    // toHaveTextContent rejects it; assert on textContent directly.
-    // eslint-disable-next-line jest-dom/prefer-to-have-text-content
-    expect(doc.body.textContent).toBe('bold');
-  });
-
-  it('does not throw for malformed HTML', () => {
-    expect(() => parseXML('<unclosed', 'text/html')).not.toThrow();
-  });
-
-  it('does not treat a literal parsererror element in HTML as a failure', () => {
-    expect(() => parseXML('<parsererror>x</parsererror>', 'text/html')).not.toThrow();
-  });
-});
 
 // parseItem — meta extraction
 describe('parseItem — meta', () => {
@@ -89,6 +59,52 @@ describe('parseItem — interaction blocks', () => {
   it('returns two blocks for an item with two interactions', () => {
     const model = parseItem(TWO_INTERACTIONS_DOCUMENT);
     expect(model.interactions).toHaveLength(2);
+  });
+
+  it('finds an interaction the editor has no descriptor for', () => {
+    const model = parseItem(UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT);
+    expect(model.interactions).toHaveLength(1);
+    expect(model.interactions[0].bodyXml).toContain(`<${UNDESCRIBED_INTERACTION}`);
+  });
+
+  it('merges inline interactions of one type into one block, in body order', () => {
+    const model = parseItem(MULTI_TEXT_ENTRY_ITEM_DOCUMENT);
+    expect(model.interactions).toHaveLength(1);
+
+    const [block] = model.interactions;
+    expect(declarationIdentifiers(block.responseDeclarations)).toEqual([
+      'response_xq7tbn2c',
+      'response_pw4rzk8d',
+    ]);
+    expect(block.bodyXml).toContain('response-identifier="response_xq7tbn2c"');
+    expect(block.bodyXml).toContain('response-identifier="response_pw4rzk8d"');
+  });
+
+  it('holds a declaration shared by inline interactions once', () => {
+    const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="x" title="" adaptive="false" time-dependent="false" xml:lang="en">
+      <qti-response-declaration identifier="A" cardinality="single" base-type="string" />
+      <qti-item-body>
+        <p><qti-text-entry-interaction response-identifier="A" /></p>
+        <p><qti-text-entry-interaction response-identifier="A" /></p>
+      </qti-item-body>
+    </qti-assessment-item>`;
+    const [block] = parseItem(xml).interactions;
+    expect(declarationIdentifiers(block.responseDeclarations)).toEqual(['A']);
+  });
+
+  it('keeps block interactions of one type as separate blocks', () => {
+    const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="x" title="" adaptive="false" time-dependent="false" xml:lang="en">
+      <qti-response-declaration identifier="RESP1" cardinality="single" base-type="identifier" />
+      <qti-response-declaration identifier="RESP2" cardinality="single" base-type="identifier" />
+      <qti-item-body>
+        <qti-choice-interaction response-identifier="RESP1" max-choices="1" />
+        <qti-choice-interaction response-identifier="RESP2" max-choices="1" />
+      </qti-item-body>
+    </qti-assessment-item>`;
+    const model = parseItem(xml);
+    expect(
+      model.interactions.map(block => declarationIdentifiers(block.responseDeclarations)),
+    ).toEqual([['RESP1'], ['RESP2']]);
   });
 
   it('returns empty interactions array for an item with no interactions', () => {

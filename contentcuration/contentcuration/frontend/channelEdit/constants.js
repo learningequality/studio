@@ -1,5 +1,3 @@
-import { AssessmentItemTypes } from 'shared/constants';
-
 export const RouteNames = {
   TREE_ROOT_VIEW: 'TREE_ROOT_VIEW',
   TREE_VIEW: 'TREE_VIEW',
@@ -31,24 +29,6 @@ export const ChannelEditPageErrors = Object.freeze({
   CHANNEL_NOT_FOUND: 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND',
   CHANNEL_DELETED: 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED',
 });
-
-export const AssessmentItemToolbarActions = {
-  EDIT_ITEM: 'EDIT_ITEM',
-  MOVE_ITEM_UP: 'MOVE_ITEM_UP',
-  MOVE_ITEM_DOWN: 'MOVE_ITEM_DOWN',
-  DELETE_ITEM: 'DELETE_ITEM',
-  ADD_ITEM_ABOVE: 'ADD_ITEM_ABOVE',
-  ADD_ITEM_BELOW: 'ADD_ITEM_BELOW',
-};
-
-export const AssessmentItemTypeLabels = {
-  [AssessmentItemTypes.SINGLE_SELECTION]: 'questionTypeSingleSelection',
-  [AssessmentItemTypes.MULTIPLE_SELECTION]: 'questionTypeMultipleSelection',
-  [AssessmentItemTypes.TRUE_FALSE]: 'questionTypeTrueFalse',
-  [AssessmentItemTypes.INPUT_QUESTION]: 'questionTypeInput',
-  [AssessmentItemTypes.PERSEUS_QUESTION]: 'questionTypePerseus',
-  [AssessmentItemTypes.FREE_RESPONSE]: 'questionTypeFreeResponse',
-};
 
 export const TabNames = {
   DETAILS: 'details',

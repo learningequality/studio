@@ -138,31 +138,18 @@
               {{ $tr('questionCount', { value: assessmentItems.length }) }}
             </VFlex>
           </VLayout>
-          <VCard
+          <QTIItemEditor
             v-for="(item, index) in assessmentItems"
-            :key="item.id"
-            flat
-          >
-            <VCardText>
-              <VLayout>
-                <VFlex
-                  shrink
-                  class="py-2"
-                >
-                  <div style="width: 64px">
-                    {{ index + 1 }}
-                  </div>
-                </VFlex>
-                <VFlex>
-                  <AssessmentItemPreview
-                    :item="item"
-                    :detailed="showAnswers"
-                  />
-                </VFlex>
-              </VLayout>
-            </VCardText>
-            <VDivider v-if="index < assessmentItems.length - 1" />
-          </VCard>
+            :key="item.assessment_id"
+            :item="item"
+            :index="index"
+            :total="assessmentItems.length"
+            mode="view"
+            :allowFreeResponse="allowFreeResponse"
+            :language="language"
+            :showAnswers="showAnswers"
+            class="question-preview"
+          />
         </VTabItem>
         <VTabItem value="details">
           <!-- File preview -->
@@ -508,12 +495,16 @@
   import camelCase from 'lodash/camelCase';
   import { isImportedContent, importedChannelLink, getCompletionCriteriaLabels } from '../utils';
   import FilePreview from '../views/files/FilePreview';
-  import { ContentLevels, Categories, AccessibilityCategories } from '../../shared/constants';
-  import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
+  import {
+    ContentLevels,
+    Categories,
+    AccessibilityCategories,
+    ContentModalities,
+  } from '../../shared/constants';
+  import { exerciseLanguage } from '../composables/useAssessmentItems';
   import ContentNodeValidator from './ContentNodeValidator';
 
   import {
-    getAssessmentItemErrors,
     getNodeLicenseErrors,
     getNodeCopyrightHolderErrors,
     getNodeLicenseDescriptionErrors,
@@ -521,6 +512,7 @@
     getNodeMasteryModelMErrors,
     getNodeMasteryModelNErrors,
   } from 'shared/utils/validation';
+  import QTIItemEditor from 'shared/views/QTIEditor/components/QTIItemEditor/index';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
@@ -545,7 +537,7 @@
       DetailsRow,
       FilePreview,
       ExpandableList,
-      AssessmentItemPreview,
+      QTIItemEditor,
       Checkbox,
       ContentNodeValidator,
       Banner,
@@ -584,7 +576,8 @@
         'getImmediatePreviousStepsList',
       ]),
       ...mapGetters('file', ['getContentNodeFiles', 'contentNodesTotalSize']),
-      ...mapGetters('assessmentItem', ['getAssessmentItems']),
+      ...mapGetters('assessmentItem', ['getAssessmentItems', 'getInvalidAssessmentItemsCount']),
+      ...mapGetters('channel', ['getChannel']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -630,6 +623,14 @@
       },
       assessmentItems() {
         return this.getAssessmentItems(this.nodeId);
+      },
+      // Free-response questions cannot be scored, so they only count as complete on a survey.
+      allowFreeResponse() {
+        return this.node?.extra_fields?.options?.modality === ContentModalities.SURVEY;
+      },
+      language() {
+        // The Clipboard previews nodes from other channels.
+        return exerciseLanguage(this.node, this.getChannel(this.node?.channel_id));
       },
       fileSize() {
         return this.contentNodesTotalSize([this.nodeId]);
@@ -729,8 +730,7 @@
       },
       invalidQuestionCount() {
         return (
-          this.isExercise &&
-          this.assessmentItems.filter(ai => getAssessmentItemErrors(ai).length).length
+          this.isExercise && this.getInvalidAssessmentItemsCount({ contentNodeId: this.nodeId })
         );
       },
       invalidDetails() {
@@ -924,6 +924,10 @@
 
   /deep/ .v-list__tile {
     padding: 0;
+  }
+
+  .question-preview {
+    margin-bottom: 8px;
   }
 
   .preview-error {

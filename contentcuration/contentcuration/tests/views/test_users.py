@@ -1,11 +1,15 @@
 import json
 
+from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
 from django.http.response import HttpResponseBadRequest
 from django.http.response import HttpResponseForbidden
 from django.http.response import HttpResponseNotAllowed
 from django.http.response import HttpResponseRedirectBase
+from django.urls import reverse
 from django.urls import reverse_lazy
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from mock import mock
 from mock import patch
 
@@ -15,6 +19,7 @@ from contentcuration.tests.base import BaseAPITestCase
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.views.users import login
 from contentcuration.views.users import UserActivationView
+from contentcuration.views.users import UserPasswordResetConfirmView
 
 
 class LoginTestCase(StudioAPITestCase):
@@ -177,6 +182,83 @@ class UserRegistrationViewTestCase(BaseAPITestCase):
         # Error response should include "email" field
         error_data = json.loads(response.content.decode())
         self.assertIn("email", error_data)
+
+
+class UserPasswordResetConfirmViewTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(UserPasswordResetConfirmViewTestCase, self).setUp()
+        self.user = testdata.user(email="tester@tester.com")
+        self.user.set_password("old_password")
+        self.user.save()
+        self.uidb64 = urlsafe_base64_encode(force_bytes(self.user.pk))
+        self.token = default_token_generator.make_token(self.user)
+
+    def _url(self, token):
+        return reverse(
+            "auth_password_reset_confirm",
+            kwargs=dict(uidb64=self.uidb64, token=token),
+        )
+
+    def _get(self, token):
+        response = self.client.get(self._url(token))
+        if response.url == self._url(UserPasswordResetConfirmView.reset_url_token):
+            response = self.client.get(response.url)
+        return response
+
+    def _post(self, password="new_password", confirm=None):
+        data = dict(new_password1=password, new_password2=confirm or password)
+        return self.client.post(
+            self._url(UserPasswordResetConfirmView.reset_url_token),
+            data,
+            format="json",
+        )
+
+    def _assert_password(self, password):
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(password))
+
+    def test_get__valid_token(self):
+        response = self._get(self.token)
+        self.assertEqual(
+            response.url, "/accounts/#/reset-password?uidb64={}".format(self.uidb64)
+        )
+
+    def test_get__invalid_token(self):
+        response = self._get("invalid-token")
+        self.assertEqual(response.url, "/accounts/#/reset-expired")
+
+    def test_post__valid_session(self):
+        self._get(self.token)
+        response = self._post()
+        self._assert_password("new_password")
+        self.assertEqual(response.url, "/accounts/#/password-reset-success")
+
+    def test_post__no_session(self):
+        response = self._post()
+        self._assert_password("old_password")
+        self.assertIsInstance(response, HttpResponseForbidden)
+
+    def test_post__invalid_token_in_url(self):
+        self.client.post(
+            self._url("invalid-token"),
+            dict(new_password1="new_password", new_password2="new_password"),
+            format="json",
+        )
+        self._assert_password("old_password")
+
+    def test_post__invalid_form(self):
+        self._get(self.token)
+        response = self._post("new_password", "other_password")
+        self._assert_password("old_password")
+        self.assertIsInstance(response, HttpResponseForbidden)
+
+    def test_post__reused_token(self):
+        self._get(self.token)
+        self._post()
+        self._get(self.token)
+        response = self._post("second_password")
+        self._assert_password("new_password")
+        self.assertIsInstance(response, HttpResponseForbidden)
 
 
 class UserActivationViewTestCase(StudioAPITestCase):
