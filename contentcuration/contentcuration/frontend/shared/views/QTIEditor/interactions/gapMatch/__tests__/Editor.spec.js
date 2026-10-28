@@ -230,6 +230,21 @@ describe('GapMatchEditor', () => {
       ).toBeInTheDocument();
     });
 
+    it('keeps the gaps when an item with no question closes', async () => {
+      const { updateProps } = await renderEditor({
+        interaction: interactionOf({ prompt: '' }),
+        showAnswers: true,
+      });
+
+      await updateProps({ mode: 'view' });
+
+      expect(
+        await screen.findByRole('group', {
+          name: tr.gapWithAnswer$({ answer: 'winter', number: 1 }),
+        }),
+      ).toBeInTheDocument();
+    });
+
     it('hides the answers when answers are hidden', async () => {
       await renderEditor({ mode: 'view', showAnswers: false });
 

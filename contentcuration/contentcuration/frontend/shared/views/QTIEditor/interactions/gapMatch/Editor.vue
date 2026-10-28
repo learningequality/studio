@@ -1,9 +1,11 @@
 <template>
 
   <div class="gap-match-editor">
-    <!-- Question (optional) -->
+    <!-- Question (optional). Each section is keyed: TipTapEditor reads its extensions once, so
+         Vue must not hand the question's editor to the passage when the question is hidden. -->
     <div
       v-if="mode === 'edit' || hasPrompt"
+      key="prompt"
       class="gap-match-editor__section"
     >
       <h4
@@ -37,7 +39,10 @@
     </div>
 
     <!-- Passage -->
-    <div class="gap-match-editor__section">
+    <div
+      key="passage"
+      class="gap-match-editor__section"
+    >
       <ValidationMessage
         v-if="hasGapErrors"
         :alert="isGapErrorsAlert"
@@ -97,6 +102,7 @@
     <!-- Distractors (optional) -->
     <div
       v-if="mode === 'edit'"
+      key="distractors"
       class="gap-match-editor__section"
     >
       <h4
