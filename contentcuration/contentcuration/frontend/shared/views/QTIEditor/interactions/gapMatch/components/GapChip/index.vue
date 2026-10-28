@@ -28,7 +28,7 @@
 
   import { computed } from 'vue';
   import { NodeViewContent, NodeViewWrapper } from '@tiptap/vue-2';
-  import { describeGap, injectPassageGaps } from '../../passageGaps';
+  import { describeGap, gapAnswerText, injectPassageGaps } from '../../passageGaps';
 
   export default {
     name: 'GapChip',
@@ -41,12 +41,13 @@
     setup(props) {
       const { gapIds, isEditable, errorGapIds, showAnswers } = injectPassageGaps();
       const identifier = computed(() => props.node.attrs.identifier);
-      const isBlank = computed(() => props.node.content.size === 0);
+      const answer = computed(() => gapAnswerText(props.node));
+      const isBlank = computed(() => !answer.value.trim());
       const isConcealed = computed(() => !isEditable.value && !showAnswers.value);
       const hasErrors = computed(() => errorGapIds.value.includes(identifier.value));
       const accessibleName = computed(() =>
         describeGap({
-          answer: props.node.textContent,
+          answer: answer.value,
           number: gapIds.value.indexOf(identifier.value) + 1,
           isConcealed: isConcealed.value,
         }),

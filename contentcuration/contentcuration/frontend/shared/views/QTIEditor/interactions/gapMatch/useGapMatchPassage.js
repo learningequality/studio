@@ -6,7 +6,7 @@ import { findChildren } from '@tiptap/core';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { qtiEditorStrings } from '../../qtiEditorStrings';
 import { GapNode, isGap } from './GapNode';
-import { describeGap, providePassageGaps } from './passageGaps';
+import { describeGap, gapAnswerText, providePassageGaps } from './passageGaps';
 import { storedHTML } from 'shared/views/TipTapEditor/TipTapEditor/utils/imageSrc';
 
 const gapNodes = doc => findChildren(doc, isGap).map(({ node }) => node);
@@ -28,7 +28,7 @@ const gapNumber = (doc, identifier) =>
   gapNodes(doc).findIndex(node => node.attrs.identifier === identifier) + 1;
 
 const describeIn = (doc, node) =>
-  describeGap({ answer: node.textContent, number: gapNumber(doc, node.attrs.identifier) });
+  describeGap({ answer: gapAnswerText(node), number: gapNumber(doc, node.attrs.identifier) });
 
 // Select-all selects the passage itself, where an inline node cannot go. Over a passage of one
 // paragraph, it is taken as that paragraph's text.

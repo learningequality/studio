@@ -25,6 +25,17 @@ export function injectPassageGaps() {
 }
 
 /**
+ * A gap's answer as plain text. A formula has no text of its own, so it reads as its LaTeX,
+ * which is what the editor shows of it.
+ *
+ * @param {import('@tiptap/pm/model').Node} node - The gap node
+ * @returns {string}
+ */
+export function gapAnswerText(node) {
+  return node.textBetween(0, node.content.size, ' ', leaf => leaf.attrs.latex ?? '');
+}
+
+/**
  * What a gap is called, by the gap and by what the passage announces about it.
  *
  * @param {object} gap

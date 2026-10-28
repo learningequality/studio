@@ -21,6 +21,16 @@ describe('GapChip', () => {
     expect(screen.getByRole('group', { name: gapEmpty$({ number: 2 }) })).toBeInTheDocument();
   });
 
+  it('names a gap whose answer is a formula by the formula', async () => {
+    await renderPassage({
+      value: `<p>${gap('gap_m', '<span data-latex="x^2"></span>')}</p>`,
+    });
+
+    expect(
+      await screen.findByRole('group', { name: gapWithAnswer$({ answer: 'x^2', number: 1 }) }),
+    ).toBeInTheDocument();
+  });
+
   it('renames a gap as its answer is typed', async () => {
     const { editor } = await renderPassage({ value: PASSAGE });
 
