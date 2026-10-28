@@ -25,11 +25,26 @@ export const press = (editor, key, init = {}) =>
     new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init }),
   );
 
-/** Sends the input event a browser sends before it changes the passage. */
-export const input = (editor, inputType, data = null) =>
-  editor.view.dom.dispatchEvent(
-    new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true }),
-  );
+/**
+ * Sends the input event a browser sends before it changes the passage. `range` is the part of
+ * the passage the browser will delete; jsdom has no `getTargetRanges`.
+ */
+export function input(editor, inputType, data = null, range = null) {
+  const event = new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true });
+  if (range) {
+    const start = editor.view.domAtPos(range.from);
+    const end = editor.view.domAtPos(range.to);
+    event.getTargetRanges = () => [
+      {
+        startContainer: start.node,
+        startOffset: start.offset,
+        endContainer: end.node,
+        endOffset: end.offset,
+      },
+    ];
+  }
+  return editor.view.dom.dispatchEvent(event);
+}
 
 /** Mounts the real TipTapEditor through `useGapMatchPassage`; resolves once it is ready. */
 export async function renderPassage({

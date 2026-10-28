@@ -86,7 +86,14 @@ function isRtlAt(view, pos) {
   return window.getComputedStyle(element).direction === 'rtl';
 }
 
-const DELETE_INPUTS = ['deleteContentBackward', 'deleteContentForward'];
+function targetRange(view, event) {
+  const [range] = event.getTargetRanges();
+  if (!range) return null;
+  return {
+    from: view.posAtDOM(range.startContainer, range.startOffset),
+    to: view.posAtDOM(range.endContainer, range.endOffset),
+  };
+}
 
 export const GapNode = Node.create({
   name: NODE_NAME,
@@ -202,24 +209,19 @@ export const GapNode = Node.create({
         props: {
           handleDOMEvents: {
             // Chrome puts text typed at the edge of a gap, or into a blank one, outside the gap,
-            // and removes a gap whose last character is deleted. So these edits go through
+            // and removes a gap when a delete empties its answer. So these edits go through
             // ProseMirror instead of the browser.
             beforeinput(view, event) {
               const { selection } = view.state;
               if (!selection.empty) return false;
-              const { $from, from } = selection;
+              const { $from } = selection;
               const { tr } = view.state;
               if (event.inputType === 'insertText' && event.data && touchesGap($from)) {
                 tr.insertText(event.data);
-              } else if (
-                DELETE_INPUTS.includes(event.inputType) &&
-                isGap($from.parent) &&
-                $from.parent.content.size === 1
-              ) {
-                const backward = event.inputType === 'deleteContentBackward';
-                const [start, end] = backward ? [from - 1, from] : [from, from + 1];
-                if (start < $from.start() || end > $from.end()) return false;
-                tr.delete(start, end);
+              } else if (event.inputType.startsWith('delete') && isGap($from.parent)) {
+                const range = targetRange(view, event);
+                if (!range || range.from > $from.start() || range.to < $from.end()) return false;
+                tr.delete($from.start(), $from.end());
               } else {
                 return false;
               }

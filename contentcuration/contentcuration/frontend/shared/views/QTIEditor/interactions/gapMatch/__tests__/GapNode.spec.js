@@ -100,10 +100,36 @@ describe('GapNode', () => {
     it('keeps a gap blank when its last character is deleted', async () => {
       const editor = await renderAt(5, `<p>ab${gap('gap_a', 'x')}cd</p>`);
 
-      input(editor, 'deleteContentBackward');
+      input(editor, 'deleteContentBackward', null, { from: 4, to: 5 });
 
       expect(findGap(editor, 'gap_a').node.content.size).toBe(0);
       expect(isInGap(editor)).toBe(true);
+    });
+
+    it('keeps a gap blank when a word delete empties its answer', async () => {
+      const editor = await renderAt(ANSWER_END);
+
+      input(editor, 'deleteWordBackward', null, { from: ANSWER_START, to: ANSWER_END });
+
+      expect(findGap(editor, 'gap_a').node.content.size).toBe(0);
+      expect(isInGap(editor)).toBe(true);
+    });
+
+    it('deletes only the answer when a line delete reaches past the gap', async () => {
+      const editor = await renderAt(ANSWER_END);
+
+      input(editor, 'deleteSoftLineBackward', null, { from: 1, to: ANSWER_END });
+
+      expect(findGap(editor, 'gap_a').node.content.size).toBe(0);
+      expect(editor.getText()).toBe('abcd');
+    });
+
+    it('leaves to the browser a delete that keeps part of the answer', async () => {
+      const editor = await renderAt(ANSWER_END);
+
+      const unhandled = input(editor, 'deleteWordBackward', null, { from: 5, to: ANSWER_END });
+
+      expect(unhandled).toBe(true);
     });
   });
 
