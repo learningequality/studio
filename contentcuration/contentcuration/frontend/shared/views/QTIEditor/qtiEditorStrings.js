@@ -643,4 +643,18 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Insert at least one inline choice',
     context: 'Validation error when the passage of an inline choice question has no dropdown',
   },
+  gapWithAnswer: {
+    message: '{answer}, gap {number}',
+    context:
+      'Accessible name of a gap in the passage of a gap match question. {answer} is the answer typed in the gap, and comes first so that speech input finds the gap by the text it shows',
+  },
+  gapEmpty: {
+    message: 'Empty gap {number}',
+    context:
+      'Accessible name of a gap in the passage of a gap match question that has no answer yet',
+  },
+  gapHidden: {
+    message: 'Gap {number}',
+    context: 'Accessible name of a gap in a preview of a gap match question that hides the answers',
+  },
 });
