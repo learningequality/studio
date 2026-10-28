@@ -206,6 +206,20 @@ describe('GapNode', () => {
       expect(findGap(editor, 'gap_a').node.attrs.correct).toBe('choice_a');
     });
 
+    it('pastes paragraphs into a gap as one line of its answer', async () => {
+      const editor = await renderAt(5);
+
+      paste(editor, '<p>one</p><p><strong>two</strong></p>');
+
+      expect(gapIdentifiers(editor)).toEqual(['gap_a']);
+      expect(findGap(editor, 'gap_a').node.content.toJSON()).toEqual([
+        { type: 'text', text: 'xone ' },
+        { type: 'text', text: 'two', marks: [{ type: 'bold' }] },
+        { type: 'text', text: 'y' },
+      ]);
+      expect(editor.state.doc.childCount).toBe(1);
+    });
+
     it('gives a copy inserted by a transaction a fresh identifier', async () => {
       const editor = await renderAt(1);
 

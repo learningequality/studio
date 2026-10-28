@@ -53,6 +53,24 @@ function reidentify(fragment, taken) {
   return Fragment.fromArray(children);
 }
 
+// A gap's answer is one line of text and formulas, so what is pasted into a gap is flattened to
+// that: a space takes the place of each line break and each break between blocks.
+function flattenForGap(fragment, schema) {
+  const nodes = [];
+  let breaks = false;
+  fragment.descendants(node => {
+    if (node.isText || node.type.name === 'math') {
+      if (breaks && nodes.length) nodes.push(schema.text(' '));
+      breaks = false;
+      nodes.push(node);
+      return false;
+    }
+    if (node.isBlock || node.type.name === 'hardBreak') breaks = true;
+    return true;
+  });
+  return Fragment.fromArray(nodes);
+}
+
 /** Whether a position is at the edge of a gap, inside or outside it. */
 function touchesGap($pos) {
   return (
@@ -212,6 +230,9 @@ export const GapNode = Node.create({
           // A copy must not share an identifier with the original; a cut-paste has already
           // removed it.
           transformPasted(slice, view) {
+            if (isGap(view.state.selection.$from.parent)) {
+              return new Slice(flattenForGap(slice.content, view.state.schema), 0, 0);
+            }
             // Whether a drag moves or copies is only known at drop; see `appendTransaction`.
             if (view.dragging || gapsIn(slice.content).next().done) return slice;
             const taken = new Set(
