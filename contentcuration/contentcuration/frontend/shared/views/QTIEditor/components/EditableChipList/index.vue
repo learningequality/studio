@@ -46,6 +46,7 @@
                   :minHeight="'48px'"
                   :autofocus="isChipOpen(index)"
                   :imageProcessor="EditorImageProcessor"
+                  :inlineOnly="inlineOnly"
                   :tabindex="-1"
                   class="editor"
                   @update="html => onChipUpdate(index, html)"
@@ -113,6 +114,7 @@
             :minHeight="'48px'"
             autofocus
             :imageProcessor="EditorImageProcessor"
+            :inlineOnly="inlineOnly"
             :tabindex="-1"
             class="editor"
             @update="onDraftUpdate"
@@ -418,6 +420,11 @@
       placeholder: {
         type: String,
         default: '',
+      },
+      /** Edits each chip with no blocks, line breaks or images, as a <qti-gap-text> holds */
+      inlineOnly: {
+        type: Boolean,
+        default: false,
       },
     },
 
