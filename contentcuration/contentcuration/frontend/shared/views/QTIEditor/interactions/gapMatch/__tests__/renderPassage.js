@@ -1,10 +1,9 @@
 /* eslint-env jest */
-import { computed, ref } from 'vue';
 import { render, waitFor } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import { findChildren } from '@tiptap/core';
-import { GapNode, findGap as findGapIn, isGap } from '../GapNode';
-import { providePassageGaps } from '../passageGaps';
+import { findGap as findGapIn, isGap } from '../GapNode';
+import { useGapMatchPassage } from '../useGapMatchPassage';
 import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
 /** Gap HTML, as the passage stores it. */
@@ -32,26 +31,21 @@ export const input = (editor, inputType, data = null) =>
     new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true }),
   );
 
-/** Mounts the real TipTapEditor holding gaps; resolves its editor once it is ready. */
+/** Mounts the real TipTapEditor through `useGapMatchPassage`; resolves once it is ready. */
 export async function renderPassage({
   value,
   mode = 'edit',
   errorGapIds = [],
   showAnswers = false,
+  onChange,
 }) {
-  const gapIds = ref([]);
   const onReady = jest.fn();
   render(
     {
       components: { TipTapEditor },
       setup() {
-        providePassageGaps({
-          gapIds,
-          isEditable: computed(() => mode === 'edit'),
-          errorGapIds: computed(() => errorGapIds),
-          showAnswers: computed(() => showAnswers),
-        });
-        return { extensions: [GapNode], mode };
+        const passage = useGapMatchPassage({ errorGapIds, showAnswers, onChange });
+        return { extensions: passage.extensions, insertActions: passage.insertActions, mode };
       },
       data: () => ({ value }),
       methods: { onReady },
@@ -60,17 +54,12 @@ export async function renderPassage({
         :mode="mode"
         format="html"
         :extensions="extensions"
+        :insertActions="insertActions"
         @ready="onReady"
       />`,
     },
     { router: new VueRouter() },
   );
   await waitFor(() => expect(onReady).toHaveBeenCalled());
-  const editor = onReady.mock.calls[0][0];
-  const syncGapIds = () => {
-    gapIds.value = gapIdentifiers(editor);
-  };
-  syncGapIds();
-  editor.on('transaction', syncGapIds);
-  return { editor };
+  return { editor: onReady.mock.calls[0][0] };
 }

@@ -653,6 +653,21 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Accessible name of a gap in the passage of a gap match question that has no answer yet',
   },
+  insertGap: {
+    message: 'Insert',
+    context:
+      "Button in the passage toolbar of a gap match question that adds a gap at the cursor, or turns the highlighted text into a gap's answer",
+  },
+  gapRemoved: {
+    message: '{name}, removed',
+    context:
+      "Announced to screen readers when a gap is deleted from the passage of a gap match question. {name} is the gap's accessible name, such as 'winter, gap 2'",
+  },
+  gapsRemoved: {
+    message: '{count, plural, one {# gap removed} other {# gaps removed}}',
+    context:
+      'Announced to screen readers when several gaps are deleted from the passage of a gap match question at once',
+  },
   gapHidden: {
     message: 'Gap {number}',
     context: 'Accessible name of a gap in a preview of a gap match question that hides the answers',
