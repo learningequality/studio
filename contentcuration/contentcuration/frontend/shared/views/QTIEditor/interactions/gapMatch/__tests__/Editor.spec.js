@@ -161,16 +161,26 @@ describe('GapMatchEditor', () => {
       screen.getByRole('group', { name: tr.gapWithAnswer$({ answer: 'summer', number: 2 }) }),
     ).toBeInTheDocument();
     expect(section(tr.distractorsLabel$())).toHaveTextContent('spring');
-    expect(screen.getByText('Fill in the seasons')).toBeInTheDocument();
+    expect(section(tr.questionOptionalLabel$())).toHaveTextContent('Fill in the seasons');
   });
 
   describe('validation', () => {
+    const distractorItems = () => within(section(tr.distractorsLabel$())).getAllByRole('listitem');
+
     it('shows a gap with no answer and marks the question incomplete', async () => {
       const { emitted } = await renderEditor({
-        interaction: interactionOf({ passage: `<p>Snow falls in ${gap('gap_a')}.</p>` }),
+        interaction: interactionOf({
+          passage: `<p>Snow falls in ${gap('gap_a')}, sun in ${gap('gap_b', 'summer')}.</p>`,
+        }),
       });
 
       expect(section(tr.passageEditorLabel$())).toHaveTextContent(tr.errorEmptyGap$());
+      expect(await screen.findByRole('group', { name: tr.gapEmpty$({ number: 1 }) })).toHaveClass(
+        'has-errors',
+      );
+      expect(
+        screen.getByRole('group', { name: tr.gapWithAnswer$({ answer: 'summer', number: 2 }) }),
+      ).not.toHaveClass('has-errors');
       expect(lastErrors(emitted())).toContainEqual({
         code: ValidationError.EMPTY_ANSWER_CONTENT,
         id: 'gap_a',
@@ -188,10 +198,17 @@ describe('GapMatchEditor', () => {
 
     it('shows a blank distractor under it', async () => {
       const { emitted } = await renderEditor({
-        interaction: interactionOf({ distractors: [{ id: 'choice_x', content: '' }] }),
+        interaction: interactionOf({
+          distractors: [
+            { id: 'choice_ok', content: 'spring' },
+            { id: 'choice_x', content: '' },
+          ],
+        }),
       });
 
-      expect(section(tr.distractorsLabel$())).toHaveTextContent(tr.errorEmptyChoiceContent$());
+      const [valid, blank] = distractorItems();
+      expect(blank).toHaveTextContent(tr.errorEmptyChoiceContent$());
+      expect(valid).not.toHaveTextContent(tr.errorEmptyChoiceContent$());
       expect(lastErrors(emitted())).toContainEqual({
         code: ValidationError.EMPTY_CHOICE_CONTENT,
         id: 'choice_x',
@@ -199,12 +216,20 @@ describe('GapMatchEditor', () => {
     });
 
     it('shows a distractor that repeats an answer under it', async () => {
-      await renderEditor({
-        interaction: interactionOf({ distractors: [{ id: 'choice_x', content: 'winter' }] }),
+      const { emitted } = await renderEditor({
+        interaction: interactionOf({
+          distractors: [
+            { id: 'choice_ok', content: 'spring' },
+            { id: 'choice_x', content: 'winter' },
+          ],
+        }),
       });
 
-      expect(section(tr.distractorsLabel$())).toHaveTextContent(
-        tr.errorDuplicateDistractorContent$(),
+      const [valid, repeated] = distractorItems();
+      expect(repeated).toHaveTextContent(tr.errorDuplicateDistractorContent$());
+      expect(valid).not.toHaveTextContent(tr.errorDuplicateDistractorContent$());
+      expect(lastErrors(emitted())).toContainEqual(
+        expect.objectContaining({ code: ValidationError.DUPLICATE_DISTRACTOR_CONTENT }),
       );
     });
   });

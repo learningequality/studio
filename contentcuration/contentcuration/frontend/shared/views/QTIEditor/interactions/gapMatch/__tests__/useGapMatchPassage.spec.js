@@ -1,9 +1,9 @@
 import { nextTick } from 'vue';
-import { fireEvent, screen } from '@testing-library/vue';
+import { screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
-import { findGap, gap, gapIdentifiers, input, renderPassage } from './renderPassage';
+import { findGap, gap, gapIdentifiers, input, press, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
 // jsdom defines `ontouchstart`, which would put the editor in its touch layout.
@@ -31,9 +31,6 @@ const { insertGap$, gapWithAnswer$, gapEmpty$, gapRemoved$, gapsRemoved$ } = qti
 const INSERT = { name: insertGap$() };
 
 const clickInsert = () => userEvent.click(screen.getByRole('button', INSERT));
-
-// ProseMirror reads `keyCode`, which `userEvent.keyboard` does not set.
-const press = (editor, key, keyCode) => fireEvent.keyDown(editor.view.dom, { key, keyCode });
 
 const newGap = editor => {
   const [identifier] = gapIdentifiers(editor).filter(id => id !== 'gap_a');
@@ -195,7 +192,7 @@ describe('useGapMatchPassage announcements', () => {
 
   it('says which gap Backspace removed', async () => {
     const { editor } = await renderAnnouncerAt(TWO_GAPS, 7);
-    press(editor, 'Backspace', 8);
+    press(editor, 'Backspace');
     expect(announced()).toEqual([gapRemoved$({ name: gapEmpty$({ number: 2 }) })]);
   });
 

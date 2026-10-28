@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
-import { gap, renderPassage } from './renderPassage';
+import { findGap, gap, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
 jest.mock('shared/utils/browserInfo', () => ({ isTouchDevice: false }));
@@ -34,7 +34,7 @@ describe('GapChip', () => {
   it('renames a gap as its answer is typed', async () => {
     const { editor } = await renderPassage({ value: PASSAGE });
 
-    editor.commands.insertContentAt(editor.state.doc.content.size - 3, 'sun');
+    editor.commands.insertContentAt(findGap(editor, 'gap_b').pos + 1, 'sun');
 
     expect(
       await screen.findByRole('group', { name: gapWithAnswer$({ answer: 'sun', number: 2 }) }),

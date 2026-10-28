@@ -164,16 +164,18 @@ describe('GapNode', () => {
     it('Backspace at the start of an answer deletes nothing', async () => {
       const editor = await renderAt(ANSWER_START);
 
-      press(editor, 'Backspace');
+      const unhandled = press(editor, 'Backspace');
 
+      expect(unhandled).toBe(false);
       expect(editor.getHTML()).toBe(PASSAGE);
     });
 
     it('Delete at the end of an answer deletes nothing', async () => {
       const editor = await renderAt(ANSWER_END);
 
-      press(editor, 'Delete');
+      const unhandled = press(editor, 'Delete');
 
+      expect(unhandled).toBe(false);
       expect(editor.getHTML()).toBe(PASSAGE);
     });
 
