@@ -1,7 +1,23 @@
-import { inject, provide } from 'vue';
+import { inject, provide, ref } from 'vue';
 import { qtiEditorStrings } from '../../qtiEditorStrings';
 
 const PassageGapsSymbol = Symbol('gapMatchPassageGaps');
+
+const speakLatex = ref(null);
+let mathLive = null;
+
+function loadSpeech() {
+  if (mathLive) return;
+  mathLive = import(/* webpackChunkName: "mathlive" */ 'mathlive').then(module => {
+    speakLatex.value = module.convertLatexToSpeakableText;
+  });
+}
+
+function formulaText(latex) {
+  if (speakLatex.value) return speakLatex.value(latex);
+  loadSpeech();
+  return latex;
+}
 
 /**
  * @typedef  {object} PassageGaps
@@ -25,14 +41,17 @@ export function injectPassageGaps() {
 }
 
 /**
- * A gap's answer as plain text. A formula has no text of its own, so it reads as its LaTeX,
- * which is what the editor shows of it.
+ * A gap's answer as plain text. A formula has no text of its own, so it reads as MathLive
+ * speaks it, as the formula's own field does. Until MathLive loads, it reads as its LaTeX, which
+ * is what the formula's field shows until then. Reactive: it changes when MathLive loads.
  *
  * @param {import('@tiptap/pm/model').Node} node - The gap node
  * @returns {string}
  */
 export function gapAnswerText(node) {
-  return node.textBetween(0, node.content.size, ' ', leaf => leaf.attrs.latex ?? '');
+  return node.textBetween(0, node.content.size, ' ', leaf =>
+    leaf.attrs.latex ? formulaText(leaf.attrs.latex) : '',
+  );
 }
 
 /**

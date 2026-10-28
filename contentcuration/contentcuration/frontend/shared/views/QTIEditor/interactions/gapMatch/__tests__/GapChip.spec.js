@@ -4,6 +4,7 @@ import { findGap, gap, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
 jest.mock('shared/utils/browserInfo', () => ({ isTouchDevice: false }));
+jest.mock('mathlive', () => ({ convertLatexToSpeakableText: latex => `spoken ${latex}` }));
 
 const { gapWithAnswer$, gapEmpty$, gapHidden$ } = qtiEditorStrings;
 
@@ -21,13 +22,15 @@ describe('GapChip', () => {
     expect(screen.getByRole('group', { name: gapEmpty$({ number: 2 }) })).toBeInTheDocument();
   });
 
-  it('names a gap whose answer is a formula by the formula', async () => {
+  it('names a gap whose answer is a formula by the formula, as MathLive speaks it', async () => {
     await renderPassage({
       value: `<p>${gap('gap_m', '<span data-latex="x^2"></span>')}</p>`,
     });
 
     expect(
-      await screen.findByRole('group', { name: gapWithAnswer$({ answer: 'x^2', number: 1 }) }),
+      await screen.findByRole('group', {
+        name: gapWithAnswer$({ answer: 'spoken x^2', number: 1 }),
+      }),
     ).toBeInTheDocument();
   });
 
