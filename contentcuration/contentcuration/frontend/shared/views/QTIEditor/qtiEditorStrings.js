@@ -653,6 +653,32 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Accessible name of a gap in the passage of a gap match question that has no answer yet',
   },
+  gapMatchLabel: {
+    message: 'Gap match',
+    context: 'Display name for a gap match question type shown in the question type selector',
+  },
+  gapMatchDescription: {
+    message:
+      'Learners fill the gaps in a passage with answers from a shuffled set. Include distractors to increase difficulty.',
+    context: 'Description for the gap match question type in the info modal',
+  },
+  gapPassageEditorDescription: {
+    message: 'Gap widgets can be inserted blank or converted from highlighted text.',
+    context: 'Instruction under the passage editor header of a gap match question',
+  },
+  gapMatchAnswersLabel: {
+    message: 'Answers',
+    context:
+      'Section header above the passage of a gap match question, with its gaps, as a preview shows it',
+  },
+  errorNoGap: {
+    message: 'Insert at least one gap',
+    context: 'Validation error when the passage of a gap match question has no gap',
+  },
+  errorEmptyGap: {
+    message: 'One or more gaps have no answer',
+    context: 'Validation error above the passage when any of its gaps has no answer',
+  },
   insertGap: {
     message: 'Insert',
     context:

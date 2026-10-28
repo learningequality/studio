@@ -26,6 +26,16 @@ class GapMatchInteractionDescriptor extends InteractionDescriptor {
     return QuestionType.GAP_MATCH;
   }
 
+  getTypeOptions(tr) {
+    return [
+      {
+        value: QuestionType.GAP_MATCH,
+        label: tr.gapMatchLabel$(),
+        description: tr.gapMatchDescription$(),
+      },
+    ];
+  }
+
   getResponseDeclarationSchema() {
     return {
       baseType: BaseType.DIRECTED_PAIR,
