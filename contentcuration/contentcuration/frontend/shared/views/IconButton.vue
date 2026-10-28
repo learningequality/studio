@@ -4,7 +4,7 @@
     v-bind="$attrs"
     :tooltip="text"
     :icon="icon"
-    ariaLabel="text"
+    :ariaLabel="text"
     :color="color"
     :size="size"
     :class="{ 'rtl-flip': rtlFlip }"
