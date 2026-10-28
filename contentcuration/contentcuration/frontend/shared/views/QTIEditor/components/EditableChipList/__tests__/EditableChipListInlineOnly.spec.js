@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import EditableChipList from '../index.vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
+import { stubProseMirrorLayout } from 'shared/utils/testing';
 
 const { distractorsLabel$, addDistractorBtn$, editDistractorLabel$, deleteDistractorBtn$ } =
   qtiEditorStrings;
@@ -29,6 +30,8 @@ const openEditor = async buttonName => {
 const openChipEditor = () => openEditor(editDistractorLabel$({ number: 1 }));
 
 describe('EditableChipList chip editor', () => {
+  stubProseMirrorLayout();
+
   it('edits a chip on a single line in inline-only mode', async () => {
     renderList({ inlineOnly: true });
 
