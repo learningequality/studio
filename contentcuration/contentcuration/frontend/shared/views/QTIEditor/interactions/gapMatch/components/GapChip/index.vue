@@ -75,7 +75,7 @@
     min-width: 3em;
     min-height: 1.5em;
     padding: 0 8px;
-    margin: 2px 0;
+    margin: 2px;
     vertical-align: bottom;
     background-color: var(--palette-green-v100);
     border: 1px solid var(--tokens-correct);
