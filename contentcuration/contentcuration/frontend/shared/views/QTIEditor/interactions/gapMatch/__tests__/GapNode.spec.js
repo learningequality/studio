@@ -11,6 +11,8 @@ const caret = editor => editor.state.selection.$from;
 
 const isInGap = editor => caret(editor).parent.type.name === 'gap';
 
+const answerOf = (editor, identifier) => findGap(editor, identifier).node.textContent;
+
 // <p>ab[gap_a: xy]cd</p>: the gap starts at 3, its answer runs from 4 to 6, and 7 is after it.
 const PASSAGE = `<p>ab${gap('gap_a', 'xy', 'choice_a')}cd</p>`;
 const BEFORE_GAP = 3;
@@ -67,7 +69,7 @@ describe('GapNode', () => {
       input(editor, 'insertText', 'z');
 
       const [inserted] = gapIdentifiers(editor);
-      expect(findGap(editor, inserted).node).toHaveTextContent('z');
+      expect(answerOf(editor, inserted)).toBe('z');
     });
 
     it('types at the start of an answer into the gap', async () => {
@@ -75,7 +77,7 @@ describe('GapNode', () => {
 
       input(editor, 'insertText', 'z');
 
-      expect(findGap(editor, 'gap_a').node).toHaveTextContent('zxy');
+      expect(answerOf(editor, 'gap_a')).toBe('zxy');
     });
 
     it('types at the end of an answer into the gap', async () => {
@@ -83,7 +85,7 @@ describe('GapNode', () => {
 
       input(editor, 'insertText', 'z');
 
-      expect(findGap(editor, 'gap_a').node).toHaveTextContent('xyz');
+      expect(answerOf(editor, 'gap_a')).toBe('xyz');
     });
 
     it('types beside a gap outside it', async () => {
@@ -91,7 +93,7 @@ describe('GapNode', () => {
 
       input(editor, 'insertText', 'z');
 
-      expect(findGap(editor, 'gap_a').node).toHaveTextContent('xy');
+      expect(answerOf(editor, 'gap_a')).toBe('xy');
       expect(editor.getText()).toBe('abxyzcd');
     });
 
@@ -190,7 +192,7 @@ describe('GapNode', () => {
       expect(original).toBe('gap_a');
       expect(copy).not.toBe('gap_a');
       expect(findGap(editor, copy).node.attrs.correct).toBeNull();
-      expect(findGap(editor, copy).node).toHaveTextContent('xy');
+      expect(answerOf(editor, copy)).toBe('xy');
     });
 
     it('keeps the identifiers on cut and paste', async () => {
