@@ -1,6 +1,5 @@
-import { computed, readonly } from 'vue';
+import { readonly } from 'vue';
 import { gapMatchInteractionDescriptor } from '../interactions/gapMatch/Descriptor';
-import { getGaps } from '../interactions/gapMatch/parse';
 import { useDistractors } from './useDistractors';
 import { useInteraction } from './useInteraction';
 import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
@@ -18,9 +17,6 @@ export function useGapMatchInteraction(interactionBlock, questionType) {
   const base = useInteraction(gapMatchInteractionDescriptor, interactionBlock, questionType);
   const { state } = base;
 
-  /** Every gap in the passage, in document order. */
-  const gaps = computed(() => getGaps(state.value.passage));
-
   function setPrompt(html) {
     state.value = { ...state.value, prompt: hasRichTextContent(html) ? html : '' };
   }
@@ -32,7 +28,6 @@ export function useGapMatchInteraction(interactionBlock, questionType) {
   return {
     ...base,
     state: readonly(state),
-    gaps,
     setPrompt,
     setPassage,
     ...useDistractors(state),

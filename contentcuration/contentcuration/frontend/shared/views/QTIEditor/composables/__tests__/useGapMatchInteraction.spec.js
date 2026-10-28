@@ -13,11 +13,6 @@ function setup(state = { prompt: '', passage: PASSAGE, distractors: [] }) {
 }
 
 describe('useGapMatchInteraction', () => {
-  it('reads the gaps out of the passage', () => {
-    const { gaps } = setup();
-    expect(gaps.value).toEqual([{ id: 'gap_a', answerId: expect.any(String), answer: 'winter' }]);
-  });
-
   it('sets the question', () => {
     const { state, setPrompt } = setup();
     setPrompt('<p>Fill in the seasons</p>');
@@ -35,10 +30,10 @@ describe('useGapMatchInteraction', () => {
     expect(bodyXml.value).not.toContain('qti-prompt');
   });
 
-  it('sets the passage, and the gaps follow it', () => {
-    const { gaps, setPassage } = setup();
+  it('sets the passage', () => {
+    const { state, setPassage } = setup();
     setPassage(`<p>${gap('gap_b', 'summer')}</p>`);
-    expect(gaps.value.map(g => g.id)).toEqual(['gap_b']);
+    expect(state.value.passage).toBe(`<p>${gap('gap_b', 'summer')}</p>`);
   });
 
   it('adds, edits and removes distractors', () => {
