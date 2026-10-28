@@ -26,26 +26,21 @@ Object.entries(Categories).forEach(([key, value]) => {
   categoriesLookup[newKey] = value;
 });
 
+const getOptionCheckboxes = wrapper => wrapper.findAllComponents({ name: 'KListboxOption' });
+
 const getOptionsValues = wrapper => {
   const categories = {};
-  const checkboxes = wrapper.findAllComponents('[data-test="option-checkbox"]');
-  checkboxes.wrappers.forEach(checkbox => {
-    const { label, checked } = checkbox.props();
-    let value;
-    if (checked) {
-      value = CheckboxValue.CHECKED;
-    } else {
-      value = CheckboxValue.UNCHECKED;
-    }
-    categories[categoriesLookup[label]] = value;
+  getOptionCheckboxes(wrapper).wrappers.forEach(option => {
+    const label = option.props('label');
+    const checked = option.attributes('aria-selected') === 'true';
+    categories[categoriesLookup[label]] = checked ? CheckboxValue.CHECKED : CheckboxValue.UNCHECKED;
   });
   return categories;
 };
 
 const findOptionCheckbox = (wrapper, category) => {
-  const checkboxes = wrapper.findAllComponents('[data-test="option-checkbox"]');
-  return checkboxes.wrappers.find(checkbox => {
-    const label = checkbox.props('label');
+  return getOptionCheckboxes(wrapper).wrappers.find(option => {
+    const label = option.props('label');
     return categoriesLookup[label] === category;
   });
 };

@@ -135,18 +135,27 @@ describe('CategoryOptions', () => {
     });
   });
 
-  describe('expanded mode', () => {
-    it('renders the flat checkbox list instead of KMultiSelect', () => {
+  describe('expanded mode (KMultiSelect)', () => {
+    it('shows the category list open, with no dropdown menu', async () => {
       renderComponent({ expanded: true });
 
       expect(screen.queryByRole('button', { name: openMenuAction$() })).not.toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: DANCE_LABEL })).toBeInTheDocument();
+      expect(await screen.findByRole('option', { name: DANCE_LABEL })).toBeInTheDocument();
+    });
+
+    it('filters the category list as the user types', async () => {
+      renderComponent({ expanded: true });
+
+      await userEvent.type(screen.getByRole('combobox'), MUSIC_LABEL);
+
+      expect(screen.queryByRole('option', { name: DANCE_LABEL })).not.toBeInTheDocument();
+      expect(screen.getByRole('option', { name: MUSIC_LABEL })).toBeInTheDocument();
     });
 
     it('emits the added category applied to all edited nodes when checked', async () => {
       const { emitted } = renderComponent({ expanded: true, nodeIds: [NODE_1] });
 
-      await userEvent.click(screen.getByRole('checkbox', { name: DANCE_LABEL }));
+      await userEvent.click(await screen.findByRole('option', { name: DANCE_LABEL }));
 
       expect(lastInput(emitted)).toEqual({ [DANCE]: [NODE_1] });
     });
@@ -158,7 +167,65 @@ describe('CategoryOptions', () => {
         nodeIds: [NODE_1],
       });
 
-      await userEvent.click(screen.getByRole('checkbox', { name: ARTS_LABEL }));
+      await userEvent.click(await screen.findByRole('option', { name: ARTS_LABEL }));
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('adds only the parent when a partially selected parent is clicked, same as dropdown mode', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1] },
+        nodeIds: [NODE_1],
+      });
+
+      await userEvent.click(
+        await screen.findByRole('option', { name: name => name.startsWith(SCHOOL_LABEL) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({
+        [DANCE]: [NODE_1],
+        [SCHOOL]: [NODE_1],
+      });
+    });
+
+    it('preserves a category only partially applied across the edited nodes', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(await screen.findByRole('option', { name: DANCE_LABEL }));
+
+      expect(lastInput(emitted)).toEqual({
+        [MUSIC]: [NODE_1],
+        [DANCE]: [NODE_1, NODE_2],
+      });
+    });
+
+    it('removes a category when its chip close button is clicked', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1] },
+        nodeIds: [NODE_1],
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: DANCE_PATH }) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('emits an empty object when the selection is cleared', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1] },
+        nodeIds: [NODE_1],
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: clearAllAction$() }));
 
       expect(lastInput(emitted)).toEqual({});
     });
