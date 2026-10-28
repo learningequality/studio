@@ -121,6 +121,27 @@ describe('useGapMatchPassage Insert action', () => {
     expect(screen.getByRole('button', INSERT)).toHaveAttribute('aria-disabled', 'true');
     expect(gapIdentifiers(editor)).toEqual(['gap_a']);
   });
+
+  it('is unavailable over a select-all holding a gap', async () => {
+    const value = `<p>The ${gap('gap_a', 'Sun')} rises</p>`;
+    const { editor } = await renderAt(value, 1);
+    editor.commands.selectAll();
+    await nextTick();
+    await clickInsert();
+
+    expect(screen.getByRole('button', INSERT)).toHaveAttribute('aria-disabled', 'true');
+    expect(editor.getHTML()).toBe(value);
+  });
+
+  it('is unavailable over a select-all holding a line break', async () => {
+    const { editor } = await renderAt('<p>one<br>two</p>', 1);
+    editor.commands.selectAll();
+    await nextTick();
+    await clickInsert();
+
+    expect(screen.getByRole('button', INSERT)).toHaveAttribute('aria-disabled', 'true');
+    expect(gapIdentifiers(editor)).toEqual([]);
+  });
 });
 
 describe('useGapMatchPassage announcements', () => {

@@ -56,13 +56,23 @@ function answerBetween(doc, { from, to }) {
   return answer;
 }
 
-function selectionHoldsGap({ doc, selection }) {
+function rangeHolds(doc, { from, to }, test) {
   let holds = false;
-  doc.nodesBetween(selection.from, selection.to, node => {
-    if (isGap(node)) holds = true;
+  doc.nodesBetween(from, to, node => {
+    if (test(node)) holds = true;
     return !holds;
   });
-  return holds || isGap(selection.$from.parent) || isGap(selection.$to.parent);
+  return holds;
+}
+
+const isGapOrBreak = node => isGap(node) || node.type.name === 'hardBreak';
+
+function selectionHoldsGap({ doc, selection }) {
+  return (
+    rangeHolds(doc, selection, isGap) ||
+    isGap(selection.$from.parent) ||
+    isGap(selection.$to.parent)
+  );
 }
 
 /**
@@ -171,10 +181,12 @@ export function useGapMatchPassage({
     prominent: true,
     // Before focus, the gap goes at the end of the passage, which always takes one.
     // Replacing a multi-line selection with an inline node would join the lines.
-    isAvailable: ({ editor: { state }, selection, canInsertNode }) =>
-      !selection.hasCursor ||
-      Boolean(paragraphOfAllSelection(state)) ||
-      (!selection.spansLines && canInsertNode(GapNode.name) && !selectionHoldsGap(state)),
+    isAvailable: ({ editor: { state }, selection, canInsertNode }) => {
+      if (!selection.hasCursor) return true;
+      const paragraph = paragraphOfAllSelection(state);
+      if (paragraph) return !rangeHolds(state.doc, paragraph, isGapOrBreak);
+      return !selection.spansLines && canInsertNode(GapNode.name) && !selectionHoldsGap(state);
+    },
     handler: ({ editor, selection }) => {
       if (!selection.hasCursor) {
         editor.chain().focus('end').insertGap().run();
