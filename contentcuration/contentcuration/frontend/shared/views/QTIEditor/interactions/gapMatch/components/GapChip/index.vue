@@ -68,11 +68,14 @@
 
 <style lang="scss" scoped>
 
+  // An empty inline-block has no line box, so a blank gap needs a height of its own.
   .gap {
     display: inline-block;
     min-width: 3em;
+    min-height: 1.5em;
     padding: 0 8px;
     margin: 2px 0;
+    vertical-align: bottom;
     background-color: var(--palette-green-v100);
     border: 1px solid var(--tokens-correct);
     border-radius: 8px;
