@@ -10,7 +10,6 @@ import MoveModal from '../../../components/move/MoveModal';
 import NodePanel from '../../NodePanel';
 import { createTranslator } from 'shared/i18n';
 
-
 const tr = createTranslator('TrashModal', TrashModal.$trs);
 const moveTr = createTranslator('MoveModal', MoveModal.$trs);
 const nodePanelTr = createTranslator('NodePanel', NodePanel.$trs);

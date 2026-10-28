@@ -4,7 +4,6 @@ import { Store } from 'vuex';
 import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import DeleteChannelModal from '../index.vue';
 
-
 const mockDeleteChannel = jest.fn().mockResolvedValue();
 
 function createStore() {

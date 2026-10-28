@@ -94,7 +94,7 @@
 
 <script>
 
-  import useKSnackbar from "kolibri-design-system/lib/composables/useKSnackbar";
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { mapActions, mapMutations, mapState, mapGetters } from 'vuex';
   import sumBy from 'lodash/sumBy';
   import { RouteNames } from '../../constants';

@@ -4,7 +4,6 @@ import { Store } from 'vuex';
 import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import RemoveChannelFromListModal from '../index.vue';
 
-
 const mockRemoveViewer = jest.fn().mockResolvedValue();
 
 function createStore() {
