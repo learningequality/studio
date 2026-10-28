@@ -92,6 +92,7 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
 
 describe('EditBooleanMapModal', () => {
   beforeEach(() => {
+    useKSnackbar().clearSnackbar();
     nodes = {
       node1: { id: 'node1' },
       node2: { id: 'node2' },

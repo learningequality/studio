@@ -48,6 +48,10 @@ async function chooseLanguage(wrapper, language) {
 describe('EditLanguageModal', () => {
   let wrapper, mocks;
 
+  beforeEach(() => {
+    useKSnackbar().clearSnackbar();
+  });
+
   afterEach(() => {
     if (wrapper) wrapper.destroy();
   });
