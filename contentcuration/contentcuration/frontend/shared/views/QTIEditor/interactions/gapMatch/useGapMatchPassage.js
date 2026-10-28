@@ -11,14 +11,12 @@ import { storedHTML } from 'shared/views/TipTapEditor/TipTapEditor/utils/imageSr
 
 const gapNodes = doc => findChildren(doc, isGap).map(({ node }) => node);
 
-/** Whether two documents hold the same gaps, in the same order, with the same answers. */
 function sameGaps(prevDoc, doc) {
   const before = gapNodes(prevDoc);
   const after = gapNodes(doc);
   return before.length === after.length && before.every((node, i) => node.eq(after[i]));
 }
 
-/** The gaps in `prevDoc` that `doc` no longer holds; a moved gap keeps its identifier. */
 function removedGaps(prevDoc, doc) {
   const kept = new Set(gapNodes(doc).map(node => node.attrs.identifier));
   return gapNodes(prevDoc).filter(node => !kept.has(node.attrs.identifier));
@@ -30,8 +28,7 @@ const gapNumber = (doc, identifier) =>
 const describeIn = (doc, node) =>
   describeGap({ answer: gapAnswerText(node), number: gapNumber(doc, node.attrs.identifier) });
 
-// Select-all selects the passage itself, where an inline node cannot go. Over a passage of one
-// paragraph, it is taken as that paragraph's text.
+// Select-all selects the passage itself, where an inline node cannot go.
 function paragraphOfAllSelection({ doc, selection, schema }) {
   const only = doc.childCount === 1 ? doc.firstChild : null;
   const holdsGap = only && only.type.contentMatch.matchType(schema.nodes[GapNode.name]);
@@ -47,7 +44,6 @@ function trimmedRange(doc, { from, to }) {
   return { from, to };
 }
 
-// A gap holds text and formulas, so the rest of the highlighted content is left out.
 function answerBetween(doc, { from, to }) {
   const answer = [];
   doc.slice(from, to).content.forEach(node => {
@@ -115,7 +111,6 @@ export function useGapMatchPassage({
     gapIds.value = gapNodes(doc).map(node => node.attrs.identifier);
   };
 
-  /** What a screen reader should hear about the gap a change entered or removed, if any. */
   function gapMessage(prevState, state) {
     const entered = state.selection.$from.parent;
     if (state.doc.eq(prevState.doc)) {
@@ -133,12 +128,10 @@ export function useGapMatchPassage({
     return null;
   }
 
-  // Assertive, so it is read as the caret moves, rather than after it.
   const { sendAssertiveMessage } = useKLiveRegion();
   const announcer = new Plugin({
     view: () => ({
       update(view, prevState) {
-        // Only what the author does in the passage, not what loading or another field does to it.
         if (!view.editable || !view.hasFocus()) return;
         const message = gapMessage(prevState, view.state);
         if (message) sendAssertiveMessage(message);
@@ -191,7 +184,6 @@ export function useGapMatchPassage({
     title: qtiEditorStrings.insertGap$(),
     icon: 'insert',
     prominent: true,
-    // Before focus, the gap goes at the end of the passage, which always takes one.
     // Replacing a multi-line selection with an inline node would join the lines.
     isAvailable: ({ editor: { state }, selection, canInsertNode }) => {
       if (!selection.hasCursor) return true;

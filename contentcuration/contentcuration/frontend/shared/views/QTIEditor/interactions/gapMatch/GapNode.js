@@ -32,8 +32,6 @@ function* gapsIn(fragment) {
   }
 }
 
-// A copy takes a fresh identifier and drops the answer identifier, which the save derives from
-// the gap's.
 function withFreshIdentifier(attrs, taken) {
   if (attrs.identifier && !taken.has(attrs.identifier)) return attrs;
   return { ...attrs, identifier: generateRandomSlug('gap'), correct: null };
@@ -53,8 +51,6 @@ function reidentify(fragment, taken) {
   return Fragment.fromArray(children);
 }
 
-// A gap's answer is one line of text and formulas, so what is pasted into a gap is flattened to
-// that: a space takes the place of each line break and each break between blocks.
 function flattenForGap(fragment, schema) {
   const nodes = [];
   let breaks = false;
@@ -71,7 +67,6 @@ function flattenForGap(fragment, schema) {
   return Fragment.fromArray(nodes);
 }
 
-/** Whether a position is at the edge of a gap, inside or outside it. */
 function touchesGap($pos) {
   return (
     isGap($pos.nodeBefore) ||
@@ -128,7 +123,6 @@ export const GapNode = Node.create({
 
   addCommands() {
     return {
-      // The content, if any, becomes the gap's answer. The cursor goes to the end of it.
       insertGap:
         content =>
         ({ tr, commands }) => {
@@ -157,7 +151,6 @@ export const GapNode = Node.create({
       if (!$pos || !isGap($pos.parent) || $pos.parent.content.size) return false;
       return editor.commands.deleteRange({ from: $pos.before(), to: $pos.after() });
     };
-    // Backspace after a gap and Delete before one go into it, rather than delete it whole.
     const enterGap =
       forward =>
       ({ editor }) => {
@@ -165,7 +158,6 @@ export const GapNode = Node.create({
         if (!$pos || !isGap(forward ? $pos.nodeAfter : $pos.nodeBefore)) return false;
         return editor.commands.setTextSelection(forward ? $pos.pos + 1 : $pos.pos - 1);
       };
-    // At the edge of a gap's answer, Backspace and Delete would join or delete across it.
     const stayInGap =
       forward =>
       ({ editor }) => {
@@ -230,8 +222,6 @@ export const GapNode = Node.create({
               return true;
             },
           },
-          // A copy must not share an identifier with the original; a cut-paste has already
-          // removed it.
           transformPasted(slice, view) {
             if (isGap(view.state.selection.$from.parent)) {
               return new Slice(flattenForGap(slice.content, view.state.schema), 0, 0);
@@ -244,11 +234,9 @@ export const GapNode = Node.create({
             return new Slice(reidentify(slice.content, taken), slice.openStart, slice.openEnd);
           },
         },
-        // Catches inserts `transformPasted` does not see, such as a drop, the toolbar's Paste,
-        // which inserts through `insertContent`, and a block inserted inside a gap, which splits
-        // it. An inserted gap whose identifier another gap still has is a copy or a split half.
+        // `transformPasted` does not see a drop, the toolbar's Paste, which inserts through
+        // `insertContent`, or a block inserted inside a gap, which splits it.
         appendTransaction(transactions, oldState, newState) {
-          // Undo and redo only restore states this plugin already accepted.
           if (transactions.every(isHistoryTransaction)) return null;
           if (!transactions.some(tr => tr.docChanged)) return null;
           const changed = getChangedRanges(combineTransactionSteps(oldState.doc, transactions));
