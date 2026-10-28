@@ -173,7 +173,8 @@ export const GapNode = Node.create({
       ({ editor }) => {
         const $pos = caret(editor);
         if (!$pos) return false;
-        const forward = (key === 'ArrowRight') !== isRtlAt(editor.view, $pos.pos);
+        const outsideGap = isGap($pos.parent) ? $pos.before() : $pos.pos;
+        const forward = (key === 'ArrowRight') !== isRtlAt(editor.view, outsideGap);
         const target = forward ? $pos.pos + 1 : $pos.pos - 1;
         const { doc } = editor.state;
         if (target < 0 || target > doc.content.size) return false;

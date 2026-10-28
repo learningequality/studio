@@ -260,5 +260,20 @@ describe('GapNode', () => {
       expect(positionsAfter(editor, 'ArrowRight', 1)).toEqual([BEFORE_GAP]);
       spy.mockRestore();
     });
+
+    it('follow the text around a gap whose answer runs the other way', async () => {
+      const editor = await renderAt(BEFORE_GAP);
+      const { getComputedStyle } = window;
+      const spy = jest
+        .spyOn(window, 'getComputedStyle')
+        .mockImplementation((el, ...rest) =>
+          editor.view.dom.contains(el)
+            ? { direction: el.closest('.answer') ? 'ltr' : 'rtl' }
+            : getComputedStyle.call(window, el, ...rest),
+        );
+
+      expect(positionsAfter(editor, 'ArrowLeft', 4)).toEqual([4, 5, 6, AFTER_GAP]);
+      spy.mockRestore();
+    });
   });
 });
