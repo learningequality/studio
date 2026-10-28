@@ -96,7 +96,7 @@ function selectionHoldsGap({ doc, selection }) {
  * @param {boolean | import('vue').Ref<boolean>} [options.showAnswers] - Whether a read-only
  *   passage shows each gap's answer.
  * @param {?string} [options.describedBy] - The id of the passage's helper text, which describes
- *   the editor.
+ *   the editor while it can be edited.
  * @param {(html: string) => void} [options.onChange] - Receives the passage's HTML, as above.
  * @returns {GapMatchPassageObject} What the passage's editor uses.
  */
@@ -146,8 +146,15 @@ export function useGapMatchPassage({
     }),
   });
 
+  const describe = view => {
+    if (describedBy && view.editable) view.dom.setAttribute('aria-describedby', describedBy);
+    else view.dom.removeAttribute('aria-describedby');
+  };
   const description = new Plugin({
-    props: { attributes: describedBy ? { 'aria-describedby': describedBy } : {} },
+    view(view) {
+      describe(view);
+      return { update: describe };
+    },
   });
 
   providePassageGaps({

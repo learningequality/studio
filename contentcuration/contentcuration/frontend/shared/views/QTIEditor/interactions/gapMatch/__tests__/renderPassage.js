@@ -52,6 +52,7 @@ export async function renderPassage({
   mode = 'edit',
   errorGapIds = [],
   showAnswers = false,
+  describedBy = null,
   onChange,
 }) {
   const onReady = jest.fn();
@@ -59,7 +60,7 @@ export async function renderPassage({
     {
       components: { TipTapEditor },
       setup() {
-        const passage = useGapMatchPassage({ errorGapIds, showAnswers, onChange });
+        const passage = useGapMatchPassage({ errorGapIds, showAnswers, describedBy, onChange });
         return { extensions: passage.extensions, insertActions: passage.insertActions, mode };
       },
       data: () => ({ value }),

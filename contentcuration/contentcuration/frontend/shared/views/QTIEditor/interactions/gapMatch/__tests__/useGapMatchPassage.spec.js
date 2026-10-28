@@ -206,6 +206,29 @@ describe('useGapMatchPassage announcements', () => {
   });
 });
 
+describe('useGapMatchPassage description', () => {
+  stubProseMirrorLayout();
+
+  const describedPassage = mode =>
+    renderPassage({ value: '<p>The Sun</p>', mode, describedBy: 'passage-description' });
+
+  it('describes the passage while it can be edited', async () => {
+    const { editor } = await describedPassage('edit');
+    expect(editor.view.dom).toHaveAttribute('aria-describedby', 'passage-description');
+  });
+
+  it('leaves a read-only passage undescribed', async () => {
+    const { editor } = await describedPassage('view');
+    expect(editor.view.dom).not.toHaveAttribute('aria-describedby');
+  });
+
+  it('stops describing the passage when it is made read-only', async () => {
+    const { editor } = await describedPassage('edit');
+    editor.setEditable(false);
+    expect(editor.view.dom).not.toHaveAttribute('aria-describedby');
+  });
+});
+
 describe('useGapMatchPassage syncing', () => {
   stubProseMirrorLayout();
 
