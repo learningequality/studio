@@ -646,12 +646,12 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   gapWithAnswer: {
     message: '{answer}, gap {number}',
     context:
-      'Accessible name of a gap in the passage of a gap match question. {answer} is the answer typed in the gap, and comes first so that speech input finds the gap by the text it shows',
+      'Accessible name of a gap in the passage of a gap match question. {answer} is the answer typed in the gap, and comes first so that speech input finds the gap by the text it shows. {number} is its position in the passage',
   },
   gapEmpty: {
     message: 'Empty gap {number}',
     context:
-      'Accessible name of a gap in the passage of a gap match question that has no answer yet',
+      'Accessible name of a gap in the passage of a gap match question that has no answer yet. {number} is its position in the passage',
   },
   gapMatchLabel: {
     message: 'Gap match',
@@ -696,6 +696,7 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   },
   gapHidden: {
     message: 'Gap {number}',
-    context: 'Accessible name of a gap in a preview of a gap match question that hides the answers',
+    context:
+      'Accessible name of a gap in a preview of a gap match question that hides the answers. {number} is its position in the passage',
   },
 });
