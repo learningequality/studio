@@ -22,6 +22,7 @@ const ARTS_LABEL = translateMetadataString('arts');
 const DANCE_LABEL = translateMetadataString('dance');
 const MUSIC_LABEL = translateMetadataString('music');
 const DANCE_PATH = `${SCHOOL_LABEL} - ${ARTS_LABEL} - ${DANCE_LABEL}`;
+const MUSIC_PATH = `${SCHOOL_LABEL} - ${ARTS_LABEL} - ${MUSIC_LABEL}`;
 const ARTS_PATH = `${SCHOOL_LABEL} - ${ARTS_LABEL}`;
 
 const NODE_1 = 'node1';
@@ -230,6 +231,20 @@ describe('CategoryOptions', () => {
       );
 
       expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('preserves an unrelated partial category when the last full chip is removed', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [MUSIC]: [NODE_1, NODE_2], [DANCE]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: MUSIC_PATH }) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({ [DANCE]: [NODE_1] });
     });
 
     it('emits an empty object when the selection is cleared', async () => {

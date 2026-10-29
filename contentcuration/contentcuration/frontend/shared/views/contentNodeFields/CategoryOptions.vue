@@ -105,17 +105,20 @@
         return createMultiSelectMessages({
           clearText: clearAllAction$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          cleared: () => this.$tr('allCategoriesCleared'),
+          // Clear-all and removing the last fully-applied chip both emit an empty
+          // array from KMultiSelect's `input` event, so the two can't be told apart
+          // there. `cleared` is the only callback KMultiSelect invokes specifically
+          // for Clear-all, so it's the one place this reset can live safely.
+          cleared: () => {
+            this.selected = {};
+            return this.$tr('allCategoriesCleared');
+          },
           partiallySelected: true,
         });
       },
     },
     methods: {
       onKMultiSelectInput(newValues) {
-        if (newValues.length === 0) {
-          this.selected = {};
-          return;
-        }
         const newValueIds = new Set(newValues);
         const removedIds = Object.keys(this.selected).filter(
           key => this.selected[key].length === this.nodeIds.length && !newValueIds.has(key),
