@@ -5,7 +5,7 @@ import { AllSelection, Plugin } from '@tiptap/pm/state';
 import { findChildren } from '@tiptap/core';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { qtiEditorStrings } from '../../qtiEditorStrings';
-import { GapNode, isGap } from './GapNode';
+import { GAP_INSERTED, GapNode, isGap } from './GapNode';
 import { describeGap, gapAnswerText, providePassageGaps } from './passageGaps';
 import { storedHTML } from 'shared/views/TipTapEditor/TipTapEditor/utils/imageSrc';
 
@@ -130,9 +130,15 @@ export function useGapMatchPassage({
 
   const { sendAssertiveMessage } = useKLiveRegion();
   const announcer = new Plugin({
+    state: {
+      init: () => false,
+      apply: tr => Boolean(tr.getMeta(GAP_INSERTED)),
+    },
     view: () => ({
       update(view, prevState) {
-        if (!view.editable || !view.hasFocus()) return;
+        // Tiptap's `focus` command focuses the editor in the next animation frame, after Insert.
+        const isInsert = announcer.getState(view.state);
+        if (!view.editable || !(view.hasFocus() || isInsert)) return;
         const message = gapMessage(prevState, view.state);
         if (message) sendAssertiveMessage(message);
       },

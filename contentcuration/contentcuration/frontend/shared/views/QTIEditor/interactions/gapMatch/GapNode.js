@@ -19,6 +19,8 @@ import { CORRECT_ATTR, GAP } from './parse';
 
 const NODE_NAME = 'gap';
 
+export const GAP_INSERTED = 'gapInserted';
+
 export const isGap = node => Boolean(node) && node.type.name === NODE_NAME;
 
 export const findGap = (doc, identifier) =>
@@ -177,7 +179,7 @@ export const GapNode = Node.create({
           const found = inserted && findGap(tr.doc, identifier);
           if (!found) return false;
           const end = found.pos + 1 + found.node.content.size;
-          tr.setSelection(TextSelection.create(tr.doc, end));
+          tr.setSelection(TextSelection.create(tr.doc, end)).setMeta(GAP_INSERTED, true);
           return true;
         },
     };

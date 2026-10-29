@@ -171,6 +171,13 @@ describe('useGapMatchPassage announcements', () => {
     expect(announced()).toEqual([gapEmpty$({ number: 1 })]);
   });
 
+  it('names the gap Insert adds from the keyboard', async () => {
+    await renderAnnouncerAt('<p>The rises</p>', 5);
+    screen.getByRole('button', INSERT).focus();
+    await userEvent.keyboard('{Enter}');
+    expect(announced()).toEqual([gapEmpty$({ number: 1 })]);
+  });
+
   it('names the gap Insert makes of highlighted text', async () => {
     await renderAnnouncerAt('<p>The Sun rises</p>', 5, 8);
     await clickInsert();
