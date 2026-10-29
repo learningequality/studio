@@ -4,17 +4,21 @@ import { qtiEditorStrings } from '../../qtiEditorStrings';
 
 const PassageGapsSymbol = Symbol('gapMatchPassageGaps');
 
+const RETRY_WAIT = 10000;
+
 const speakLatex = ref(null);
 let mathLive = null;
+let failedAt = -Infinity;
 
 function loadSpeech() {
-  if (mathLive) return;
+  if (mathLive || Date.now() - failedAt < RETRY_WAIT) return;
   mathLive = import(/* webpackChunkName: "mathlive" */ 'mathlive')
     .then(module => {
       speakLatex.value = module.convertLatexToSpeakableText;
     })
     .catch(() => {
       mathLive = null;
+      failedAt = Date.now();
     });
 }
 

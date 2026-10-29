@@ -180,8 +180,10 @@ export function useGapMatchPassage({
       editor = null;
     },
     onUpdate() {
+      if (this.editor.isEditable !== isEditable.value) {
+        loadFormulaSpeech(gapNodes(this.editor.state.doc));
+      }
       isEditable.value = this.editor.isEditable;
-      loadFormulaSpeech(gapNodes(this.editor.state.doc));
     },
     onTransaction({ transaction }) {
       if (!transaction.docChanged || sameGaps(transaction.before, transaction.doc)) return;

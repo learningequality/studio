@@ -256,20 +256,28 @@ describe('useGapMatchPassage announcements', () => {
 describe('useGapMatchPassage formula names', () => {
   stubProseMirrorLayout();
 
+  const RETRY_WAIT = 10000;
+  const afterMathLiveLoads = () => new Promise(resolve => setTimeout(resolve));
+
   afterEach(() => {
     delete global.mathLiveFails;
+    jest.restoreAllMocks();
   });
 
-  it('loads MathLive again when the passage opens after a failed load', async () => {
+  it('loads MathLive again when the passage reopens after a failed load, not as it is typed in', async () => {
+    const now = jest.spyOn(Date, 'now').mockReturnValue(0);
     global.mathLiveFails = true;
     const { editor } = await renderPassage({
       value: `<p>${gap('gap_a', '<span data-latex="x^2"></span>')}</p>`,
     });
-    await new Promise(resolve => setTimeout(resolve));
-    expect(
-      screen.getByRole('group', { name: gapWithAnswer$({ answer: 'x^2', number: 1 }) }),
-    ).toBeInTheDocument();
+    await afterMathLiveLoads();
     delete global.mathLiveFails;
+    now.mockReturnValue(RETRY_WAIT);
+    const formulaGap = name => screen.getByRole('group', { name });
+
+    editor.commands.insertContentAt(editor.state.doc.content.size - 1, 'a');
+    await afterMathLiveLoads();
+    expect(formulaGap(gapWithAnswer$({ answer: 'x^2', number: 1 }))).toBeInTheDocument();
 
     editor.setEditable(false);
     editor.setEditable(true);

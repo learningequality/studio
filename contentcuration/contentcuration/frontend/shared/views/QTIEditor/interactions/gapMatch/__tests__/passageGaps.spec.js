@@ -28,36 +28,50 @@ describe('gapAnswerText', () => {
     expect(gapAnswerText(node)).toBe('area spoken x^2');
   });
 
-  it('loads MathLive again after a failed load', async () => {
-    const node = await formulaGap();
-    jest.resetModules();
-    jest.doMock('mathlive', () => {
-      throw new Error('Loading chunk mathlive failed');
+  describe('after a failed MathLive load', () => {
+    const RETRY_WAIT = 10000;
+    let now;
+
+    async function afterFailedLoad() {
+      const node = await formulaGap();
+      now = jest.spyOn(Date, 'now').mockReturnValue(0);
+      jest.resetModules();
+      jest.doMock('mathlive', () => {
+        throw new Error('Loading chunk mathlive failed');
+      });
+      const fresh = require('../passageGaps');
+      fresh.gapAnswerText(node);
+      await afterMathLiveLoads();
+      jest.doMock('mathlive', mathLive);
+      return { fresh, node };
+    }
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('reads a formula as its LaTeX until the wait is over, then loads MathLive again', async () => {
+      const { fresh, node } = await afterFailedLoad();
+
+      fresh.gapAnswerText(node);
+      await afterMathLiveLoads();
+      expect(fresh.gapAnswerText(node)).toBe('area x^2');
+
+      now.mockReturnValue(RETRY_WAIT);
+      fresh.gapAnswerText(node);
+      await afterMathLiveLoads();
+      expect(fresh.gapAnswerText(node)).toBe('area spoken x^2');
     });
-    const { gapAnswerText: freshAnswerText } = require('../passageGaps');
 
-    expect(freshAnswerText(node)).toBe('area x^2');
-    await afterMathLiveLoads();
-    jest.doMock('mathlive', mathLive);
-    expect(freshAnswerText(node)).toBe('area x^2');
-    await afterMathLiveLoads();
-    expect(freshAnswerText(node)).toBe('area spoken x^2');
-  });
+    it('loads MathLive for the formulas in a passage once the wait is over', async () => {
+      const { fresh, node } = await afterFailedLoad();
 
-  it('loads MathLive again for the formulas in a passage after a failed load', async () => {
-    const node = await formulaGap();
-    jest.resetModules();
-    jest.doMock('mathlive', () => {
-      throw new Error('Loading chunk mathlive failed');
+      fresh.loadFormulaSpeech([node]);
+      await afterMathLiveLoads();
+      expect(fresh.gapAnswerText(node)).toBe('area x^2');
+
+      now.mockReturnValue(RETRY_WAIT);
+      fresh.loadFormulaSpeech([node]);
+      await afterMathLiveLoads();
+      expect(fresh.gapAnswerText(node)).toBe('area spoken x^2');
     });
-    const fresh = require('../passageGaps');
-    fresh.gapAnswerText(node);
-    await afterMathLiveLoads();
-    jest.doMock('mathlive', mathLive);
-
-    fresh.loadFormulaSpeech([node]);
-    await afterMathLiveLoads();
-
-    expect(fresh.gapAnswerText(node)).toBe('area spoken x^2');
   });
 });
