@@ -92,7 +92,7 @@ function targetRange(view, event) {
   };
 }
 
-const PLACEHOLDER = '​';
+const PLACEHOLDER = String.fromCharCode(0x200b);
 const compositionKey = new PluginKey('gapComposition');
 
 function removePlaceholder(view) {

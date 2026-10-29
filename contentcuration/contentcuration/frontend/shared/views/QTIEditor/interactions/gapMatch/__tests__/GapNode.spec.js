@@ -151,7 +151,7 @@ describe('GapNode', () => {
   });
 
   describe('composition', () => {
-    const PLACEHOLDER = '​';
+    const PLACEHOLDER = String.fromCharCode(0x200b);
 
     const compose = (editor, type) =>
       editor.view.dom.dispatchEvent(new CompositionEvent(type, { bubbles: true }));
