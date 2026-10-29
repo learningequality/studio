@@ -181,6 +181,7 @@ export function useGapMatchPassage({
     },
     onUpdate() {
       isEditable.value = this.editor.isEditable;
+      loadFormulaSpeech(gapNodes(this.editor.state.doc));
     },
     onTransaction({ transaction }) {
       if (!transaction.docChanged || sameGaps(transaction.before, transaction.doc)) return;

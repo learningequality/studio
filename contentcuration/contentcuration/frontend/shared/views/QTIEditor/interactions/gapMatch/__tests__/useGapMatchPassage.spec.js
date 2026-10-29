@@ -27,6 +27,14 @@ jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => {
   };
 });
 
+// Reading MathLive fails, as a failed load of its chunk does, while `mathLiveFails` is set.
+jest.mock('mathlive', () => ({
+  get convertLatexToSpeakableText() {
+    if (global.mathLiveFails) throw new Error('Loading chunk mathlive failed');
+    return latex => `spoken ${latex}`;
+  },
+}));
+
 const { insertGap$, gapWithAnswer$, gapEmpty$, gapRemoved$, gapsRemoved$, gapsAdded$ } =
   qtiEditorStrings;
 
@@ -242,6 +250,35 @@ describe('useGapMatchPassage announcements', () => {
     editor.commands.undo();
 
     expect(announced()).toEqual([gapWithAnswer$({ answer: 'x', number: 1 })]);
+  });
+});
+
+describe('useGapMatchPassage formula names', () => {
+  stubProseMirrorLayout();
+
+  afterEach(() => {
+    delete global.mathLiveFails;
+  });
+
+  it('loads MathLive again when the passage opens after a failed load', async () => {
+    global.mathLiveFails = true;
+    const { editor } = await renderPassage({
+      value: `<p>${gap('gap_a', '<span data-latex="x^2"></span>')}</p>`,
+    });
+    await new Promise(resolve => setTimeout(resolve));
+    expect(
+      screen.getByRole('group', { name: gapWithAnswer$({ answer: 'x^2', number: 1 }) }),
+    ).toBeInTheDocument();
+    delete global.mathLiveFails;
+
+    editor.setEditable(false);
+    editor.setEditable(true);
+
+    expect(
+      await screen.findByRole('group', {
+        name: gapWithAnswer$({ answer: 'spoken x^2', number: 1 }),
+      }),
+    ).toBeInTheDocument();
   });
 });
 
