@@ -8,9 +8,13 @@ let mathLive = null;
 
 function loadSpeech() {
   if (mathLive) return;
-  mathLive = import(/* webpackChunkName: "mathlive" */ 'mathlive').then(module => {
-    speakLatex.value = module.convertLatexToSpeakableText;
-  });
+  mathLive = import(/* webpackChunkName: "mathlive" */ 'mathlive')
+    .then(module => {
+      speakLatex.value = module.convertLatexToSpeakableText;
+    })
+    .catch(() => {
+      mathLive = null;
+    });
 }
 
 function formulaText(latex) {
