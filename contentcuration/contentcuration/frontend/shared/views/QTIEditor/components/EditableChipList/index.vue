@@ -14,6 +14,8 @@
       <ul
         class="chip-list"
         :aria-label="listLabel"
+        data-editor-boundary
+        @click="onListClick"
       >
         <li
           v-for="(chip, index) in chips"
@@ -49,7 +51,7 @@
                   :tabindex="-1"
                   class="editor"
                   @update="html => onChipUpdate(index, html)"
-                  @minimize="close"
+                  @minimize="onMinimize"
                 />
                 <div
                   v-if="isChipOpen(index)"
@@ -102,6 +104,7 @@
       <div
         v-if="isDraftOpen"
         class="draft-row"
+        data-editor-boundary
         @click.stop
       >
         <div class="draft-editor">
@@ -116,7 +119,7 @@
             :tabindex="-1"
             class="editor"
             @update="onDraftUpdate"
-            @minimize="close"
+            @minimize="onMinimize"
           />
           <div class="save-row">
             <KButton
@@ -168,6 +171,7 @@
   import ValidationMessage from '../ValidationMessage/index.vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
+  import { isPopupDismissal } from 'shared/views/TipTapEditor/TipTapEditor/composables/useClickOutside';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
@@ -281,7 +285,15 @@
         emit('open');
       }
 
-      function onRegionClick() {
+      let closingClick = null;
+
+      function onMinimize(clickOutside) {
+        closingClick = clickOutside;
+        close();
+      }
+
+      function onRegionClick(event) {
+        if (event === closingClick) return;
         if (firstBlankIndex.value === -1) {
           openDraft();
         } else {
@@ -334,6 +346,14 @@
         }
       }
 
+      function onListClick(event) {
+        if (!open.value || isDraftOpen.value || isPopupDismissal(event)) return;
+        const path = event.composedPath();
+        if (chipRegions.value.some(region => path.includes(region.$el))) return;
+        event.stopPropagation();
+        close();
+      }
+
       async function onDiscard(event) {
         event.stopPropagation();
         open.value = null;
@@ -362,11 +382,13 @@
         close,
         openChip,
         openDraft,
+        onMinimize,
         onRegionClick,
         onChipUpdate,
         onDraftUpdate,
         onRemove,
         onSave,
+        onListClick,
         onDiscard,
         saveChipBtn$,
       };
