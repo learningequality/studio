@@ -100,4 +100,9 @@
     }
   }
 
+  .ProseMirror-focused .gap.has-caret {
+    outline: 2px solid v-bind('$themeTokens.focusOutline');
+    outline-offset: 2px;
+  }
+
 </style>

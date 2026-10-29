@@ -1,6 +1,17 @@
 // The resolver does not read package `exports` subpaths.
-// eslint-disable-next-line import/no-unresolved
+/* eslint-disable import/no-unresolved */
 import { Plugin } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
+/* eslint-enable import/no-unresolved */
+
+// Tiptap puts a node decoration's class on the node view's `NodeViewWrapper`.
+function caretGapDecoration(state, isGap) {
+  const { selection } = state;
+  const $pos = selection.$from;
+  if (!selection.empty || !isGap($pos.parent)) return null;
+  const mark = Decoration.node($pos.before(), $pos.after(), { class: 'has-caret' });
+  return DecorationSet.create(state.doc, [mark]);
+}
 
 function browserCaretPoint(view, isGap) {
   const { selection } = view.state;
@@ -40,6 +51,9 @@ function placeBrowserCaret(view, isGap) {
  */
 export function gapCaret(isGap) {
   return new Plugin({
+    props: {
+      decorations: state => caretGapDecoration(state, isGap),
+    },
     view(view) {
       placeBrowserCaret(view, isGap);
       return { update: updated => placeBrowserCaret(updated, isGap) };

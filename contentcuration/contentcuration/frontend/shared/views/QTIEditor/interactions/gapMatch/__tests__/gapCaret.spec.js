@@ -1,3 +1,6 @@
+import { nextTick } from 'vue';
+import { screen } from '@testing-library/vue';
+import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { gap, press, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
@@ -58,6 +61,31 @@ describe('gap caret', () => {
 
       expect(editor.state.selection.from).toBe(4);
       expect(browserCaret()).toEqual(['P', 1]);
+    });
+  });
+
+  describe('outline', () => {
+    const TWO_GAPS = `<p>ab${gap('gap_a', 'xy')}cd${gap('gap_b', 'z')}</p>`;
+    const { gapWithAnswer$ } = qtiEditorStrings;
+    const chip = (answer, number) =>
+      screen.getByRole('group', { name: gapWithAnswer$({ answer, number }) });
+
+    it('marks only the gap that holds the caret', async () => {
+      await renderAt(5, TWO_GAPS);
+      await nextTick();
+
+      expect(chip('xy', 1)).toHaveClass('has-caret');
+      expect(chip('z', 2)).not.toHaveClass('has-caret');
+    });
+
+    it('marks no gap while the caret is outside every gap', async () => {
+      const editor = await renderAt(5, TWO_GAPS);
+      await nextTick();
+
+      editor.commands.setTextSelection(2);
+      await nextTick();
+
+      expect(chip('xy', 1)).not.toHaveClass('has-caret');
     });
   });
 });
