@@ -285,8 +285,9 @@ export const GapNode = Node.create({
             return new Slice(reidentify(slice.content, taken), slice.openStart, slice.openEnd);
           },
         },
-        // `transformPasted` does not see a drop, the toolbar's Paste, which inserts through
-        // `insertContent`, or a block inserted inside a gap, which splits it.
+        // On a drop, `transformPasted` cannot tell a move from a copy. It does not see the
+        // toolbar's Paste, which inserts through `insertContent`, or a block inserted inside a
+        // gap, which splits it.
         appendTransaction(transactions, oldState, newState) {
           if (transactions.every(isHistoryTransaction)) return null;
           if (!transactions.some(tr => tr.docChanged)) return null;
