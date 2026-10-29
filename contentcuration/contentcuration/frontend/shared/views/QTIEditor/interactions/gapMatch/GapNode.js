@@ -15,6 +15,7 @@ import {
 import { VueNodeViewRenderer } from '@tiptap/vue-2';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import GapChip from './components/GapChip';
+import { gapCaret } from './gapCaret';
 import { CORRECT_ATTR, GAP } from './parse';
 
 const NODE_NAME = 'gap';
@@ -244,6 +245,7 @@ export const GapNode = Node.create({
   addProseMirrorPlugins() {
     return [
       compositionPlaceholder,
+      gapCaret(isGap),
       new Plugin({
         props: {
           handleDOMEvents: {
