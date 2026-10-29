@@ -195,7 +195,6 @@ export function useGapMatchPassage({
     title: qtiEditorStrings.insertGap$(),
     icon: 'insert',
     prominent: true,
-    // Replacing a multi-line selection with an inline node would join the lines.
     isAvailable: ({ editor: { state }, selection, canInsertNode }) => {
       if (!selection.hasCursor) return true;
       const paragraph = paragraphOfAllSelection(state);

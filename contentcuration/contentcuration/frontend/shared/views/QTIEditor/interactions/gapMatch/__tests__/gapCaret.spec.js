@@ -148,7 +148,12 @@ describe('gap caret', () => {
   describe('a click at a line edge beside a gap', () => {
     const GAP_BOX = { left: 100, right: 200, top: 0, bottom: 20 };
 
-    /** Clicks at `x` where the browser resolves the click to `pos`. */
+    function edgesOf(editor, identifier) {
+      const { node, pos } = findGap(editor, identifier);
+      const end = pos + 1 + node.content.size;
+      return { before: pos, start: pos + 1, end, after: end + 1 };
+    }
+
     function click(editor, x, pos, boxes = [GAP_BOX]) {
       jest.spyOn(editor.view, 'posAtCoords').mockReturnValue({ pos, inside: -1 });
       editor.view.dom.querySelectorAll('.gap').forEach((chip, i) => {
@@ -172,64 +177,67 @@ describe('gap caret', () => {
 
     afterEach(() => jest.restoreAllMocks());
 
-    // <p>ab[gap_a: xy]</p>: the answer ends at 6, and 7 is after the gap, at the line's end.
     it('puts the caret after a gap at the line end for a click past it', async () => {
       const editor = await renderAt(1, `<p>ab${gap('gap_a', 'xy')}</p>`);
+      const { end, after } = edgesOf(editor, 'gap_a');
 
-      click(editor, 260, 6);
+      click(editor, 260, end);
 
-      expect(editor.state.selection.from).toBe(7);
+      expect(editor.state.selection.from).toBe(after);
     });
 
-    // <p>[gap_a: xy]cd</p>: 1 is before the gap, at the line's start, and its answer starts at 2.
     it('puts the caret before a gap at the line start for a click before it', async () => {
-      const editor = await renderAt(5, `<p>${gap('gap_a', 'xy')}cd</p>`);
+      const editor = await renderAt(1, `<p>${gap('gap_a', 'xy')}cd</p>`);
+      const { before, start } = edgesOf(editor, 'gap_a');
+      editor.commands.setTextSelection(editor.state.doc.content.size - 1);
 
-      click(editor, 40, 2);
+      click(editor, 40, start);
 
-      expect(editor.state.selection.from).toBe(1);
+      expect(editor.state.selection.from).toBe(before);
     });
 
     it('puts the caret after a gap for a click past its left side in right-to-left text', async () => {
       const editor = await renderAt(1, `<p>ab${gap('gap_a', 'xy')}</p>`);
+      const { end, after } = edgesOf(editor, 'gap_a');
       inRtl(editor);
 
-      click(editor, 40, 6);
+      click(editor, 40, end);
 
-      expect(editor.state.selection.from).toBe(7);
+      expect(editor.state.selection.from).toBe(after);
     });
 
     it('puts the caret after a gap at the line end when the click resolves there', async () => {
       const editor = await renderAt(1, `<p>ab${gap('gap_a', 'xy')}</p>`);
+      const { after } = edgesOf(editor, 'gap_a');
 
-      click(editor, 260, 7);
+      click(editor, 260, after);
 
-      expect(editor.state.selection.from).toBe(7);
+      expect(editor.state.selection.from).toBe(after);
     });
 
     it('puts the caret at the edge of the clicked gap for a click on it', async () => {
       const editor = await renderAt(1, `<p>ab${gap('gap_a', 'xy')}</p>`);
-      const answerEnd = findGap(editor, 'gap_a').pos + 1 + 'xy'.length;
+      const { end } = edgesOf(editor, 'gap_a');
 
-      const unhandled = click(editor, 190, answerEnd);
+      const unhandled = click(editor, 190, end);
 
       expect(unhandled).toBe(false);
-      expect(editor.state.selection.from).toBe(answerEnd);
+      expect(editor.state.selection.from).toBe(end);
     });
 
     it('puts the caret in the clicked gap for a click on its leading edge after another gap', async () => {
       const editor = await renderAt(1, `<p>${gap('gap_a', 'one')}${gap('gap_b', 'two')}</p>`);
-      const answerStart = findGap(editor, 'gap_b').pos + 1;
+      const { start } = edgesOf(editor, 'gap_b');
       const boxes = [{ ...GAP_BOX, left: 0, right: 99 }, GAP_BOX];
 
-      click(editor, 105, answerStart, boxes);
+      click(editor, 105, start, boxes);
 
-      expect(editor.state.selection.from).toBe(answerStart);
+      expect(editor.state.selection.from).toBe(start);
     });
 
     it('puts the caret in a gap for a click on its padding', async () => {
       const editor = await renderAt(1, `<p>${gap('gap_a', 'one')}${gap('gap_b', 'two')}</p>`);
-      const answerStart = findGap(editor, 'gap_b').pos + 1;
+      const { start: answerStart } = edgesOf(editor, 'gap_b');
       jest.spyOn(editor.view, 'posAtCoords').mockReturnValue({ pos: answerStart, inside: -1 });
       const [first, second] = editor.view.dom.querySelectorAll('.gap');
       first.getBoundingClientRect = () => ({ ...GAP_BOX, left: 0, right: 99 });
@@ -247,7 +255,7 @@ describe('gap caret', () => {
     it('leaves a click on the gap itself, resolved beside it, to the browser', async () => {
       const editor = await renderAt(1, `<p>ab${gap('gap_a', 'xy')}</p>`);
 
-      const unhandled = click(editor, 190, findGap(editor, 'gap_a').pos);
+      const unhandled = click(editor, 190, edgesOf(editor, 'gap_a').before);
 
       expect(unhandled).toBe(true);
     });

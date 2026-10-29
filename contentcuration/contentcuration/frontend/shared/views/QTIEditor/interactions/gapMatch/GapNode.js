@@ -322,7 +322,6 @@ export const GapNode = Node.create({
             if (isGap(view.state.selection.$from.parent)) {
               return new Slice(flattenForGap(slice.content, view.state.schema), 0, 0);
             }
-            // Whether a drag moves or copies is only known at drop; see `appendTransaction`.
             if (view.dragging || gapsIn(slice.content).next().done) return slice;
             const taken = new Set(
               findChildren(view.state.doc, isGap).map(({ node }) => node.attrs.identifier),
