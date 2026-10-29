@@ -16,7 +16,7 @@ import { Orientation, QuestionType, RESPONSE_IDENTIFIER } from '../../constants'
  * @typedef {object} ChoiceState
  * @property {string}        prompt          - HTML content of <qti-prompt>; default ""
  * @property {ChoiceAnswer[]} choices
- * @property {boolean}       showAnswerCount - true unless max-choices="0" in the source XML
+ * @property {boolean}       showAnswerCount - true unless max-choices="0" with a correct choice
  * @property {boolean}       shuffle         - From shuffle attribute; default false
  * @property {string}        orientation     - From orientation attribute; default "vertical"
  */
@@ -84,9 +84,10 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
   const shuffle = root.getAttribute('shuffle') === 'true';
   const orientation = root.getAttribute('orientation') ?? Orientation.VERTICAL;
   const prompt = getPromptHTML(root);
-  const showAnswerCount = root.getAttribute('max-choices') !== '0';
-
   const correctIds = _extractCorrectIds(responseDeclarations);
+  // With no correct choice, the count shown is 0, saved the same as not showing it, so the
+  // count reads back as shown, as a new question starts.
+  const showAnswerCount = root.getAttribute('max-choices') !== '0' || correctIds.size === 0;
 
   const choices = [...root.querySelectorAll('qti-simple-choice')].map(el => ({
     id: el.getAttribute('identifier') || generateRandomSlug('choice'),
