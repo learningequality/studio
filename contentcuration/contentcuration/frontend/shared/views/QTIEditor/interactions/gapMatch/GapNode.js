@@ -249,16 +249,20 @@ export const GapNode = Node.create({
             // and removes a gap when a delete empties its answer. So these edits go through
             // ProseMirror instead of the browser.
             beforeinput(view, event) {
-              const { selection } = view.state;
-              if (!selection.empty) return false;
-              const { $from } = selection;
-              const { tr } = view.state;
-              if (event.inputType === 'insertText' && event.data && touchesGap($from)) {
-                tr.insertText(event.data);
-              } else if (event.inputType.startsWith('delete') && isGap($from.parent)) {
-                const range = targetRange(view, event);
+              const { selection, tr } = view.state;
+              const { $from, $to } = selection;
+              const isDelete = event.inputType.startsWith('delete');
+              if (isDelete && isGap($from.parent) && $from.sameParent($to)) {
+                const range = selection.empty ? targetRange(view, event) : selection;
                 if (!range || range.from > $from.start() || range.to < $from.end()) return false;
                 tr.delete($from.start(), $from.end());
+              } else if (
+                selection.empty &&
+                event.inputType === 'insertText' &&
+                event.data &&
+                touchesGap($from)
+              ) {
+                tr.insertText(event.data);
               } else {
                 return false;
               }

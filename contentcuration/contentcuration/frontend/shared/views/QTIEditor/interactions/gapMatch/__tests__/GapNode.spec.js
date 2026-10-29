@@ -124,6 +124,23 @@ describe('GapNode', () => {
       expect(editor.getText()).toBe('abcd');
     });
 
+    it('keeps a gap blank when a delete removes its whole answer selected', async () => {
+      const editor = await renderAt({ from: ANSWER_START, to: ANSWER_END });
+
+      input(editor, 'deleteSoftLineBackward');
+
+      expect(findGap(editor, 'gap_a').node.content.size).toBe(0);
+      expect(isInGap(editor)).toBe(true);
+    });
+
+    it('leaves to the browser a delete of part of a selected answer', async () => {
+      const editor = await renderAt({ from: 5, to: ANSWER_END });
+
+      const unhandled = input(editor, 'deleteSoftLineBackward');
+
+      expect(unhandled).toBe(true);
+    });
+
     it('leaves to the browser a delete that keeps part of the answer', async () => {
       const editor = await renderAt(ANSWER_END);
 
