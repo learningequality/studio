@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import VueRouter from 'vue-router';
-import ChannelModal from './../ChannelModal';
+import ChannelModal from '../ChannelModal';
 import storeFactory from 'shared/vuex/baseStore';
 
 const TESTROUTE = 'test channel modal route';

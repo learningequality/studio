@@ -3,7 +3,7 @@ import VueRouter from 'vue-router';
 import StudioRaisedBox from '../StudioRaisedBox.vue';
 
 describe('StudioRaisedBox', () => {
-  test('renders both header and main slots', () => {
+  it('renders both header and main slots', () => {
     const headerContent = 'Header Title';
     const mainContent = 'Main content area';
     render(StudioRaisedBox, {

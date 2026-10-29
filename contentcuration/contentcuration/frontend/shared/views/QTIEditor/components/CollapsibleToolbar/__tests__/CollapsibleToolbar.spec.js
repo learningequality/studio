@@ -52,24 +52,24 @@ describe('CollapsibleToolbar', () => {
       await user.click(screen.getByRole('button', { name: 'trigger' }));
     };
 
-    test('moves focus to the button of a visible action', async () => {
+    it('moves focus to the button of a visible action', async () => {
       await focusEdit([makeAction({ id: 'edit', label: 'Edit', collapsed: false })]);
       expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
     });
 
-    test('moves focus to the options menu for an action collapsed into it', async () => {
+    it('moves focus to the options menu for an action collapsed into it', async () => {
       await focusEdit([makeAction({ id: 'edit', label: 'Edit', collapsed: true })]);
       expect(screen.getByRole('button', { name: optionsLabel$() })).toHaveFocus();
     });
 
-    test('moves focus nowhere for an action the toolbar does not have', async () => {
+    it('moves focus nowhere for an action the toolbar does not have', async () => {
       await focusEdit([makeAction({ id: 'delete', label: 'Delete', collapsed: true })]);
       expect(screen.getByRole('button', { name: optionsLabel$() })).not.toHaveFocus();
     });
   });
 
   describe('visible icon actions', () => {
-    test('renders icon buttons for non-collapsed actions with icons', () => {
+    it('renders icon buttons for non-collapsed actions with icons', () => {
       const actions = [
         makeAction({ id: 'a1', label: 'Edit', icon: 'edit', collapsed: false }),
         makeAction({ id: 'a2', label: 'Move up', icon: 'chevronUp', collapsed: false }),
@@ -79,7 +79,7 @@ describe('CollapsibleToolbar', () => {
       expect(screen.getByRole('button', { name: 'Move up' })).toBeInTheDocument();
     });
 
-    test('does not render an icon button for collapsed actions', () => {
+    it('does not render an icon button for collapsed actions', () => {
       const actions = [
         makeAction({ id: 'a1', label: 'Edit', icon: 'edit', collapsed: false }),
         makeAction({ id: 'a2', label: 'Delete', icon: 'delete', collapsed: true }),
@@ -90,7 +90,7 @@ describe('CollapsibleToolbar', () => {
       expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
     });
 
-    test('calls the action handler when an icon button is clicked', async () => {
+    it('calls the action handler when an icon button is clicked', async () => {
       const user = userEvent.setup();
       const handler = jest.fn();
       const actions = [
@@ -103,13 +103,13 @@ describe('CollapsibleToolbar', () => {
   });
 
   describe('collapsed dropdown menu', () => {
-    test('does not render the options button when there are no collapsed actions', () => {
+    it('does not render the options button when there are no collapsed actions', () => {
       const actions = [makeAction({ id: 'a1', icon: 'edit', collapsed: false })];
       renderComponent(actions);
       expect(screen.queryByRole('button', { name: optionsLabel$() })).not.toBeInTheDocument();
     });
 
-    test('renders the options button when there are collapsed actions', () => {
+    it('renders the options button when there are collapsed actions', () => {
       const actions = [
         makeAction({ id: 'a1', icon: 'edit', collapsed: false }),
         makeAction({ id: 'a2', icon: null, label: 'Delete', collapsed: true, handler: jest.fn() }),
@@ -118,13 +118,13 @@ describe('CollapsibleToolbar', () => {
       expect(screen.getByRole('button', { name: optionsLabel$() })).toBeInTheDocument();
     });
 
-    test('renders the options button when an action has no icon (forces it to menu)', () => {
+    it('renders the options button when an action has no icon (forces it to menu)', () => {
       const actions = [makeAction({ id: 'a1', icon: null, label: 'Delete', collapsed: false })];
       renderComponent(actions);
       expect(screen.getByRole('button', { name: optionsLabel$() })).toBeInTheDocument();
     });
 
-    test('uses the provided optionsLabel prop for the menu button', () => {
+    it('uses the provided optionsLabel prop for the menu button', () => {
       const actions = [makeAction({ id: 'a1', icon: null, label: 'Delete', collapsed: true })];
       renderComponent(actions, 'Custom options label');
       expect(screen.getByRole('button', { name: 'Custom options label' })).toBeInTheDocument();
@@ -132,7 +132,7 @@ describe('CollapsibleToolbar', () => {
   });
 
   describe('disabled state', () => {
-    test('renders the icon button as disabled when action.disabled is true', () => {
+    it('renders the icon button as disabled when action.disabled is true', () => {
       const actions = [
         makeAction({ id: 'a1', label: 'Edit', icon: 'edit', collapsed: false, disabled: true }),
       ];
