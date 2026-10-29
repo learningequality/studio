@@ -429,7 +429,7 @@ describe('GapNode', () => {
 
       press(editor, 'ArrowRight');
 
-      expect(editor.state.doc.resolve(caret(editor).pos).parent).not.toHaveTextContent('b');
+      expect(caret(editor).parent).not.toBe(editor.state.doc.lastChild);
     });
   });
 });
