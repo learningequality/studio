@@ -1,4 +1,5 @@
 import { inject, provide, ref } from 'vue';
+import { findChildren } from '@tiptap/core';
 import { qtiEditorStrings } from '../../qtiEditorStrings';
 
 const PassageGapsSymbol = Symbol('gapMatchPassageGaps');
@@ -21,6 +22,17 @@ function formulaText(latex) {
   if (speakLatex.value) return speakLatex.value(latex);
   loadSpeech();
   return latex;
+}
+
+const holdsFormula = gap => findChildren(gap, node => Boolean(node.attrs.latex)).length > 0;
+
+/**
+ * Loads what names the formulas in these gaps, unless it is loaded or no gap holds a formula.
+ *
+ * @param {import('@tiptap/pm/model').Node[]} gaps - The gap nodes
+ */
+export function loadFormulaSpeech(gaps) {
+  if (!speakLatex.value && gaps.some(holdsFormula)) loadSpeech();
 }
 
 /**

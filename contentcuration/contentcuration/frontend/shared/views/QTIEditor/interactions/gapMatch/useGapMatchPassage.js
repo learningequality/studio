@@ -8,7 +8,7 @@ import { findChildren } from '@tiptap/core';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { qtiEditorStrings } from '../../qtiEditorStrings';
 import { GAP_INSERTED, GapNode, isGap } from './GapNode';
-import { describeGap, gapAnswerText, providePassageGaps } from './passageGaps';
+import { describeGap, gapAnswerText, loadFormulaSpeech, providePassageGaps } from './passageGaps';
 import { storedHTML } from 'shared/views/TipTapEditor/TipTapEditor/utils/imageSrc';
 
 const gapNodes = doc => findChildren(doc, isGap).map(({ node }) => node);
@@ -109,8 +109,10 @@ export function useGapMatchPassage({
   const gapIds = ref([]);
   let editor = null;
 
-  const readGapIds = doc => {
-    gapIds.value = gapNodes(doc).map(node => node.attrs.identifier);
+  const readGaps = doc => {
+    const gaps = gapNodes(doc);
+    gapIds.value = gaps.map(node => node.attrs.identifier);
+    loadFormulaSpeech(gaps);
   };
 
   function gapMessage(prevState, state) {
@@ -173,7 +175,7 @@ export function useGapMatchPassage({
     onCreate() {
       editor = this.editor;
       isEditable.value = editor.isEditable;
-      readGapIds(editor.state.doc);
+      readGaps(editor.state.doc);
     },
     onDestroy() {
       editor = null;
@@ -183,7 +185,7 @@ export function useGapMatchPassage({
     },
     onTransaction({ transaction }) {
       if (!transaction.docChanged || sameGaps(transaction.before, transaction.doc)) return;
-      readGapIds(transaction.doc);
+      readGaps(transaction.doc);
       onChange(storedHTML(editor));
     },
   });

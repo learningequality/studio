@@ -43,4 +43,21 @@ describe('gapAnswerText', () => {
     await afterMathLiveLoads();
     expect(freshAnswerText(node)).toBe('area spoken x^2');
   });
+
+  it('loads MathLive again for the formulas in a passage after a failed load', async () => {
+    const node = await formulaGap();
+    jest.resetModules();
+    jest.doMock('mathlive', () => {
+      throw new Error('Loading chunk mathlive failed');
+    });
+    const fresh = require('../passageGaps');
+    fresh.gapAnswerText(node);
+    await afterMathLiveLoads();
+    jest.doMock('mathlive', mathLive);
+
+    fresh.loadFormulaSpeech([node]);
+    await afterMathLiveLoads();
+
+    expect(fresh.gapAnswerText(node)).toBe('area spoken x^2');
+  });
 });
