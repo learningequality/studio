@@ -97,6 +97,42 @@ function moveToLine(view, event, isGap) {
   return true;
 }
 
+function isOverGap(view, gapPos, event) {
+  const box = view.nodeDOM(gapPos).getBoundingClientRect();
+  return event.clientX >= box.left && event.clientX <= box.right;
+}
+
+function outsideOfGap(view, $pos, event) {
+  const gap = view.nodeDOM($pos.before());
+  const box = gap.getBoundingClientRect();
+  const isRtl = window.getComputedStyle(gap.parentElement).direction === 'rtl';
+  const pastLeft = event.clientX < box.left;
+  const pastRight = event.clientX > box.right;
+  if ($pos.pos === $pos.end() && (isRtl ? pastLeft : pastRight)) return $pos.after();
+  if ($pos.pos === $pos.start() && (isRtl ? pastRight : pastLeft)) return $pos.before();
+  return null;
+}
+
+function besideGap(view, $pos, event, isGap) {
+  if (!isBesideGap($pos, isGap)) return null;
+  const { nodeBefore, nodeAfter } = $pos;
+  const overBefore = isGap(nodeBefore) && isOverGap(view, $pos.pos - nodeBefore.nodeSize, event);
+  const overAfter = isGap(nodeAfter) && isOverGap(view, $pos.pos, event);
+  return overBefore || overAfter ? null : $pos.pos;
+}
+
+// Browsers put the caret for a click past a gap at a line's edge inside the gap, also where
+// ProseMirror resolves the click to outside it.
+function clickBesideGap(view, pos, event, isGap) {
+  const $pos = view.state.doc.resolve(pos);
+  const outside = isGap($pos.parent)
+    ? outsideOfGap(view, $pos, event)
+    : besideGap(view, $pos, event, isGap);
+  if (outside === null) return false;
+  view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, outside)));
+  return true;
+}
+
 /**
  * Keeps the caret at a gap's edges where the editor's selection says it is.
  *
@@ -108,6 +144,7 @@ export function gapCaret(isGap) {
     props: {
       decorations: state => caretDecorations(state, isGap),
       handleKeyDown: (view, event) => moveToLine(view, event, isGap),
+      handleClick: (view, pos, event) => clickBesideGap(view, pos, event, isGap),
       attributes: state => {
         const $pos = caretOf(state);
         return $pos && needsDrawnCaret($pos, isGap) ? { class: 'hides-caret' } : {};
