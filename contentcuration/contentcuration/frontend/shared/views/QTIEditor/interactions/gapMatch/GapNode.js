@@ -84,6 +84,43 @@ function isRtlAt(view, pos) {
   return window.getComputedStyle(element).direction === 'rtl';
 }
 
+const isReversed = (view, gapPos) => isRtlAt(view, gapPos) !== isRtlAt(view, gapPos + 1);
+
+function stepIntoGap(view, $pos, forward) {
+  const gapPos = forward ? $pos.pos : $pos.pos - $pos.nodeBefore.nodeSize;
+  const start = gapPos + 1;
+  const end = gapPos + view.state.doc.nodeAt(gapPos).nodeSize - 1;
+  return forward !== isReversed(view, gapPos) ? start : end;
+}
+
+function stepOutsideGaps(view, $pos, key) {
+  const forward = (key === 'ArrowRight') !== isRtlAt(view, $pos.pos);
+  if (isGap(forward ? $pos.nodeAfter : $pos.nodeBefore)) return stepIntoGap(view, $pos, forward);
+  const { doc } = view.state;
+  const target = forward ? $pos.pos + 1 : $pos.pos - 1;
+  if (target < 0 || target > doc.content.size) return null;
+  let $target = doc.resolve(target);
+  if (!$target.parent.inlineContent) {
+    const next = TextSelection.findFrom($target, forward ? 1 : -1, true);
+    if (!next || next.from !== target + (forward ? 1 : -1)) return null;
+    $target = next.$head;
+  }
+  return touchesGap($pos) || touchesGap($target) ? $target.pos : null;
+}
+
+// In an answer that runs the other way from the passage, Chrome moves the caret by the
+// passage's direction and Firefox by the answer's.
+function stepInGap(view, $pos, key) {
+  const gapPos = $pos.before();
+  const reversed = isReversed(view, gapPos);
+  const forward = (key === 'ArrowRight') !== isRtlAt(view, gapPos + 1);
+  if (forward && $pos.pos === $pos.end()) return reversed ? $pos.before() : $pos.after();
+  if (!forward && $pos.pos === $pos.start()) return reversed ? $pos.after() : $pos.before();
+  const target = forward ? $pos.pos + 1 : $pos.pos - 1;
+  const atEdge = pos => pos === $pos.start() || pos === $pos.end();
+  return reversed || atEdge($pos.pos) || atEdge(target) ? target : null;
+}
+
 function endsBesideGap(doc, { from, to }) {
   return isGap(doc.resolve(from).nodeBefore) || isGap(doc.resolve(to).nodeAfter);
 }
@@ -221,19 +258,10 @@ export const GapNode = Node.create({
       ({ editor }) => {
         const $pos = caret(editor);
         if (!$pos) return false;
-        const outsideGap = isGap($pos.parent) ? $pos.before() : $pos.pos;
-        const forward = (key === 'ArrowRight') !== isRtlAt(editor.view, outsideGap);
-        const target = forward ? $pos.pos + 1 : $pos.pos - 1;
-        const { doc } = editor.state;
-        if (target < 0 || target > doc.content.size) return false;
-        let $target = doc.resolve(target);
-        if (!$target.parent.inlineContent) {
-          const next = TextSelection.findFrom($target, forward ? 1 : -1, true);
-          if (!next || next.from !== target + (forward ? 1 : -1)) return false;
-          $target = next.$head;
-        }
-        if (!touchesGap($pos) && !touchesGap($target)) return false;
-        return editor.commands.setTextSelection($target.pos);
+        const target = isGap($pos.parent)
+          ? stepInGap(editor.view, $pos, key)
+          : stepOutsideGaps(editor.view, $pos, key);
+        return target !== null && editor.commands.setTextSelection(target);
       };
     return {
       Backspace: props =>

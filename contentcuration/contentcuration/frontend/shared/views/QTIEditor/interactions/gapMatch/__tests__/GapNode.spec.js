@@ -405,7 +405,8 @@ describe('GapNode', () => {
             : getComputedStyle.call(window, el, ...rest),
         );
 
-      expect(positionsAfter(editor, 'ArrowLeft', 4)).toEqual([4, 5, 6, AFTER_GAP]);
+      expect(positionsAfter(editor, 'ArrowLeft', 4)).toEqual([6, 5, 4, AFTER_GAP]);
+      expect(positionsAfter(editor, 'ArrowRight', 4)).toEqual([4, 5, 6, BEFORE_GAP]);
       spy.mockRestore();
     });
 
