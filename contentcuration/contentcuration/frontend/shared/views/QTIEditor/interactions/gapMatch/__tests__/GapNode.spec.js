@@ -407,5 +407,13 @@ describe('GapNode', () => {
       expect(positionsAfter(editor, 'ArrowLeft', 4)).toEqual([4, 5, 6, AFTER_GAP]);
       spy.mockRestore();
     });
+
+    // <p>a[gap_a: x]</p><p>[gap_b: y]b</p>: after gap_a is 5, and before gap_b is 7.
+    it('stop beside the gaps on both sides of a paragraph break', async () => {
+      const editor = await renderAt(5, `<p>a${gap('gap_a', 'x')}</p><p>${gap('gap_b', 'y')}b</p>`);
+
+      expect(positionsAfter(editor, 'ArrowRight', 2)).toEqual([7, 8]);
+      expect(positionsAfter(editor, 'ArrowLeft', 2)).toEqual([7, 5]);
+    });
   });
 });

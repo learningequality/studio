@@ -226,10 +226,14 @@ export const GapNode = Node.create({
         const target = forward ? $pos.pos + 1 : $pos.pos - 1;
         const { doc } = editor.state;
         if (target < 0 || target > doc.content.size) return false;
-        const $target = doc.resolve(target);
+        let $target = doc.resolve(target);
+        if (!$target.parent.inlineContent) {
+          const next = TextSelection.findFrom($target, forward ? 1 : -1, true);
+          if (!next) return false;
+          $target = next.$head;
+        }
         if (!touchesGap($pos) && !touchesGap($target)) return false;
-        if (!$target.parent.inlineContent) return false;
-        return editor.commands.setTextSelection(target);
+        return editor.commands.setTextSelection($target.pos);
       };
     return {
       Backspace: props =>
