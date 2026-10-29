@@ -230,6 +230,8 @@ export const GapNode = Node.create({
       Backspace: props =>
         removeBlankGap(props) || enterGap(false)(props) || stayInGap(false)(props),
       Delete: props => removeBlankGap(props) || enterGap(true)(props) || stayInGap(true)(props),
+      'Mod-Backspace': removeBlankGap,
+      'Shift-Mod-Backspace': removeBlankGap,
       ArrowLeft: arrow('ArrowLeft'),
       ArrowRight: arrow('ArrowRight'),
     };

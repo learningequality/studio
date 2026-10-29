@@ -205,6 +205,18 @@ describe('GapNode', () => {
       expect(gapIdentifiers(editor)).toEqual(['gap_a']);
     });
 
+    it.each([
+      ['Ctrl+Backspace', { ctrlKey: true }],
+      ['Shift+Ctrl+Backspace', { ctrlKey: true, shiftKey: true }],
+    ])('%s removes a blank gap', async (_, modifiers) => {
+      const editor = await renderAt(1);
+      editor.commands.insertGap();
+
+      press(editor, 'Backspace', modifiers);
+
+      expect(gapIdentifiers(editor)).toEqual(['gap_a']);
+    });
+
     it('Backspace after a gap moves into it, deleting nothing', async () => {
       const editor = await renderAt(AFTER_GAP);
 
