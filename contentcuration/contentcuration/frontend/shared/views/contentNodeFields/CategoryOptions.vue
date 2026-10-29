@@ -105,16 +105,17 @@
         return createMultiSelectMessages({
           clearText: clearAllAction$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          cleared: () => {
-            this.selected = {};
-            return this.$tr('allCategoriesCleared');
-          },
+          cleared: () => this.$tr('allCategoriesCleared'),
           partiallySelected: true,
         });
       },
     },
     methods: {
       onKMultiSelectInput(newValues) {
+        if (newValues.length === 0) {
+          this.selected = {};
+          return;
+        }
         const newValueIds = new Set(newValues);
         const removedIds = Object.keys(this.selected).filter(
           key => this.selected[key].length === this.nodeIds.length && !newValueIds.has(key),
