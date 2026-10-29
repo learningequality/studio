@@ -220,7 +220,7 @@ describe('EditLanguageModal', () => {
   });
 
   describe('topic nodes present', () => {
-    test('should display a selected checkbox to apply change to descendants if a topic is present', () => {
+    it('should display a selected checkbox to apply change to descendants if a topic is present', () => {
       const [wrapper] = makeWrapper(['test-en-topic', 'test-en-res']);
 
       expect(
@@ -236,7 +236,7 @@ describe('EditLanguageModal', () => {
       ).toBeFalsy();
     });
 
-    test('should call updateContentNodeDescendants with the right language on success submit by default', async () => {
+    it('should call updateContentNodeDescendants with the right language on success submit by default', async () => {
       const [wrapper, mocks] = makeWrapper(['test-en-topic', 'test-en-res']);
 
       await chooseLanguage(wrapper, 'es');
@@ -248,7 +248,7 @@ describe('EditLanguageModal', () => {
       });
     });
 
-    test('should call updateContentNode with the right language on success submit if the user unchecks check the checkbox', async () => {
+    it('should call updateContentNode with the right language on success submit if the user unchecks check the checkbox', async () => {
       const [wrapper, mocks] = makeWrapper(['test-en-topic', 'test-en-res']);
 
       await chooseLanguage(wrapper, 'es');

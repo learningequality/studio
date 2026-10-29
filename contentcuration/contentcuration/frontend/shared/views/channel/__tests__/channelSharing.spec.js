@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import ChannelSharing from './../ChannelSharing';
+import ChannelSharing from '../ChannelSharing';
 import storeFactory from 'shared/vuex/baseStore';
 import { SharingPermissions } from 'shared/constants';
 

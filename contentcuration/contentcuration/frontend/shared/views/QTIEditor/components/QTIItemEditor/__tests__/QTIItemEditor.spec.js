@@ -103,31 +103,31 @@ describe('QTIItemEditor', () => {
   afterEach(() => jest.restoreAllMocks());
 
   describe('view mode', () => {
-    test('shows the card body (placeholder) even in view mode', () => {
+    it('shows the card body (placeholder) even in view mode', () => {
       renderComponent({ mode: 'view' });
       expect(screen.getByText(questionContentPlaceholder$())).toBeInTheDocument();
     });
 
-    test('does not show the close button', () => {
+    it('does not show the close button', () => {
       renderComponent({ mode: 'view' });
       expect(screen.queryByRole('button', { name: closeBtnLabel$() })).not.toBeInTheDocument();
     });
   });
 
   describe('opening the card by clicking it', () => {
-    test('asks to open a closed card when it is clicked', async () => {
+    it('asks to open a closed card when it is clicked', async () => {
       const { emitted } = renderComponent({ mode: 'view' });
       await fireEvent.click(screen.getByText(questionContentPlaceholder$()));
       expect(emitted().open).toHaveLength(1);
     });
 
-    test('does not ask to open a card that is already open', async () => {
+    it('does not ask to open a card that is already open', async () => {
       const { emitted } = renderComponent({ mode: 'edit' });
       await fireEvent.click(screen.getByText(questionContentPlaceholder$()));
       expect(emitted().open).toBeUndefined();
     });
 
-    test('does not ask to open an item this editor cannot edit', async () => {
+    it('does not ask to open an item this editor cannot edit', async () => {
       const { emitted } = renderComponent({
         item: { assessment_id: 'perseus-item', type: 'perseus_question', raw_data: '{}' },
       });
@@ -135,7 +135,7 @@ describe('QTIItemEditor', () => {
       expect(emitted().open).toBeUndefined();
     });
 
-    test('leaves clicks on the toolbar actions to the actions themselves', async () => {
+    it('leaves clicks on the toolbar actions to the actions themselves', async () => {
       const { emitted } = renderComponent(
         { mode: 'view' },
         { toolbarActions: '<button type="button">Move up</button>' },
@@ -144,7 +144,7 @@ describe('QTIItemEditor', () => {
       expect(emitted().open).toBeUndefined();
     });
 
-    test('asks to open a closed card when its incomplete indicator is clicked', async () => {
+    it('asks to open a closed card when its incomplete indicator is clicked', async () => {
       const { emitted } = renderComponent({
         item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER },
         mode: 'view',
@@ -153,7 +153,7 @@ describe('QTIItemEditor', () => {
       expect(emitted().open).toHaveLength(1);
     });
 
-    test('leaves clicks on buttons inside the card body to the buttons themselves', async () => {
+    it('leaves clicks on buttons inside the card body to the buttons themselves', async () => {
       const { emitted } = renderComponent({
         item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
         mode: 'view',
@@ -163,14 +163,14 @@ describe('QTIItemEditor', () => {
       expect(emitted().open).toBeUndefined();
     });
 
-    test('offers no way to open a card whose consumer does not listen for it', async () => {
+    it('offers no way to open a card whose consumer does not listen for it', async () => {
       const { container, emitted } = renderComponent({ mode: 'view' }, {}, {});
       expect(container.firstChild).not.toHaveClass('is-clickable');
       await fireEvent.click(screen.getByText(questionContentPlaceholder$()));
       expect(emitted().open).toBeUndefined();
     });
 
-    test('keeps the click that opens a card from carrying on to the document', async () => {
+    it('keeps the click that opens a card from carrying on to the document', async () => {
       // The editor's click-outside handler lives there, and minimizes the question.
       const onDocumentClick = jest.fn();
       document.addEventListener('click', onDocumentClick);
@@ -186,25 +186,25 @@ describe('QTIItemEditor', () => {
   });
 
   describe('bringing an opened card into view', () => {
-    test('scrolls the start of the card into view when it opens', async () => {
+    it('scrolls the start of the card into view when it opens', async () => {
       const { container, updateProps } = renderComponent({ mode: 'view' });
       await updateProps({ mode: 'edit' });
       expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
       expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
     });
 
-    test('scrolls the start of a card into view when it is created open', () => {
+    it('scrolls the start of a card into view when it is created open', () => {
       const { container } = renderComponent({ mode: 'edit' });
       expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
       expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
     });
 
-    test('leaves the scroll position alone for a closed card', () => {
+    it('leaves the scroll position alone for a closed card', () => {
       renderComponent({ mode: 'view' });
       expect(scrollIntoView).not.toHaveBeenCalled();
     });
 
-    test('leaves the scroll position alone when a card closes', async () => {
+    it('leaves the scroll position alone when a card closes', async () => {
       const { updateProps } = renderComponent({ mode: 'edit' });
       scrollIntoView.mockClear();
       await updateProps({ mode: 'view' });
@@ -213,17 +213,17 @@ describe('QTIItemEditor', () => {
   });
 
   describe('edit mode', () => {
-    test('shows the card body', () => {
+    it('shows the card body', () => {
       renderComponent({ mode: 'edit' });
       expect(screen.getByText(questionContentPlaceholder$())).toBeInTheDocument();
     });
 
-    test('shows the close button', () => {
+    it('shows the close button', () => {
       renderComponent({ mode: 'edit' });
       expect(screen.getByRole('button', { name: closeBtnLabel$() })).toBeInTheDocument();
     });
 
-    test('emits a close event when the close button is clicked', async () => {
+    it('emits a close event when the close button is clicked', async () => {
       const { emitted } = renderComponent({ mode: 'edit' });
       await fireEvent.click(screen.getByRole('button', { name: closeBtnLabel$() }));
       expect(emitted().close).toHaveLength(1);
@@ -231,18 +231,18 @@ describe('QTIItemEditor', () => {
   });
 
   describe('showAnswers', () => {
-    test('shows the card body in view mode when showAnswers is true', () => {
+    it('shows the card body in view mode when showAnswers is true', () => {
       renderComponent({ mode: 'view', showAnswers: true });
       expect(screen.getByText(questionContentPlaceholder$())).toBeInTheDocument();
     });
 
-    test('does not show the close button even when showAnswers is true', () => {
+    it('does not show the close button even when showAnswers is true', () => {
       renderComponent({ mode: 'view', showAnswers: true });
       expect(screen.queryByRole('button', { name: closeBtnLabel$() })).not.toBeInTheDocument();
     });
   });
 
-  test('shows a numeric answer in the language it is given', async () => {
+  it('shows a numeric answer in the language it is given', async () => {
     renderComponent({
       item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
       showAnswers: true,
@@ -253,7 +253,7 @@ describe('QTIItemEditor', () => {
     );
   });
 
-  test('reads a numeric answer in the language it is given after a change', async () => {
+  it('reads a numeric answer in the language it is given after a change', async () => {
     const { emitted, updateProps } = renderComponent({
       item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
       mode: 'edit',
@@ -269,7 +269,7 @@ describe('QTIItemEditor', () => {
     expect(emitted()['update:rawData'].at(-1)[0]).toContain('<qti-value>1234</qti-value>');
   });
 
-  test('keeps the open question in place when the language changes', async () => {
+  it('keeps the open question in place when the language changes', async () => {
     const { updateProps } = renderComponent({
       item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
       mode: 'edit',
@@ -284,7 +284,7 @@ describe('QTIItemEditor', () => {
     expect(input).toHaveValue('1234.5');
   });
 
-  test.each([
+  it.each([
     ['fr', '1234.5'],
     ['fr', '1E3'],
     ['fr', '0.0000001'],
@@ -303,7 +303,7 @@ describe('QTIItemEditor', () => {
     },
   );
 
-  test.each([
+  it.each([
     ['en', '1.50', '1.5'],
     ['de', '0012', '12'],
     ['ar-EG', '1.50', '1.5'],
@@ -324,7 +324,7 @@ describe('QTIItemEditor', () => {
   );
 
   describe('items this editor cannot edit', () => {
-    test('shows a read-only message for an item authored elsewhere', () => {
+    it('shows a read-only message for an item authored elsewhere', () => {
       renderComponent({
         item: { assessment_id: 'perseus-item', type: 'perseus_question', raw_data: '{}' },
         canDelete: true,
@@ -353,7 +353,7 @@ describe('QTIItemEditor', () => {
         'a stylesheet and no prompt': STYLESHEET_ITEM_DOCUMENT_NO_PROMPT,
       };
 
-      test.each(Object.entries(publishableDocuments))(
+      it.each(Object.entries(publishableDocuments))(
         'with %s shows the unsupported message and no delete prompt',
         (_, raw_data) => {
           renderDocument(raw_data, { mode: 'view', canDelete: true });
@@ -365,7 +365,7 @@ describe('QTIItemEditor', () => {
       );
 
       describe.each(Object.entries(documents))('with %s', (_, raw_data) => {
-        test('offers no editable controls or hints in edit mode', () => {
+        it('offers no editable controls or hints in edit mode', () => {
           renderDocument(raw_data, { mode: 'edit' });
           expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
           const buttons = screen.getAllByRole('button');
@@ -377,7 +377,7 @@ describe('QTIItemEditor', () => {
           expect(screen.queryAllByRole('textbox').filter(isAuthorInput)).toHaveLength(0);
         });
 
-        test('leaves raw_data untouched after the card is opened and closed', async () => {
+        it('leaves raw_data untouched after the card is opened and closed', async () => {
           const { emitted, updateProps } = renderDocument(raw_data, { mode: 'edit' });
 
           await fireEvent.click(screen.getByRole('button', { name: closeBtnLabel$() }));
@@ -388,7 +388,7 @@ describe('QTIItemEditor', () => {
         });
       });
 
-      test('shows the hints of an unsupported item when answers are shown', () => {
+      it('shows the hints of an unsupported item when answers are shown', () => {
         renderDocument(MULTI_INTERACTION_ITEM_DOCUMENT, { mode: 'view', showAnswers: true });
         expect(screen.getByRole('button', { name: hintsLabel$() })).toBeInTheDocument();
       });
@@ -396,7 +396,7 @@ describe('QTIItemEditor', () => {
   });
 
   describe('delete prompt', () => {
-    test.each([
+    it.each([
       ['XML that cannot be parsed', '<not-xml'],
       ['no interaction', NO_INTERACTION_ITEM_DOCUMENT],
       [
@@ -414,7 +414,7 @@ describe('QTIItemEditor', () => {
       },
     );
 
-    test('only says the question cannot be edited where the card offers no Delete', () => {
+    it('only says the question cannot be edited where the card offers no Delete', () => {
       // Rendered without canDelete, as ResourcePanel's preview does.
       renderDocument('<not-xml');
       expect(screen.getByTestId('unsupportedMessage')).toHaveTextContent(unsupportedItemMessage$());
@@ -430,25 +430,25 @@ describe('QTIItemEditor', () => {
       await nextTick();
     };
 
-    test('is shown for a question missing something the author has to supply', async () => {
+    it('is shown for a question missing something the author has to supply', async () => {
       await renderAndValidate(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER);
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
-    test('is not shown for a complete question', async () => {
+    it('is not shown for a complete question', async () => {
       await renderAndValidate(VALID_CHOICE_ITEM_DOCUMENT);
       expect(screen.queryByText(incompleteItemIndicatorLabel$())).not.toBeInTheDocument();
     });
 
     // The card reads the item's XML rather than errors an interaction editor reports, so an
     // interaction that reports nothing is covered like any other.
-    test('is shown for an incomplete question of any interaction type', async () => {
+    it('is shown for an incomplete question of any interaction type', async () => {
       await renderAndValidate(ORDERING_ITEM_DOCUMENT_NO_PROMPT);
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
     // Publishing reads the stored XML, where these are not xsd:double.
-    test.each([
+    it.each([
       ['fr', '1,5', '1.5'],
       ['fr', '1 234,5', '1234.5'],
       ['de', '1.234,5', '1234.5'],
@@ -473,32 +473,32 @@ describe('QTIItemEditor', () => {
       },
     );
 
-    test('is shown for an unsupported item with no interaction, which blocks publishing', async () => {
+    it('is shown for an unsupported item with no interaction, which blocks publishing', async () => {
       await renderAndValidate(NO_INTERACTION_ITEM_DOCUMENT);
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
-    test('is shown for an item whose XML cannot be parsed', async () => {
+    it('is shown for an item whose XML cannot be parsed', async () => {
       await renderAndValidate('<not-xml');
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
-    test('is shown for a match interaction that cannot be read', async () => {
+    it('is shown for a match interaction that cannot be read', async () => {
       await renderAndValidate(VALID_MATCH_ITEM_DOCUMENT.replace(MATCH_XML, MATCH_THREE_SETS_XML));
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
-    test('is not shown for an item whose body the editor cannot reproduce', async () => {
+    it('is not shown for an item whose body the editor cannot reproduce', async () => {
       await renderAndValidate(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS);
       expect(screen.queryByTestId('incompleteIndicator')).not.toBeInTheDocument();
     });
 
-    test('is not shown for a valid item with unsupported interactions', async () => {
+    it('is not shown for a valid item with unsupported interactions', async () => {
       await renderAndValidate(MULTI_INTERACTION_ITEM_DOCUMENT);
       expect(screen.queryByText(incompleteItemIndicatorLabel$())).not.toBeInTheDocument();
     });
 
-    test('is shown for a free-response question where those are not accepted', async () => {
+    it('is shown for a free-response question where those are not accepted', async () => {
       renderComponent({
         allowFreeResponse: false,
         item: {
@@ -512,11 +512,11 @@ describe('QTIItemEditor', () => {
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
-    test('is not shown for a free-response question where those are accepted', async () => {
+    it('is not shown for a free-response question where those are accepted', async () => {
       await renderAndValidate(FREE_RESPONSE_ITEM_DOCUMENT);
       expect(screen.queryByText(incompleteItemIndicatorLabel$())).not.toBeInTheDocument();
     });
-    test('is not shown for a question this editor cannot read', async () => {
+    it('is not shown for a question this editor cannot read', async () => {
       renderComponent({
         item: {
           assessment_id: 'item-id',
@@ -541,7 +541,7 @@ describe('QTIItemEditor', () => {
         },
       });
 
-    test('a card that is only being viewed reports nothing', async () => {
+    it('a card that is only being viewed reports nothing', async () => {
       // A closed card re-assembles its XML too; reporting that would rewrite every
       // question in the list just for being on screen.
       const { emitted } = renderWithContent('view');
@@ -550,7 +550,7 @@ describe('QTIItemEditor', () => {
       expect(emitted()['update:rawData']).toBeUndefined();
     });
 
-    test('a card that is only being viewed does not warn about scoring it will not write', async () => {
+    it('a card that is only being viewed does not warn about scoring it will not write', async () => {
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
       renderComponent({
         item: {
@@ -567,7 +567,7 @@ describe('QTIItemEditor', () => {
       expect(warn).not.toHaveBeenCalled();
     });
 
-    test('a card reopened for editing reports nothing until the author changes something', async () => {
+    it('a card reopened for editing reports nothing until the author changes something', async () => {
       const { emitted, updateProps } = renderWithContent('view');
       await updateProps({ mode: 'edit' });
       await nextTick();
@@ -575,7 +575,7 @@ describe('QTIItemEditor', () => {
       expect(emitted()['update:rawData']).toBeUndefined();
     });
 
-    test('a change made while editing is still reported once the card closes', async () => {
+    it('a change made while editing is still reported once the card closes', async () => {
       const { emitted, updateProps } = renderWithContent('edit');
       // Deliberately not awaited: the change and the close land in the same flush, which is
       // what happens when a click closes the card the author was just typing in.
@@ -586,7 +586,7 @@ describe('QTIItemEditor', () => {
       expect(emitted()['update:rawData']).toBeDefined();
     });
 
-    test('the card being edited reports the new XML when the author changes it', async () => {
+    it('the card being edited reports the new XML when the author changes it', async () => {
       const { emitted } = renderWithContent('edit');
       // The fixture starts with two choices.
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
@@ -600,7 +600,7 @@ describe('QTIItemEditor', () => {
   describe('hints', () => {
     // Adaptation of the hints previously used in Studio. New hints are not
     // supported, only the display of existing ones.
-    test('offers no hints section on a question that arrived without any', () => {
+    it('offers no hints section on a question that arrived without any', () => {
       renderComponent({
         item: { ...defaultProps.item, raw_data: VALID_CHOICE_ITEM_DOCUMENT },
         mode: 'edit',
@@ -608,12 +608,12 @@ describe('QTIItemEditor', () => {
       expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
     });
 
-    test('offers no hints section on a newly created question', () => {
+    it('offers no hints section on a newly created question', () => {
       renderComponent({ mode: 'edit' });
       expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
     });
 
-    test('shows the hints section on a question that arrived with hints', () => {
+    it('shows the hints section on a question that arrived with hints', () => {
       renderComponent({
         item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
         mode: 'edit',
@@ -621,7 +621,7 @@ describe('QTIItemEditor', () => {
       expect(screen.getByText(hintsLabel$())).toBeInTheDocument();
     });
 
-    test('keeps the hints of a closed question out of the way until answers are shown', () => {
+    it('keeps the hints of a closed question out of the way until answers are shown', () => {
       renderComponent({
         item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
         mode: 'view',
@@ -630,7 +630,7 @@ describe('QTIItemEditor', () => {
       expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
     });
 
-    test('shows the hints of a closed question when answers are shown', () => {
+    it('shows the hints of a closed question when answers are shown', () => {
       renderComponent({
         item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
         mode: 'view',
@@ -639,7 +639,7 @@ describe('QTIItemEditor', () => {
       expect(screen.getByText(hintsLabel$())).toBeInTheDocument();
     });
 
-    test('reports the item XML when a hint changes', async () => {
+    it('reports the item XML when a hint changes', async () => {
       const { emitted } = renderComponent({
         item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
         mode: 'edit',
@@ -654,7 +654,7 @@ describe('QTIItemEditor', () => {
     });
   });
 
-  test('keeps xsi:schemaLocation through an edit', async () => {
+  it('keeps xsi:schemaLocation through an edit', async () => {
     const { emitted } = renderComponent({
       item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_SCHEMA_LOCATION },
       mode: 'edit',
@@ -667,7 +667,7 @@ describe('QTIItemEditor', () => {
     expect(root.getAttributeNS(XSI_NS, 'schemaLocation')).toBe(QTI_SCHEMA_LOCATION);
   });
 
-  test('keeps the label through an edit', async () => {
+  it('keeps the label through an edit', async () => {
     const { emitted } = renderComponent({
       item: {
         ...defaultProps.item,
@@ -695,13 +695,13 @@ describe('QTIItemEditor', () => {
         },
       });
 
-    test('names the associate question type rather than falling back to unknown', async () => {
+    it('names the associate question type rather than falling back to unknown', async () => {
       renderAssociateItem();
       expect(await screen.findByText(associateLabel$(), { exact: false })).toBeInTheDocument();
       expect(screen.queryByText(unknownTypeLabel$(), { exact: false })).not.toBeInTheDocument();
     });
 
-    test('renders the associate editor for the parsed interaction', async () => {
+    it('renders the associate editor for the parsed interaction', async () => {
       renderAssociateItem();
       expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
       expect(screen.getByText('Antonio')).toBeInTheDocument();
@@ -718,13 +718,13 @@ describe('QTIItemEditor', () => {
         },
       });
 
-    test('names the match question type rather than falling back to unknown', async () => {
+    it('names the match question type rather than falling back to unknown', async () => {
       renderMatchItem();
       const heading = questionNumberAndTypeLabel$({ number: 1, total: 5, type: matchLabel$() });
       expect(await screen.findByText(heading)).toBeInTheDocument();
     });
 
-    test('renders the match editor for the parsed interaction', async () => {
+    it('renders the match editor for the parsed interaction', async () => {
       renderMatchItem();
       expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
       expect(screen.getByText('Dog')).toBeInTheDocument();
@@ -742,7 +742,7 @@ describe('QTIItemEditor', () => {
         ...props,
       });
 
-    test('names the inline choice question type', async () => {
+    it('names the inline choice question type', async () => {
       renderInlineChoiceItem();
       const heading = questionNumberAndTypeLabel$({
         number: 1,
@@ -752,7 +752,7 @@ describe('QTIItemEditor', () => {
       expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
     });
 
-    test('opens in the inline choice editor', async () => {
+    it('opens in the inline choice editor', async () => {
       renderInlineChoiceItem({ mode: 'edit' });
       expect(
         await screen.findByRole('heading', { name: passageEditorLabel$() }),
@@ -760,14 +760,14 @@ describe('QTIItemEditor', () => {
       expect(screen.queryByTestId('unsupportedMessage')).not.toBeInTheDocument();
     });
 
-    test('marks a dropdown without a correct answer as incomplete', async () => {
+    it('marks a dropdown without a correct answer as incomplete', async () => {
       renderInlineChoiceItem();
       expect(await screen.findByTestId('incompleteIndicator')).toBeInTheDocument();
     });
   });
 
   describe('toolbarActions slot', () => {
-    test('renders content injected into the toolbarActions slot', () => {
+    it('renders content injected into the toolbarActions slot', () => {
       renderComponent({}, { toolbarActions: '<button>Edit</button>' });
       expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
     });

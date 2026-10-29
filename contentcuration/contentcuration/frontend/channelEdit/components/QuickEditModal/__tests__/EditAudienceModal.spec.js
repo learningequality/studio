@@ -69,13 +69,13 @@ describe('EditAudienceModal', () => {
     });
   });
 
-  test('smoke test', () => {
+  it('smoke test', () => {
     const wrapper = makeWrapper(['node1']);
     expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected audience on first render', () => {
-    test('no rol should be selected if a single node does not have set rol', () => {
+    it('no rol should be selected if a single node does not have set rol', () => {
       const wrapper = makeWrapper(['node1']);
 
       const rolesValues = getRolesValues(wrapper);
@@ -84,7 +84,7 @@ describe('EditAudienceModal', () => {
       });
     });
 
-    test('no rol should be selected if just a single node among multiple nodes does not have rol set', () => {
+    it('no rol should be selected if just a single node among multiple nodes does not have rol set', () => {
       nodes['node1'].role_visibility = RolesNames.COACH;
 
       const wrapper = makeWrapper(['node1', 'node2']);
@@ -95,7 +95,7 @@ describe('EditAudienceModal', () => {
       });
     });
 
-    test('no rol should be selected if there are multiple roles set', () => {
+    it('no rol should be selected if there are multiple roles set', () => {
       nodes['node1'].role_visibility = RolesNames.COACH;
       nodes['node2'].role_visibility = RolesNames.LEARNER;
 
@@ -107,7 +107,7 @@ describe('EditAudienceModal', () => {
       });
     });
 
-    test('the common rol should be selected if all nodes have the same rol visibility', () => {
+    it('the common rol should be selected if all nodes have the same rol visibility', () => {
       nodes['node1'].role_visibility = RolesNames.COACH;
       nodes['node2'].role_visibility = RolesNames.COACH;
 
@@ -117,13 +117,13 @@ describe('EditAudienceModal', () => {
       expect(rolesValues[RolesNames.COACH]).toBeTruthy();
     });
 
-    test('for beginners checkbox should be unselected if no node is set for beginners', () => {
+    it('for beginners checkbox should be unselected if no node is set for beginners', () => {
       const wrapper = makeWrapper(['node1']);
 
       expect(isForBeginnersChecked(wrapper)).toBeFalsy();
     });
 
-    test('for beginners checkbox should be unselected if just a single node among multiple nodes is not set for beginners', () => {
+    it('for beginners checkbox should be unselected if just a single node among multiple nodes is not set for beginners', () => {
       nodes['node1'].learner_needs = {
         [ResourcesNeededTypes.FOR_BEGINNERS]: true,
       };
@@ -133,7 +133,7 @@ describe('EditAudienceModal', () => {
       expect(isForBeginnersChecked(wrapper)).toBeFalsy();
     });
 
-    test('for beginners checkbox should be selected if all nodes are set for beginners', () => {
+    it('for beginners checkbox should be selected if all nodes are set for beginners', () => {
       nodes['node1'].learner_needs = {
         [ResourcesNeededTypes.FOR_BEGINNERS]: true,
       };
@@ -146,7 +146,7 @@ describe('EditAudienceModal', () => {
       expect(isForBeginnersChecked(wrapper)).toBeTruthy();
     });
 
-    test('should display information message about different roles visibilities if there are multiple roles set', () => {
+    it('should display information message about different roles visibilities if there are multiple roles set', () => {
       nodes['node1'].role_visibility = RolesNames.COACH;
       nodes['node2'].role_visibility = RolesNames.LEARNER;
 
@@ -155,7 +155,7 @@ describe('EditAudienceModal', () => {
       expect(wrapper.find('[data-test="multiple-audience-message"]').exists()).toBeTruthy();
     });
 
-    test('should not display information message about different roles visibilities if just some nodes are set for beginners', () => {
+    it('should not display information message about different roles visibilities if just some nodes are set for beginners', () => {
       nodes['node1'].learner_needs = {
         [ResourcesNeededTypes.FOR_BEGINNERS]: true,
       };
@@ -165,7 +165,7 @@ describe('EditAudienceModal', () => {
       expect(wrapper.find('[data-test="multiple-audience-message"]').exists()).toBeTruthy();
     });
 
-    test('should not display information message about different roles visibilities if all nodes have the same rol visibility and are set for beginners', () => {
+    it('should not display information message about different roles visibilities if all nodes have the same rol visibility and are set for beginners', () => {
       nodes['node1'].role_visibility = RolesNames.COACH;
       nodes['node1'].learner_needs = {
         [ResourcesNeededTypes.FOR_BEGINNERS]: true,
@@ -181,7 +181,7 @@ describe('EditAudienceModal', () => {
     });
   });
 
-  test('should render the message of the number of resources selected', () => {
+  it('should render the message of the number of resources selected', () => {
     const wrapper = makeWrapper(['node1', 'node2']);
 
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
@@ -189,7 +189,7 @@ describe('EditAudienceModal', () => {
     expect(resourcesCounter.text()).toContain('2');
   });
 
-  test('should call updateContentNode with the right rol on success submit', () => {
+  it('should call updateContentNode with the right rol on success submit', () => {
     const wrapper = makeWrapper(['node1']);
 
     selectRole(wrapper, RolesNames.COACH);
@@ -204,7 +204,7 @@ describe('EditAudienceModal', () => {
     });
   });
 
-  test('should call updateContentNode with the need for beginners set on success submit', () => {
+  it('should call updateContentNode with the need for beginners set on success submit', () => {
     const wrapper = makeWrapper(['node1']);
 
     checkForBeginners(wrapper);
@@ -221,7 +221,7 @@ describe('EditAudienceModal', () => {
     });
   });
 
-  test('should emit close event on success submit', () => {
+  it('should emit close event on success submit', () => {
     const wrapper = makeWrapper(['node1']);
 
     selectRole(wrapper, RolesNames.COACH);
@@ -233,7 +233,7 @@ describe('EditAudienceModal', () => {
     });
   });
 
-  test('should emit close event on cancel', () => {
+  it('should emit close event on cancel', () => {
     const wrapper = makeWrapper(['node1']);
 
     wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('cancel');
@@ -244,7 +244,7 @@ describe('EditAudienceModal', () => {
     });
   });
 
-  test('should show a confirmation snackbar on success submit', () => {
+  it('should show a confirmation snackbar on success submit', () => {
     const wrapper = makeWrapper(['node1']);
 
     selectRole(wrapper, RolesNames.COACH);

@@ -9,8 +9,8 @@
 // Disabled because jest-dom's matchers are built for HTML elements and reject the strict
 // XML nodes this serialization produces — same reason as assembleItem.spec.js.
 /* eslint-disable jest-dom/prefer-to-have-attribute */
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { parseItem } from '../parseItem';
 import { assembleItemXml } from '../assembleItem';
 import { isEditableItem } from '../../validateItem';
