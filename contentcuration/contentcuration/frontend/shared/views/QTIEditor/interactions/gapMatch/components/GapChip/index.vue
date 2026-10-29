@@ -106,3 +106,34 @@
   }
 
 </style>
+
+
+<style lang="scss">
+
+  /* After prosemirror-gapcursor's style/gapcursor.css. */
+  .gap-caret {
+    display: none;
+    width: 0;
+    height: 1.2em;
+    margin-right: -1px;
+    vertical-align: text-bottom;
+    pointer-events: none;
+    border-left: 1px solid currentcolor;
+    animation: gap-caret-blink 1.1s steps(2, start) infinite;
+  }
+
+  .ProseMirror-focused .gap-caret {
+    display: inline-block;
+  }
+
+  .ProseMirror-focused.hides-caret {
+    caret-color: transparent;
+  }
+
+  @keyframes gap-caret-blink {
+    to {
+      visibility: hidden;
+    }
+  }
+
+</style>

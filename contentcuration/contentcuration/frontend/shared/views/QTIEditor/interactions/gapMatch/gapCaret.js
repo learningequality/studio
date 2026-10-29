@@ -4,25 +4,49 @@ import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 /* eslint-enable import/no-unresolved */
 
+const caretOf = ({ selection }) => (selection.empty ? selection.$from : null);
+
+const isBesideGap = ($pos, isGap) =>
+  !isGap($pos.parent) && (isGap($pos.nodeBefore) || isGap($pos.nodeAfter));
+
+const hasTextBeside = $pos => Boolean($pos.nodeBefore?.isText || $pos.nodeAfter?.isText);
+
+// The browser has no text there to draw its own caret in.
+const needsDrawnCaret = ($pos, isGap) => isBesideGap($pos, isGap) && !hasTextBeside($pos);
+
+function drawnCaret() {
+  const caret = document.createElement('span');
+  caret.className = 'gap-caret';
+  caret.contentEditable = 'false';
+  caret.setAttribute('aria-hidden', 'true');
+  return caret;
+}
+
 // Tiptap puts a node decoration's class on the node view's `NodeViewWrapper`.
-function caretGapDecoration(state, isGap) {
-  const { selection } = state;
-  const $pos = selection.$from;
-  if (!selection.empty || !isGap($pos.parent)) return null;
-  const mark = Decoration.node($pos.before(), $pos.after(), { class: 'has-caret' });
-  return DecorationSet.create(state.doc, [mark]);
+function caretDecorations(state, isGap) {
+  const $pos = caretOf(state);
+  if (!$pos) return null;
+  if (isGap($pos.parent)) {
+    const mark = Decoration.node($pos.before(), $pos.after(), { class: 'has-caret' });
+    return DecorationSet.create(state.doc, [mark]);
+  }
+  if (!needsDrawnCaret($pos, isGap)) return null;
+  const caret = Decoration.widget($pos.pos, drawnCaret, {
+    key: 'gap-caret',
+    ignoreSelection: true,
+  });
+  return DecorationSet.create(state.doc, [caret]);
 }
 
 function browserCaretPoint(view, isGap) {
-  const { selection } = view.state;
-  if (!selection.empty) return null;
-  const $pos = selection.$from;
+  const $pos = caretOf(view.state);
+  if (!$pos) return null;
   if (isGap($pos.parent)) {
     if ($pos.pos === $pos.start()) return view.domAtPos($pos.pos, 1);
     if ($pos.pos === $pos.end()) return view.domAtPos($pos.pos, -1);
     return null;
   }
-  if (!isGap($pos.nodeBefore) && !isGap($pos.nodeAfter)) return null;
+  if (!isBesideGap($pos, isGap)) return null;
   if ($pos.nodeBefore?.isText) return view.domAtPos($pos.pos, -1);
   if ($pos.nodeAfter?.isText) return view.domAtPos($pos.pos, 1);
   return view.domAtPos($pos.pos, 0);
@@ -52,7 +76,11 @@ function placeBrowserCaret(view, isGap) {
 export function gapCaret(isGap) {
   return new Plugin({
     props: {
-      decorations: state => caretGapDecoration(state, isGap),
+      decorations: state => caretDecorations(state, isGap),
+      attributes: state => {
+        const $pos = caretOf(state);
+        return $pos && needsDrawnCaret($pos, isGap) ? { class: 'hides-caret' } : {};
+      },
     },
     view(view) {
       placeBrowserCaret(view, isGap);

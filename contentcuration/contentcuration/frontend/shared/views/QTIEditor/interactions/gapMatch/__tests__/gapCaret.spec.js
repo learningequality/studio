@@ -64,6 +64,31 @@ describe('gap caret', () => {
     });
   });
 
+  describe('drawn caret', () => {
+    const drawnCarets = editor => [...editor.view.dom.querySelectorAll('.gap-caret')];
+
+    it('is drawn between two gaps, where the browser has no text to draw its caret in', async () => {
+      const editor = await renderAt(3, `<p>${gap('gap_a', 'x')}${gap('gap_b', 'y')}</p>`);
+
+      press(editor, 'ArrowRight');
+
+      const [caret] = drawnCarets(editor);
+      expect(caret.previousElementSibling).toHaveTextContent('x');
+      expect(caret.nextElementSibling).toHaveTextContent('y');
+      expect(caret).toHaveAttribute('aria-hidden', 'true');
+      expect(editor.view.dom).toHaveClass('hides-caret');
+    });
+
+    it('is not drawn where text is beside the caret', async () => {
+      const editor = await renderAt(4);
+
+      press(editor, 'ArrowLeft');
+
+      expect(drawnCarets(editor)).toEqual([]);
+      expect(editor.view.dom).not.toHaveClass('hides-caret');
+    });
+  });
+
   describe('outline', () => {
     const TWO_GAPS = `<p>ab${gap('gap_a', 'xy')}cd${gap('gap_b', 'z')}</p>`;
     const { gapWithAnswer$ } = qtiEditorStrings;
