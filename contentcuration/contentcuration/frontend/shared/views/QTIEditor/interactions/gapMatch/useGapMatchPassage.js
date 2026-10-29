@@ -19,9 +19,9 @@ function sameGaps(prevDoc, doc) {
   return before.length === after.length && before.every((node, i) => node.eq(after[i]));
 }
 
-function removedGaps(prevDoc, doc) {
-  const kept = new Set(gapNodes(doc).map(node => node.attrs.identifier));
-  return gapNodes(prevDoc).filter(node => !kept.has(node.attrs.identifier));
+function gapsOnlyIn(doc, otherDoc) {
+  const inOther = new Set(gapNodes(otherDoc).map(node => node.attrs.identifier));
+  return gapNodes(doc).filter(node => !inOther.has(node.attrs.identifier));
 }
 
 const gapNumber = (doc, identifier) =>
@@ -121,15 +121,14 @@ export function useGapMatchPassage({
       if (!isGap(entered) || prevState.selection.$from.parent === entered) return null;
       return describeIn(state.doc, entered);
     }
-    const removed = removedGaps(prevState.doc, state.doc);
+    const removed = gapsOnlyIn(prevState.doc, state.doc);
     if (removed.length > 1) return qtiEditorStrings.gapsRemoved$({ count: removed.length });
     if (removed.length) {
       return qtiEditorStrings.gapRemoved$({ name: describeIn(prevState.doc, removed[0]) });
     }
-    if (isGap(entered) && !gapNumber(prevState.doc, entered.attrs.identifier)) {
-      return describeIn(state.doc, entered);
-    }
-    return null;
+    const added = gapsOnlyIn(state.doc, prevState.doc);
+    if (added.length > 1) return qtiEditorStrings.gapsAdded$({ count: added.length });
+    return added.length ? describeIn(state.doc, added[0]) : null;
   }
 
   const { sendAssertiveMessage } = useKLiveRegion();

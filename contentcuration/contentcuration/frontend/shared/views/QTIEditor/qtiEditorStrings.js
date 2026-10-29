@@ -694,6 +694,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Announced to screen readers when several gaps are deleted from the passage of a gap match question at once',
   },
+  gapsAdded: {
+    message: '{count, plural, one {# gap added} other {# gaps added}}',
+    context:
+      'Announced to screen readers when several gaps are added to the passage of a gap match question at once, for example when an undo restores them',
+  },
   gapHidden: {
     message: 'Gap {number}',
     context:

@@ -27,7 +27,8 @@ jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => {
   };
 });
 
-const { insertGap$, gapWithAnswer$, gapEmpty$, gapRemoved$, gapsRemoved$ } = qtiEditorStrings;
+const { insertGap$, gapWithAnswer$, gapEmpty$, gapRemoved$, gapsRemoved$, gapsAdded$ } =
+  qtiEditorStrings;
 
 const INSERT = { name: insertGap$() };
 
@@ -219,6 +220,28 @@ describe('useGapMatchPassage announcements', () => {
     const { editor } = await renderAnnouncerAt(TWO_GAPS, 1);
     editor.commands.deleteRange({ from: 1, to: editor.state.doc.content.size - 1 });
     expect(announced()).toEqual([gapsRemoved$({ count: 2 })]);
+  });
+
+  it('counts the gaps an undo restores together', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_GAPS, 1);
+    editor.commands.deleteRange({ from: 1, to: editor.state.doc.content.size - 1 });
+    sendAssertiveMessage.mockClear();
+
+    editor.commands.undo();
+
+    expect(announced()).toEqual([gapsAdded$({ count: 2 })]);
+  });
+
+  it('names the gap an undo restores with the caret outside it', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_GAPS, 1);
+    const { node, pos } = findGap(editor, 'gap_a');
+    editor.commands.setTextSelection({ from: 1, to: pos + node.nodeSize });
+    editor.commands.deleteSelection();
+    sendAssertiveMessage.mockClear();
+
+    editor.commands.undo();
+
+    expect(announced()).toEqual([gapWithAnswer$({ answer: 'x', number: 1 })]);
   });
 });
 
