@@ -238,6 +238,7 @@ describe('GapNode', () => {
     it.each([
       ['Ctrl+Backspace', { ctrlKey: true }],
       ['Shift+Ctrl+Backspace', { ctrlKey: true, shiftKey: true }],
+      ['Alt+Backspace, the word delete on macOS,', { altKey: true }],
     ])('%s removes a blank gap', async (_, modifiers) => {
       const editor = await renderAt(1);
       editor.commands.insertGap();
