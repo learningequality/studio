@@ -102,15 +102,18 @@ function isOverGap(view, gapPos, event) {
   return event.clientX >= box.left && event.clientX <= box.right;
 }
 
-function outsideOfGap(view, $pos, event) {
+function edgeOfGap(view, $pos, event) {
+  const atStart = $pos.pos === $pos.start();
+  const atEnd = $pos.pos === $pos.end();
+  if (!atStart && !atEnd) return null;
   const gap = view.nodeDOM($pos.before());
   const box = gap.getBoundingClientRect();
   const isRtl = window.getComputedStyle(gap.parentElement).direction === 'rtl';
   const pastLeft = event.clientX < box.left;
   const pastRight = event.clientX > box.right;
-  if ($pos.pos === $pos.end() && (isRtl ? pastLeft : pastRight)) return $pos.after();
-  if ($pos.pos === $pos.start() && (isRtl ? pastRight : pastLeft)) return $pos.before();
-  return null;
+  if (atEnd && (isRtl ? pastLeft : pastRight)) return $pos.after();
+  if (atStart && (isRtl ? pastRight : pastLeft)) return $pos.before();
+  return $pos.pos;
 }
 
 function besideGap(view, $pos, event, isGap) {
@@ -121,15 +124,16 @@ function besideGap(view, $pos, event, isGap) {
   return overBefore || overAfter ? null : $pos.pos;
 }
 
-// Browsers put the caret for a click past a gap at a line's edge inside the gap, also where
-// ProseMirror resolves the click to outside it.
-function clickBesideGap(view, pos, event, isGap) {
+// For a click at a gap's edge, browsers can put the caret on the other side of the edge from
+// where ProseMirror resolves the click: inside a gap for a click past it at a line's edge, and
+// at the end of the node before a gap for a click on its leading edge.
+function clickAtGapEdge(view, pos, event, isGap) {
   const $pos = view.state.doc.resolve(pos);
-  const outside = isGap($pos.parent)
-    ? outsideOfGap(view, $pos, event)
+  const caret = isGap($pos.parent)
+    ? edgeOfGap(view, $pos, event)
     : besideGap(view, $pos, event, isGap);
-  if (outside === null) return false;
-  view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, outside)));
+  if (caret === null) return false;
+  view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, caret)));
   return true;
 }
 
@@ -144,7 +148,7 @@ export function gapCaret(isGap) {
     props: {
       decorations: state => caretDecorations(state, isGap),
       handleKeyDown: (view, event) => moveToLine(view, event, isGap),
-      handleClick: (view, pos, event) => clickBesideGap(view, pos, event, isGap),
+      handleClick: (view, pos, event) => clickAtGapEdge(view, pos, event, isGap),
       attributes: state => {
         const $pos = caretOf(state);
         return $pos && needsDrawnCaret($pos, isGap) ? { class: 'hides-caret' } : {};

@@ -247,7 +247,9 @@ export const GapNode = Node.create({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(GapChip);
+    // Tiptap's node views stop ProseMirror from handling a mousedown outside their content, such
+    // as on a gap's padding, and the browser then puts the caret outside the gap.
+    return VueNodeViewRenderer(GapChip, { stopEvent: () => false });
   },
 
   addProseMirrorPlugins() {

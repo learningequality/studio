@@ -1,7 +1,7 @@
 import { nextTick } from 'vue';
 import { screen } from '@testing-library/vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
-import { gap, press, renderPassage } from './renderPassage';
+import { findGap, gap, press, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
 jest.mock('shared/utils/browserInfo', () => ({ isTouchDevice: false }));
@@ -172,9 +172,11 @@ describe('gap caret', () => {
     const GAP_BOX = { left: 100, right: 200, top: 0, bottom: 20 };
 
     /** Clicks at `x` where the browser resolves the click to `pos`. */
-    function click(editor, x, pos) {
+    function click(editor, x, pos, boxes = [GAP_BOX]) {
       jest.spyOn(editor.view, 'posAtCoords').mockReturnValue({ pos, inside: -1 });
-      editor.view.dom.querySelector('.gap').getBoundingClientRect = () => GAP_BOX;
+      editor.view.dom.querySelectorAll('.gap').forEach((chip, i) => {
+        chip.getBoundingClientRect = () => boxes[i];
+      });
       const init = { bubbles: true, cancelable: true, button: 0, clientX: x, clientY: 10 };
       editor.view.dom.dispatchEvent(new MouseEvent('mousedown', init));
       return editor.view.dom.dispatchEvent(new MouseEvent('mouseup', init));
@@ -228,13 +230,47 @@ describe('gap caret', () => {
       expect(editor.state.selection.from).toBe(7);
     });
 
-    it.each([
-      ['inside the gap', 6],
-      ['beside the gap', 7],
-    ])('leaves a click on the gap itself, resolved %s, to the browser', async (_, pos) => {
+    it('puts the caret at the edge of the clicked gap for a click on it', async () => {
+      const editor = await renderAt(1, `<p>ab${gap('gap_a', 'xy')}</p>`);
+      const answerEnd = findGap(editor, 'gap_a').pos + 1 + 'xy'.length;
+
+      const unhandled = click(editor, 190, answerEnd);
+
+      expect(unhandled).toBe(false);
+      expect(editor.state.selection.from).toBe(answerEnd);
+    });
+
+    it('puts the caret in the clicked gap for a click on its leading edge after another gap', async () => {
+      const editor = await renderAt(1, `<p>${gap('gap_a', 'one')}${gap('gap_b', 'two')}</p>`);
+      const answerStart = findGap(editor, 'gap_b').pos + 1;
+      const boxes = [{ ...GAP_BOX, left: 0, right: 99 }, GAP_BOX];
+
+      click(editor, 105, answerStart, boxes);
+
+      expect(editor.state.selection.from).toBe(answerStart);
+    });
+
+    it('puts the caret in a gap for a click on its padding', async () => {
+      const editor = await renderAt(1, `<p>${gap('gap_a', 'one')}${gap('gap_b', 'two')}</p>`);
+      const answerStart = findGap(editor, 'gap_b').pos + 1;
+      jest.spyOn(editor.view, 'posAtCoords').mockReturnValue({ pos: answerStart, inside: -1 });
+      const [first, second] = editor.view.dom.querySelectorAll('.gap');
+      first.getBoundingClientRect = () => ({ ...GAP_BOX, left: 0, right: 99 });
+      second.getBoundingClientRect = () => GAP_BOX;
+      // jsdom does not implement `isContentEditable`.
+      Object.defineProperty(second, 'isContentEditable', { value: true });
+      const init = { bubbles: true, cancelable: true, button: 0, clientX: 102, clientY: 10 };
+
+      second.dispatchEvent(new MouseEvent('mousedown', init));
+      second.dispatchEvent(new MouseEvent('mouseup', init));
+
+      expect(editor.state.selection.from).toBe(answerStart);
+    });
+
+    it('leaves a click on the gap itself, resolved beside it, to the browser', async () => {
       const editor = await renderAt(1, `<p>ab${gap('gap_a', 'xy')}</p>`);
 
-      const unhandled = click(editor, 190, pos);
+      const unhandled = click(editor, 190, findGap(editor, 'gap_a').pos);
 
       expect(unhandled).toBe(true);
     });
