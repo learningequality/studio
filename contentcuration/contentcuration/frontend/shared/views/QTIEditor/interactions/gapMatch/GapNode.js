@@ -84,6 +84,10 @@ function isRtlAt(view, pos) {
   return window.getComputedStyle(element).direction === 'rtl';
 }
 
+function endsBesideGap(doc, { from, to }) {
+  return isGap(doc.resolve(from).nodeBefore) || isGap(doc.resolve(to).nodeAfter);
+}
+
 function targetRange(view, event) {
   const [range] = event.getTargetRanges();
   if (!range) return null;
@@ -250,8 +254,8 @@ export const GapNode = Node.create({
         props: {
           handleDOMEvents: {
             // Chrome puts text typed at the edge of a gap, or into a blank one, outside the gap,
-            // and removes a gap when a delete empties its answer. So these edits go through
-            // ProseMirror instead of the browser.
+            // removes a gap when a delete empties its answer, and leaves the caret inside a gap
+            // after a delete beside it. So these edits go through ProseMirror instead.
             beforeinput(view, event) {
               const { selection, tr } = view.state;
               const { $from, $to } = selection;
@@ -260,6 +264,10 @@ export const GapNode = Node.create({
                 const range = selection.empty ? targetRange(view, event) : selection;
                 if (!range || range.from > $from.start() || range.to < $from.end()) return false;
                 tr.delete($from.start(), $from.end());
+              } else if (isDelete && selection.empty) {
+                const range = targetRange(view, event);
+                if (!range || !endsBesideGap(tr.doc, range)) return false;
+                tr.delete(range.from, range.to);
               } else if (
                 selection.empty &&
                 event.inputType === 'insertText' &&

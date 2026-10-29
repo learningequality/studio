@@ -148,6 +148,36 @@ describe('GapNode', () => {
 
       expect(unhandled).toBe(true);
     });
+
+    it('keeps the caret outside a gap when Backspace stops just after it', async () => {
+      const editor = await renderAt(AFTER_GAP + 1, `<p>ab${gap('gap_a', 'xy')}Zcd</p>`);
+
+      input(editor, 'deleteContentBackward', null, { from: AFTER_GAP, to: AFTER_GAP + 1 });
+      input(editor, 'insertText', 'Q');
+
+      expect(answerOf(editor, 'gap_a')).toBe('xy');
+      expect(editor.getText()).toBe('abxyQcd');
+    });
+
+    it('keeps the caret outside a gap when Delete stops just after it', async () => {
+      const editor = await renderAt(AFTER_GAP);
+
+      input(editor, 'deleteContentForward', null, { from: AFTER_GAP, to: AFTER_GAP + 1 });
+      input(editor, 'insertText', 'Q');
+
+      expect(answerOf(editor, 'gap_a')).toBe('xy');
+      expect(editor.getText()).toBe('abxyQd');
+    });
+
+    it('keeps the caret outside a gap when Delete stops just before it', async () => {
+      const editor = await renderAt(BEFORE_GAP - 1);
+
+      input(editor, 'deleteContentForward', null, { from: BEFORE_GAP - 1, to: BEFORE_GAP });
+      input(editor, 'insertText', 'Q');
+
+      expect(answerOf(editor, 'gap_a')).toBe('xy');
+      expect(editor.getText()).toBe('aQxycd');
+    });
   });
 
   describe('composition', () => {
