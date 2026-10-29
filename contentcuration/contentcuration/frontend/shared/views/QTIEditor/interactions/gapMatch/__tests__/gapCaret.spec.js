@@ -89,6 +89,85 @@ describe('gap caret', () => {
     });
   });
 
+  describe('up and down arrows beside the drawn caret', () => {
+    // <p>first line</p><p>[gap_a: x][gap_b: y]</p>: line 2 starts at 13, before gap_a.
+    const TWO_LINES = `<p>first line</p><p>${gap('gap_a', 'x')}${gap('gap_b', 'y')}</p>`;
+    const LINE_HEIGHT = 20;
+    const lineOf = pos => (pos < 13 ? 0 : 1);
+
+    /** Lays out each paragraph as one line, with each position 10px to the right of the last. */
+    function layOutLines(editor) {
+      jest.spyOn(editor.view, 'coordsAtPos').mockImplementation(pos => {
+        const top = lineOf(pos) * LINE_HEIGHT;
+        return { left: pos * 10, right: pos * 10, top, bottom: top + LINE_HEIGHT };
+      });
+      jest.spyOn(editor.view, 'posAtCoords').mockImplementation(({ left, top }) => {
+        if (top < 0 || top >= 2 * LINE_HEIGHT) return null;
+        const pos = top < LINE_HEIGHT ? Math.min(Math.max(left / 10, 1), 11) : 13;
+        return { pos, inside: -1 };
+      });
+    }
+
+    it('moves the caret to the line above, inside the editor', async () => {
+      const editor = await renderAt(13, TWO_LINES);
+      layOutLines(editor);
+
+      const unhandled = press(editor, 'ArrowUp');
+
+      expect(unhandled).toBe(false);
+      expect(editor.state.selection.from).toBe(11);
+    });
+
+    it('looks past the space between paragraphs for the line above', async () => {
+      const editor = await renderAt(13, TWO_LINES);
+      layOutLines(editor);
+      const BETWEEN_PARAGRAPHS = 12;
+      editor.view.posAtCoords
+        .mockReturnValueOnce({ pos: BETWEEN_PARAGRAPHS, inside: -1 })
+        .mockReturnValueOnce({ pos: 5, inside: 0 });
+
+      press(editor, 'ArrowUp');
+
+      expect(editor.state.selection.from).toBe(5);
+    });
+
+    it('moves the caret to the line below', async () => {
+      const editor = await renderAt(1, `<p>${gap('gap_a', 'x')}${gap('gap_b', 'y')}</p>`);
+      jest.spyOn(editor.view, 'coordsAtPos').mockImplementation(pos => ({
+        left: pos * 10,
+        right: pos * 10,
+        top: pos < 7 ? 0 : LINE_HEIGHT,
+        bottom: pos < 7 ? LINE_HEIGHT : 2 * LINE_HEIGHT,
+      }));
+      jest
+        .spyOn(editor.view, 'posAtCoords')
+        .mockImplementation(({ top }) => (top >= LINE_HEIGHT ? { pos: 7, inside: -1 } : null));
+
+      press(editor, 'ArrowDown');
+
+      expect(editor.state.selection.from).toBe(7);
+    });
+
+    it('keeps the caret where it is when no line is above', async () => {
+      const editor = await renderAt(1, `<p>${gap('gap_a', 'x')}${gap('gap_b', 'y')}</p>`);
+      layOutLines(editor);
+      editor.view.posAtCoords.mockReturnValue(null);
+
+      const unhandled = press(editor, 'ArrowUp');
+
+      expect(unhandled).toBe(false);
+      expect(editor.state.selection.from).toBe(1);
+    });
+
+    it('leaves the move to the browser where it draws its own caret', async () => {
+      const editor = await renderAt(7);
+
+      const unhandled = press(editor, 'ArrowUp');
+
+      expect(unhandled).toBe(true);
+    });
+  });
+
   describe('outline', () => {
     const TWO_GAPS = `<p>ab${gap('gap_a', 'xy')}cd${gap('gap_b', 'z')}</p>`;
     const { gapWithAnswer$ } = qtiEditorStrings;

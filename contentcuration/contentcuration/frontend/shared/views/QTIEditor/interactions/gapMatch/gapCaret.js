@@ -1,6 +1,6 @@
 // The resolver does not read package `exports` subpaths.
 /* eslint-disable import/no-unresolved */
-import { Plugin } from '@tiptap/pm/state';
+import { Plugin, TextSelection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 /* eslint-enable import/no-unresolved */
 
@@ -67,6 +67,36 @@ function placeBrowserCaret(view, isGap) {
   if (!isThere) selection.collapse(point.node, point.offset);
 }
 
+const LINE_DIRECTIONS = { ArrowUp: -1, ArrowDown: 1 };
+const LINES_TO_SEARCH = 4;
+
+function lineBeside(view, $pos, direction) {
+  const { left, top, bottom } = view.coordsAtPos($pos.pos);
+  const halfLine = (bottom - top) / 2;
+  for (let step = 1; step <= 2 * LINES_TO_SEARCH; step++) {
+    const y = direction < 0 ? top - step * halfLine : bottom + step * halfLine;
+    const found = view.posAtCoords({ left, top: y });
+    if (!found || !view.state.doc.resolve(found.pos).parent.inlineContent) continue;
+    const coords = view.coordsAtPos(found.pos);
+    if (direction < 0 ? coords.bottom <= top : coords.top >= bottom) return found.pos;
+  }
+  return null;
+}
+
+// Chrome moves the browser's selection out of the editor on ArrowUp beside the drawn caret.
+function moveToLine(view, event, isGap) {
+  const direction = LINE_DIRECTIONS[event.key];
+  if (!direction || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return false;
+  const $pos = caretOf(view.state);
+  if (!$pos || !needsDrawnCaret($pos, isGap)) return false;
+  const pos = lineBeside(view, $pos, direction);
+  if (pos !== null) {
+    const selection = TextSelection.create(view.state.doc, pos);
+    view.dispatch(view.state.tr.setSelection(selection).scrollIntoView());
+  }
+  return true;
+}
+
 /**
  * Keeps the caret at a gap's edges where the editor's selection says it is.
  *
@@ -77,6 +107,7 @@ export function gapCaret(isGap) {
   return new Plugin({
     props: {
       decorations: state => caretDecorations(state, isGap),
+      handleKeyDown: (view, event) => moveToLine(view, event, isGap),
       attributes: state => {
         const $pos = caretOf(state);
         return $pos && needsDrawnCaret($pos, isGap) ? { class: 'hides-caret' } : {};
