@@ -408,12 +408,28 @@ describe('GapNode', () => {
       spy.mockRestore();
     });
 
-    // <p>a[gap_a: x]</p><p>[gap_b: y]b</p>: after gap_a is 5, and before gap_b is 7.
     it('stop beside the gaps on both sides of a paragraph break', async () => {
-      const editor = await renderAt(5, `<p>a${gap('gap_a', 'x')}</p><p>${gap('gap_b', 'y')}b</p>`);
+      const editor = await renderPassage({
+        value: `<p>a${gap('gap_a', 'x')}</p><p>${gap('gap_b', 'y')}b</p>`,
+      }).then(rendered => rendered.editor);
+      const afterA = findGap(editor, 'gap_a').pos + 3;
+      const beforeB = findGap(editor, 'gap_b').pos;
+      editor.commands.setTextSelection(afterA);
 
-      expect(positionsAfter(editor, 'ArrowRight', 2)).toEqual([7, 8]);
-      expect(positionsAfter(editor, 'ArrowLeft', 2)).toEqual([7, 5]);
+      expect(positionsAfter(editor, 'ArrowRight', 2)).toEqual([beforeB, beforeB + 1]);
+      expect(positionsAfter(editor, 'ArrowLeft', 2)).toEqual([beforeB, afterA]);
+    });
+
+    it('do not skip a block image between the paragraphs', async () => {
+      const { editor } = await renderPassage({
+        value: `<p>a${gap('gap_a', 'x')}</p><img src="sun.png"><p>b</p>`,
+      });
+      const afterA = findGap(editor, 'gap_a').pos + 3;
+      editor.commands.setTextSelection(afterA);
+
+      press(editor, 'ArrowRight');
+
+      expect(editor.state.doc.resolve(caret(editor).pos).parent).not.toHaveTextContent('b');
     });
   });
 });

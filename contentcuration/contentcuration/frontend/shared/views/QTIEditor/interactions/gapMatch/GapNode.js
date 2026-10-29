@@ -229,7 +229,7 @@ export const GapNode = Node.create({
         let $target = doc.resolve(target);
         if (!$target.parent.inlineContent) {
           const next = TextSelection.findFrom($target, forward ? 1 : -1, true);
-          if (!next) return false;
+          if (!next || next.from !== target + (forward ? 1 : -1)) return false;
           $target = next.$head;
         }
         if (!touchesGap($pos) && !touchesGap($target)) return false;
