@@ -5,6 +5,7 @@ import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { findGap, gap, gapIdentifiers, input, press, renderPassage } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
+import { getTipTapEditorStrings } from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditorStrings';
 
 // jsdom defines `ontouchstart`, which would put the editor in its touch layout.
 jest.mock('shared/utils/browserInfo', () => ({ isTouchDevice: false }));
@@ -201,6 +202,17 @@ describe('useGapMatchPassage announcements', () => {
     const { editor } = await renderAnnouncerAt(TWO_GAPS, 7);
     press(editor, 'Backspace');
     expect(announced()).toEqual([gapRemoved$({ name: gapEmpty$({ number: 2 }) })]);
+  });
+
+  it('names the gap that the toolbar Undo restores from the keyboard', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_GAPS, 7);
+    press(editor, 'Backspace');
+    sendAssertiveMessage.mockClear();
+
+    screen.getByRole('button', { name: getTipTapEditorStrings().undo$() }).focus();
+    await userEvent.keyboard('{Enter}');
+
+    expect(announced()).toEqual([gapEmpty$({ number: 2 })]);
   });
 
   it('counts the gaps removed together', async () => {

@@ -1,7 +1,9 @@
 import { computed, readonly, ref, unref } from 'vue';
 // The resolver does not read package `exports` subpaths.
-// eslint-disable-next-line import/no-unresolved
+/* eslint-disable import/no-unresolved */
+import { isHistoryTransaction } from '@tiptap/pm/history';
 import { AllSelection, Plugin } from '@tiptap/pm/state';
+/* eslint-enable import/no-unresolved */
 import { findChildren } from '@tiptap/core';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { qtiEditorStrings } from '../../qtiEditorStrings';
@@ -132,13 +134,14 @@ export function useGapMatchPassage({
   const announcer = new Plugin({
     state: {
       init: () => false,
-      apply: tr => Boolean(tr.getMeta(GAP_INSERTED)),
+      apply: tr => Boolean(tr.getMeta(GAP_INSERTED)) || isHistoryTransaction(tr),
     },
     view: () => ({
       update(view, prevState) {
-        // Tiptap's `focus` command focuses the editor in the next animation frame, after Insert.
-        const isInsert = announcer.getState(view.state);
-        if (!view.editable || !(view.hasFocus() || isInsert)) return;
+        // Tiptap's `focus` command focuses the editor in the next animation frame, after the
+        // toolbar's command.
+        const isCommand = announcer.getState(view.state);
+        if (!view.editable || !(view.hasFocus() || isCommand)) return;
         const message = gapMessage(prevState, view.state);
         if (message) sendAssertiveMessage(message);
       },
