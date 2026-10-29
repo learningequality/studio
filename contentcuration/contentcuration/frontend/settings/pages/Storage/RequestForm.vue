@@ -394,7 +394,7 @@
       channelName(channel) {
         return `${channel.name} (${channel.id})`;
       },
-      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       onValidationFailed() {
         // Scroll to error banner
         if (this.$refs.form.scrollIntoView) {
@@ -403,7 +403,7 @@
         this.sendPoliteMessage(this.errorText());
       },
 
-      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       onSubmit(formData) {
         // Convert list-based fields to comma-separated string
         // Can use commas as storage email needs to be in English

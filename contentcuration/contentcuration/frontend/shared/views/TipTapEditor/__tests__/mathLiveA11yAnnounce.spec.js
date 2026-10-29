@@ -1,3 +1,5 @@
+import { localizeAnnouncement } from '../TipTapEditor/components/math/mathLiveA11yLocalize';
+
 jest.mock('shared/i18n', () => ({
   createTranslator: (namespace, messages) => {
     // Return a mock translator that produces Spanish translations
@@ -52,8 +54,6 @@ jest.mock('shared/i18n', () => ({
     return translator;
   },
 }));
-
-const { localizeAnnouncement } = require('../TipTapEditor/components/math/mathLiveA11yLocalize');
 
 describe('localizeAnnouncement', () => {
   describe('action prefixes', () => {

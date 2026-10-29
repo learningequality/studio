@@ -84,7 +84,7 @@
       ...mapActions('settings', ['updateUserPassword']),
 
       // This is called from formMixin
-      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       onSubmit() {
         return this.updateUserPassword(this.password)
           .then(() => {

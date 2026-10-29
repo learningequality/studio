@@ -1,5 +1,3 @@
-// The resolver does not read package `exports` subpaths.
-// eslint-disable-next-line import/no-unresolved
 import { keydownHandler } from '@tiptap/pm/keymap';
 
 // The passage editor's own history shortcuts. `Mod` is Cmd on macOS and Ctrl elsewhere.

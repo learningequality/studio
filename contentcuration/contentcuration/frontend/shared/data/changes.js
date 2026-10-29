@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/no-named-as-default
+// eslint-disable-next-line import-x/no-named-as-default
 import Dexie from 'dexie';
 import isEmpty from 'lodash/isEmpty';
 import isNull from 'lodash/isNull';

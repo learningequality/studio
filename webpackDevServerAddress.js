@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 const fs = require('node:fs');
 const process = require('node:process');
 const { execSync } = require('node:child_process');

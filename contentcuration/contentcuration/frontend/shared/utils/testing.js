@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* global beforeAll, afterAll */
 import { Session } from 'shared/data/resources';
 
 export function resetJestGlobal() {

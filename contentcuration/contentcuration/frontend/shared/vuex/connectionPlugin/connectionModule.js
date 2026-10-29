@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export default {
   state: () => ({
-    online: true && navigator.onLine,
+    online: navigator.onLine,
     timeLastWentOffline: null,
     timeLastCameOnline: null,
     polling: false,
