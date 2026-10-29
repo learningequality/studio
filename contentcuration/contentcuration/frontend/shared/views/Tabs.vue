@@ -27,7 +27,6 @@
     },
     methods: {
       /* eslint-disable vue/no-unused-properties */
-      /* eslint-disable kolibri/vue-no-unused-methods */
       checkPrevIcon() {
         if (this.$vuetify.rtl)
           return this.widths.container > this.scrollOffset * -1 + this.widths.wrapper;
@@ -104,7 +103,6 @@
         }
       },
       /* eslint-enable vue/no-unused-properties */
-      /* eslint-enable kolibri/vue-no-unused-methods */
     },
   };
 

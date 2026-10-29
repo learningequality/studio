@@ -1,7 +1,5 @@
 import omit from 'lodash/omit';
 import { getSchema } from '@tiptap/core';
-// The resolver does not read package `exports` subpaths.
-// eslint-disable-next-line import/no-unresolved
 import { DOMParser as PMDOMParser } from '@tiptap/pm/model';
 import { editorExtensions } from '../extensions';
 

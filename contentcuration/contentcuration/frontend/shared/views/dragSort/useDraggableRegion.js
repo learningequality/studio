@@ -1,3 +1,4 @@
+// eslint-disable-next-line import-x/no-named-as-default
 import Sortable from 'sortablejs';
 import { onMounted, onBeforeUnmount, provide, watch } from 'vue';
 import { injectDraggableUniverse, createDraggableUniverse } from './useDraggableUniverse';

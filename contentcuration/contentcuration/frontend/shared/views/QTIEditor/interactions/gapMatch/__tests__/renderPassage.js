@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* global expect */
 import { render, waitFor } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import { findChildren } from '@tiptap/core';
