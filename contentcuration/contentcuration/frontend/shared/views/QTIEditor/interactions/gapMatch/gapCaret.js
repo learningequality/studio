@@ -68,19 +68,32 @@ function placeBrowserCaret(view, isGap) {
 }
 
 const LINE_DIRECTIONS = { ArrowUp: -1, ArrowDown: 1 };
-const LINES_TO_SEARCH = 4;
+const POSITIONS_TO_SEARCH = 1000;
 
+const isPast = (coords, line, direction) =>
+  direction < 0 ? coords.bottom <= line.top : coords.top >= line.bottom;
+
+// `posAtCoords` finds nothing outside the viewport, and `coordsAtPos` works anywhere.
 function lineBeside(view, $pos, direction) {
-  const { left, top, bottom } = view.coordsAtPos($pos.pos);
-  const halfLine = (bottom - top) / 2;
-  for (let step = 1; step <= 2 * LINES_TO_SEARCH; step++) {
-    const y = direction < 0 ? top - step * halfLine : bottom + step * halfLine;
-    const found = view.posAtCoords({ left, top: y });
-    if (!found || !view.state.doc.resolve(found.pos).parent.inlineContent) continue;
-    const coords = view.coordsAtPos(found.pos);
-    if (direction < 0 ? coords.bottom <= top : coords.top >= bottom) return found.pos;
+  const { doc } = view.state;
+  const caret = view.coordsAtPos($pos.pos);
+  let line = null;
+  let closest = null;
+  for (let step = 1; step <= POSITIONS_TO_SEARCH; step++) {
+    const pos = $pos.pos + step * direction;
+    if (pos < 0 || pos > doc.content.size) break;
+    if (!doc.resolve(pos).parent.inlineContent) continue;
+    const coords = view.coordsAtPos(pos);
+    if (!line) {
+      if (!isPast(coords, caret, direction)) continue;
+      line = coords;
+    } else if (isPast(coords, line, direction)) {
+      break;
+    }
+    const distance = Math.abs(coords.left - caret.left);
+    if (!closest || distance < closest.distance) closest = { pos, distance };
   }
-  return null;
+  return closest && closest.pos;
 }
 
 // Chrome moves the browser's selection out of the editor on ArrowUp beside the drawn caret.
