@@ -1,10 +1,19 @@
 import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
+import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import EditableChipList from '../index.vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
+jest.mock('kolibri-design-system/lib/composables/useKLiveRegion');
+
+let sendPoliteMessage;
+
+beforeEach(() => {
+  sendPoliteMessage = jest.fn();
+  useKLiveRegion.mockReturnValue({ sendPoliteMessage });
+});
 
 const {
   distractorsLabel$,
@@ -182,15 +191,86 @@ describe('EditableChipList', () => {
       expect(within(chipItems()[1]).getByRole('textbox')).toHaveValue('Prospero');
     });
 
-    it('shows each error message under its own chip only', () => {
-      renderList({ errorMessages: [null, errorEmptyChoiceContent$(), null] });
-      const [first, second, third] = chipItems();
-      expect(within(second).getByText(errorEmptyChoiceContent$())).toBeInTheDocument();
-      expect(within(first).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
-      expect(within(third).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
+    it('shows a message shared by two chips once, describing only those chips', () => {
+      renderList({ errorMessages: [errorEmptyChoiceContent$(), null, errorEmptyChoiceContent$()] });
+      expect(screen.getAllByText(errorEmptyChoiceContent$())).toHaveLength(1);
+      expect(within(list()).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
+      expect(button(editDistractorLabel$({ number: 1 }))).toHaveAccessibleDescription(
+        errorEmptyChoiceContent$(),
+      );
+      expect(button(editDistractorLabel$({ number: 2 }))).not.toHaveAccessibleDescription();
+      expect(button(editDistractorLabel$({ number: 3 }))).toHaveAccessibleDescription(
+        errorEmptyChoiceContent$(),
+      );
     });
 
-    it('shows an open chip’s error under its editor', async () => {
+    it('describes each chip by its own message when the messages differ', () => {
+      const otherFault = 'Other fault';
+      renderList({ errorMessages: [errorEmptyChoiceContent$(), otherFault] });
+      expect(screen.getAllByText(errorEmptyChoiceContent$())).toHaveLength(1);
+      expect(screen.getAllByText(otherFault)).toHaveLength(1);
+      expect(button(editDistractorLabel$({ number: 1 }))).toHaveAccessibleDescription(
+        errorEmptyChoiceContent$(),
+      );
+      expect(button(editDistractorLabel$({ number: 2 }))).toHaveAccessibleDescription(otherFault);
+    });
+
+    describe('announcements', () => {
+      it('announces a message as a chip gains it, once however many chips gain it', async () => {
+        const message = errorEmptyChoiceContent$();
+        const { updateProps } = renderList({ errorMessages: [message, message, null] });
+        expect(sendPoliteMessage).not.toHaveBeenCalled();
+
+        await updateProps({ errorMessages: [message, message, message] });
+        expect(sendPoliteMessage.mock.calls).toEqual([[message]]);
+
+        sendPoliteMessage.mockClear();
+        await updateProps({ errorMessages: [null, null, null] });
+        expect(sendPoliteMessage).not.toHaveBeenCalled();
+        await updateProps({ errorMessages: [message, message, null] });
+        expect(sendPoliteMessage.mock.calls).toEqual([[message]]);
+      });
+
+      it('announces only the messages a change adds, not those already shown', async () => {
+        const message = errorEmptyChoiceContent$();
+        const { updateProps } = renderList({ errorMessages: [message, null, null] });
+        await updateProps({ errorMessages: [message, 'Other fault', null] });
+        expect(sendPoliteMessage.mock.calls).toEqual([['Other fault']]);
+      });
+
+      it('announces a message gained by a chip sharing its id with a later chip', async () => {
+        const { updateProps } = renderList({
+          chips: [
+            { id: 'choice_a', content: '' },
+            { id: 'choice_a', content: 'Juliet' },
+          ],
+        });
+
+        await updateProps({ errorMessages: [errorEmptyChoiceContent$(), null] });
+        expect(sendPoliteMessage).toHaveBeenCalledWith(errorEmptyChoiceContent$());
+      });
+
+      it('announces nothing when a flagged chip ahead of another flagged chip is removed', async () => {
+        const { updateProps } = renderList({
+          errorMessages: [errorEmptyChoiceContent$(), 'Other fault', null],
+        });
+        await updateProps({ chips: CHIPS.slice(1), errorMessages: ['Other fault', null] });
+        expect(sendPoliteMessage).not.toHaveBeenCalled();
+      });
+    });
+
+    it('marks only a flagged, closed chip with the error icon', async () => {
+      const user = userEvent.setup();
+      renderHost({ errorMessages: [errorEmptyChoiceContent$(), null] });
+      const [flagged, unflagged] = chipItems();
+      expect(within(flagged).getByTestId('chipErrorIcon')).toBeInTheDocument();
+      expect(within(unflagged).queryByTestId('chipErrorIcon')).not.toBeInTheDocument();
+
+      await user.click(button(editDistractorLabel$({ number: 1 })));
+      expect(screen.queryByTestId('chipErrorIcon')).not.toBeInTheDocument();
+    });
+
+    it('shows an open chip’s message once, below the list', async () => {
       const user = userEvent.setup();
       renderHost({
         initialChips: [{ id: 'choice_d', content: '' }],
@@ -198,7 +278,8 @@ describe('EditableChipList', () => {
         errorMessages: [errorEmptyChoiceContent$()],
       });
       await user.click(button(editDistractorLabel$({ number: 1 })));
-      expect(within(chipItems()[0]).getByText(errorEmptyChoiceContent$())).toBeInTheDocument();
+      expect(screen.getAllByText(errorEmptyChoiceContent$())).toHaveLength(1);
+      expect(within(list()).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
     });
 
     it('shows the placeholder in a blank chip only', () => {

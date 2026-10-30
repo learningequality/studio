@@ -970,12 +970,10 @@
     padding: 8px;
   }
 
-  // Like the prompt card, the answer box sits on the tinted row.
   .row-answers {
     grid-area: answers;
     align-self: stretch;
     min-width: 0;
-    background-color: v-bind('$themeTokens.surface');
   }
 
   .row-actions {
