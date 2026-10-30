@@ -16,6 +16,7 @@ const {
   editDistractorLabel$,
   deleteDistractorBtn$,
   saveChipBtn$,
+  closeChipEditorBtn$,
 } = qtiEditorStrings;
 const { TipTapEditorLabel$, insertImage$, closeModal$, textFormatOptions$ } =
   getTipTapEditorStrings();
@@ -40,6 +41,7 @@ const Host = {
         v-if="shown"
         :chips="chips"
         :addMode="addMode"
+        :minChips="minChips"
         v-bind="labels"
         @add-chip="html => chips.push({ id: 'choice_new', content: html })"
         @update-chip="(index, html) => chips.splice(index, 1, { ...chips[index], content: html })"
@@ -54,6 +56,7 @@ const Host = {
   props: {
     addMode: { type: String, default: 'button' },
     initialChips: { type: Array, default: () => CHIPS },
+    minChips: { type: Number, default: 0 },
   },
   data() {
     return { chips: [...this.initialChips], labels: LABELS, shown: true };
@@ -93,9 +96,9 @@ describe('EditableChipList with the real TipTapEditor', () => {
     }
   });
 
-  const renderHost = (addMode, initialChips) => {
+  const renderHost = (addMode, initialChips, minChips) => {
     const user = userEvent.setup();
-    render(Host, { props: { addMode, initialChips }, routes: new VueRouter() });
+    render(Host, { props: { addMode, initialChips, minChips }, routes: new VueRouter() });
     return user;
   };
 
@@ -128,6 +131,17 @@ describe('EditableChipList with the real TipTapEditor', () => {
 
       expect(openEditor()).toBeNull();
       expect(chipTexts()).toEqual(['Antonio']);
+    });
+
+    it('closes the only chip a list must keep on a click on its close button, keeping the edit', async () => {
+      const user = renderHost(addMode, CHIPS.slice(0, 1), 1);
+      await writeIn(user, editButton(1));
+
+      await user.click(button(closeChipEditorBtn$()));
+
+      await waitFor(() => expect(editButton(1)).toHaveFocus());
+      expect(openEditor()).toBeNull();
+      expect(chipTexts()).toEqual(['Antonio!']);
     });
 
     it('keeps an open chip open when its image dialog closes, and saves it after', async () => {
