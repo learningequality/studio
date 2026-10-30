@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import ForgotPassword from '../resetPassword/ForgotPassword';
+import commonStrings from 'shared/translator';
 
 const sendPasswordResetLinkMock = jest.fn(() => Promise.resolve());
 
@@ -40,11 +41,17 @@ describe('ForgotPassword', () => {
     expect(screen.getByText('Reset your password')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    expect(screen.queryByTestId('error-banner')).not.toBeInTheDocument();
   });
 
   it('should not submit form with empty email', async () => {
     renderComponent();
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('email-field')).toHaveTextContent(
+        commonStrings.$tr('fieldRequired'),
+      );
+    });
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
   });
 
@@ -52,7 +59,32 @@ describe('ForgotPassword', () => {
     renderComponent();
     await fireEvent.update(screen.getByLabelText(/email/i), 'invalid-email');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('email-field')).toHaveTextContent(
+        ForgotPassword.$trs.emailValidationMessage,
+      );
+    });
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
+  });
+
+  it('should not show validation error while typing', async () => {
+    renderComponent();
+    await fireEvent.update(screen.getByLabelText(/email/i), 'invalid-email');
+    expect(screen.getByTestId('email-field')).not.toHaveTextContent(
+      ForgotPassword.$trs.emailValidationMessage,
+    );
+  });
+
+  it('should show validation error on blur', async () => {
+    renderComponent();
+    const emailInput = screen.getByLabelText(/email/i);
+    await fireEvent.update(emailInput, 'invalid-email');
+    await fireEvent.blur(emailInput);
+    await waitFor(() => {
+      expect(screen.getByTestId('email-field')).toHaveTextContent(
+        ForgotPassword.$trs.emailValidationMessage,
+      );
+    });
   });
 
   it('should submit form with valid email and navigate to success page', async () => {
@@ -74,6 +106,8 @@ describe('ForgotPassword', () => {
     renderComponent();
     await fireEvent.update(screen.getByLabelText(/email/i), 'test@test.com');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(await screen.findByTestId('error-banner')).toBeInTheDocument();
+    expect(await screen.findByTestId('error-banner')).toHaveTextContent(
+      ForgotPassword.$trs.forgotPasswordFailed,
+    );
   });
 });
