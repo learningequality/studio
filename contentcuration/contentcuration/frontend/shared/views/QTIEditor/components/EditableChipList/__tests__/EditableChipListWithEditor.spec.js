@@ -51,6 +51,7 @@ const Host = {
         <li v-for="chip in chips" :key="chip.id" v-html="chip.content" />
       </ul>
       <button @click="shown = false">Close question</button>
+      <button>Elsewhere</button>
     </div>
   `,
   props: {
@@ -142,6 +143,17 @@ describe('EditableChipList with the real TipTapEditor', () => {
       await waitFor(() => expect(editButton(1)).toHaveFocus());
       expect(openEditor()).toBeNull();
       expect(chipTexts()).toEqual(['Antonio!']);
+    });
+
+    it('closes an open chip on a click outside the list, leaving focus where the click put it', async () => {
+      const user = renderHost(addMode);
+      await writeIn(user, editButton(2));
+
+      await user.click(button('Elsewhere'));
+
+      await waitFor(() => expect(openEditor()).toBeNull());
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero!']);
+      expect(button('Elsewhere')).toHaveFocus();
     });
 
     it('keeps an open chip open when its image dialog closes, and saves it after', async () => {

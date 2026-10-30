@@ -375,6 +375,26 @@ describe('EditableChipList', () => {
       await user.click(button(saveChipBtn$()));
       expect(button(editDistractorLabel$({ number: 2 }))).toHaveFocus();
     });
+
+    it('focuses a chip closed from its editor’s minimize button, keeping its edits', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.type(openTextarea(), '!');
+      await user.click(button('Minimize'));
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero!', 'Capulet']);
+      expect(button(editDistractorLabel$({ number: 2 }))).toHaveFocus();
+    });
+
+    it('adds a new chip closed from its editor’s minimize button, and focuses the add button', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(addDistractorBtn$()));
+      await user.type(openTextarea(), 'Montague');
+      await user.click(button('Minimize'));
+      expect(chipTexts().at(-1)).toBe('Montague');
+      expect(button(addDistractorBtn$())).toHaveFocus();
+    });
   });
 
   describe('region mode', () => {

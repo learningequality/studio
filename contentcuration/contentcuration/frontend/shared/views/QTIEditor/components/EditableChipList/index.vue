@@ -59,7 +59,7 @@
                     :tabindex="-1"
                     class="editor"
                     @update="html => onChipUpdate(index, html)"
-                    @minimize="close"
+                    @minimize="onMinimize"
                   />
                   <div
                     v-if="isChipOpen(index)"
@@ -119,7 +119,7 @@
               :tabindex="-1"
               class="editor"
               @update="onDraftUpdate"
-              @minimize="close"
+              @minimize="onMinimize"
             />
             <div class="save-row">
               <KButton
@@ -404,6 +404,18 @@
 
       async function onSave(event) {
         event.stopPropagation();
+        await closeAndRefocus();
+      }
+
+      function onMinimize() {
+        if (poolBox.value.$el.contains(document.activeElement)) {
+          closeAndRefocus();
+        } else {
+          close();
+        }
+      }
+
+      async function closeAndRefocus() {
         const { index } = open.value;
         const wasNew = index === null;
         const wasDropped = commit() !== null;
@@ -452,6 +464,7 @@
         onDraftUpdate,
         onDeleteButton,
         onSave,
+        onMinimize,
         onDiscard,
         saveChipBtn$,
       };
