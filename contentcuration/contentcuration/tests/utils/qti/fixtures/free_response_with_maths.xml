@@ -8,7 +8,7 @@
     <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
     <qti-item-body>
         <div>
-            <math display="block">
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
                 <semantics>
                     <mrow>
                         <munderover><mo>∑</mo><mi>n</mi><mi>s</mi></munderover>
