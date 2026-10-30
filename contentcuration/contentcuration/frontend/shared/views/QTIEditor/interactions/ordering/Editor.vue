@@ -202,6 +202,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { ValidationError } from '../../constants';
   import { useOrderingInteraction } from '../../composables/useOrderingInteraction';
+  import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
@@ -305,7 +306,6 @@
           if (newMode === 'edit') {
             // Open the question, the first thing in the card, so the card opens at its start.
             openPrompt();
-            emit('update:interaction', workingInteraction.value);
           } else {
             isPromptOpen.value = false;
             openItemId.value = null;
@@ -314,10 +314,7 @@
         { immediate: true },
       );
 
-      watch(workingInteraction, newVal => {
-        if (props.mode !== 'edit') return;
-        emit('update:interaction', newVal);
-      });
+      useInteractionUpdates(workingInteraction, props, emit);
 
       const isOnlyItem = computed(() => state.value.items.length <= 1);
 
