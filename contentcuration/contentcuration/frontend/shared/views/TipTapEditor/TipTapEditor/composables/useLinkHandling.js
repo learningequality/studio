@@ -12,7 +12,6 @@ export function useLinkHandling(editor) {
 
   const calculatePosition = (forceCenter = false) => {
     if (!editor.value) return {};
-    const isRTL = document.dir === 'rtl';
 
     isEditorCentered.value = false;
     // Only center the edit modal on mobile, not the bubble menu
@@ -32,7 +31,7 @@ export function useLinkHandling(editor) {
     const coords = view.coordsAtPos(from);
 
     // Calculate position based on direction
-    if (isRTL) {
+    if (window.isRTL) {
       const right = window.innerWidth - coords.left;
       return {
         position: 'fixed',
