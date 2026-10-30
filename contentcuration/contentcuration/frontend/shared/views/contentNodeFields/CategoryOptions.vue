@@ -2,13 +2,14 @@
 
   <div>
     <KMultiSelect
-      v-if="!expanded"
+      :expanded="expanded"
       :value="autocompleteValues"
       :options="categoriesList"
       itemValue="value"
       itemText="text"
       :label="translateMetadataString('category')"
       :autoPromoteParent="false"
+      :listMaxHeight="expanded ? '250px' : undefined"
       clearable
       :noResultsText="$tr('noCategoryFoundText')"
       :messages="messages"
@@ -32,74 +33,6 @@
         />
       </template>
     </KMultiSelect>
-
-    <DropdownWrapper v-if="expanded">
-      <template #default="{ attach, menuProps }">
-        <VAutocomplete
-          :value="autocompleteValues"
-          :items="categoriesList"
-          :searchInput.sync="categoryText"
-          :label="translateMetadataString('category')"
-          box
-          clearable
-          chips
-          deletableChips
-          multiple
-          item-value="value"
-          item-text="text"
-          :menu-props="{
-            ...menuProps,
-            zIndex: 4,
-            height: 0,
-            maxHeight: 0,
-          }"
-          :attach="attach"
-          @click:clear="$nextTick(() => removeAll())"
-        >
-          <template #selection="data">
-            <VTooltip
-              bottom
-              lazy
-            >
-              <template #activator="{ on, attrs }">
-                <VChip
-                  v-bind="attrs"
-                  :close="!data.item.undeletable"
-                  v-on="on"
-                  @input="remove(data.item.value)"
-                >
-                  {{ data.item.text }}
-                </VChip>
-              </template>
-              <div>
-                <div>{{ tooltipText(data.item.value) }}</div>
-              </div>
-            </VTooltip>
-          </template>
-        </VAutocomplete>
-      </template>
-    </DropdownWrapper>
-
-    <div
-      v-if="expanded"
-      class="checkbox-list-wrapper"
-    >
-      <KCheckbox
-        v-for="option in filteredCategories"
-        :key="option.value"
-        data-test="option-checkbox"
-        :label="option.text"
-        :style="treeItemStyle(option)"
-        :checked="isSelected(option.value)"
-        @change="onChange(option.value)"
-      />
-      <p
-        v-if="!filteredCategories.length"
-        :style="{ color: $themeTokens.annotation }"
-      >
-        {{ $tr('noCategoryFoundText') }}
-      </p>
-    </div>
   </div>
 
 </template>
@@ -113,12 +46,11 @@
   import { getSortedCategories } from 'shared/utils/helpers';
   import { createMultiSelectMessages } from 'shared/utils/multiSelectMessages';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'CategoryOptions',
-    components: { KMultiSelect, KChip, DropdownWrapper },
+    components: { KMultiSelect, KChip },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       /**
@@ -145,11 +77,6 @@
         default: false,
       },
     },
-    data() {
-      return {
-        categoryText: null,
-      };
-    },
     computed: {
       categoriesList() {
         const categories = getSortedCategories();
@@ -173,55 +100,40 @@
           .map(([key]) => key);
         return selectedValues;
       },
-      nested() {
-        return !this.categoryText;
-      },
-      filteredCategories() {
-        const searchQuery = this.categoryText?.trim().toLowerCase();
-        if (!searchQuery) {
-          return this.categoriesList;
-        }
-        return this.categoriesList.filter(option =>
-          option.text.toLowerCase().includes(searchQuery),
-        );
-      },
       messages() {
         const { clearAllAction$ } = communityChannelsStrings;
         return createMultiSelectMessages({
           clearText: clearAllAction$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          cleared: () => this.$tr('allCategoriesCleared'),
+          // Clear-all and removing the last fully-applied chip both emit an empty
+          // array from KMultiSelect's `input` event, so the two can't be told apart
+          // there. `cleared` is the only callback KMultiSelect invokes specifically
+          // for Clear-all, so it's the one place this reset can live safely.
+          cleared: () => {
+            this.selected = {};
+            return this.$tr('allCategoriesCleared');
+          },
           partiallySelected: true,
         });
       },
     },
     methods: {
-      treeItemStyle(item) {
-        const rule = this.$isRTL ? 'paddingRight' : 'paddingLeft';
-        return this.nested ? { [rule]: `${item.level * 24}px` } : {};
-      },
-      add(value) {
-        this.selected = {
-          ...this.selected,
-          [value]: this.nodeIds,
-        };
-      },
-      remove(value) {
-        const newSelected = { ...this.selected };
-        Object.keys(this.selected)
-          .filter(selectedValue => selectedValue.startsWith(value))
-          .forEach(selectedValue => {
-            delete newSelected[selectedValue];
-          });
-        this.selected = newSelected;
-      },
-      removeAll() {
-        this.selected = {};
-      },
-      // Dropdown mode is only rendered when a single node is edited, so every
-      // selected category simply applies to all of nodeIds.
       onKMultiSelectInput(newValues) {
-        this.selected = Object.fromEntries(newValues.map(value => [value, this.nodeIds]));
+        const newValueIds = new Set(newValues);
+        const removedIds = Object.keys(this.selected).filter(
+          key => this.selected[key].length === this.nodeIds.length && !newValueIds.has(key),
+        );
+        const partial = Object.fromEntries(
+          Object.entries(this.selected).filter(
+            ([key, selectedNodeIds]) =>
+              selectedNodeIds.length !== this.nodeIds.length &&
+              !removedIds.some(removedId => key.startsWith(removedId)),
+          ),
+        );
+        this.selected = {
+          ...partial,
+          ...Object.fromEntries(newValues.map(value => [value, this.nodeIds])),
+        };
       },
       tooltipText(optionId) {
         const option = this.categoriesList.find(option => option.value === optionId);
@@ -245,55 +157,6 @@
       findDepth(val) {
         return val.split('.').length - 1;
       },
-      isSelected(value) {
-        // If the value is truthy (true or an array of nodeIds) then
-        // it is selected just if it is true (not an array)
-        if (this.selected[value] && this.selected[value].length === this.nodeIds.length) {
-          return true;
-        }
-
-        return this.isCheckboxSelectedByChildren(value);
-      },
-      /**
-       * Returns true if the given option should be selected thanks to its children.
-       * An option will be selected thanks to its children if:
-       * * One of the children is selected
-       * * It has several indeterminate children, but by joining all the contentNodes of the
-       *   child options, together they constitute the same array of selected contentNodes.
-       */
-      isCheckboxSelectedByChildren(optionId) {
-        const childrenOptions = Object.keys(this.selected)
-          .filter(selectedValue => selectedValue.startsWith(optionId))
-          .map(selectedValue => this.selected[selectedValue]);
-
-        if (childrenOptions.length === 0) {
-          return false; // No childen options
-        } else if (childrenOptions.length === 1) {
-          // just one child option, the value is deterrmined by if it is selected
-          return childrenOptions[0].length === this.nodeIds.length;
-        }
-
-        // Here multiple children are selected or indeterminate
-        if (childrenOptions.some(value => value.length === this.nodeIds.length)) {
-          // if some child value is selected for all nodes, then the parent option is selected
-          return true;
-        }
-
-        // Here all children options are mixed, we need to check if together
-        // the parent option is common for all nodes
-        const nodeIds = new Set();
-        childrenOptions.forEach(valueNodeIds => {
-          valueNodeIds.forEach(nodeId => nodeIds.add(nodeId));
-        });
-        return nodeIds.size === this.nodeIds.length;
-      },
-      onChange(optionId) {
-        if (this.isSelected(optionId)) {
-          this.remove(optionId);
-        } else {
-          this.add(optionId);
-        }
-      },
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
@@ -304,13 +167,3 @@
   };
 
 </script>
-
-
-<style lang="scss" scoped>
-
-  .checkbox-list-wrapper {
-    height: 250px;
-    overflow-y: auto;
-  }
-
-</style>
