@@ -111,6 +111,9 @@ const renderEditor = (props = {}) =>
     routes: new VueRouter(),
   });
 
+const pairRows = () =>
+  within(screen.getByRole('list', { name: tr.$tr('correctPairsLabel') })).getAllByRole('listitem');
+
 const updates = emitted => emitted()['update:interaction'] || [];
 const latestBodyXml = emitted => updates(emitted).at(-1)[0].bodyXml;
 
@@ -224,11 +227,6 @@ describe('AssociateEditor', () => {
   });
 
   describe('pair layout below the large breakpoint', () => {
-    const pairRows = () =>
-      within(screen.getByRole('list', { name: tr.$tr('correctPairsLabel') })).getAllByRole(
-        'listitem',
-      );
-
     it('stacks only the row whose editor is open', async () => {
       mockWindowIsLarge = false;
       const user = userEvent.setup();
@@ -529,8 +527,11 @@ describe('AssociateEditor', () => {
 
   describe('validation', () => {
     it('shows no errors for a question that is already complete', () => {
-      renderEditor();
+      const { container } = renderEditor();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      for (const key of ['errorEmptyChoiceContent', 'errorDuplicateDistractorContent']) {
+        expect(within(container).queryByText(tr.$tr(key))).not.toBeInTheDocument();
+      }
     });
 
     it('reports the prompt and too-few-pairs errors as soon as the state changes', async () => {
@@ -553,6 +554,24 @@ describe('AssociateEditor', () => {
       expect(screen.getByText(tr.$tr('errorDuplicatePairContent'))).toBeInTheDocument();
     });
 
+    it('flags both pairs when one repeats the other in reverse', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      for (const [position, content] of [
+        [1, 'Prospero'],
+        [2, 'Antonio'],
+      ]) {
+        await user.click(button(editPairItem(2, position)));
+        await user.clear(openTextarea());
+        await user.type(openTextarea(), content);
+      }
+      await user.click(button(editPairItem(1, 1)));
+      await nextTick();
+      for (const row of pairRows()) {
+        expect(within(row).getByText(tr.$tr('errorRepeatedPair'))).toBeInTheDocument();
+      }
+    });
+
     it('flags a distractor parsed with no content', async () => {
       renderEditor({ interaction: blockWithDecl(BLANK_DISTRACTOR_XML, ONE_PAIR_DECL_XML) });
       await nextTick();
@@ -566,14 +585,32 @@ describe('AssociateEditor', () => {
       await user.type(openTextarea(), 'Antonio');
       await user.click(button(editPairItem(1, 2)));
       await nextTick();
-      const distractors = screen.getByRole('list', { name: tr.$tr('distractorsLabel') });
       const pairs = screen.getByRole('list', { name: tr.$tr('correctPairsLabel') });
-      expect(
-        within(distractors).getByText(tr.$tr('errorDuplicateDistractorContent')),
-      ).toBeInTheDocument();
+      expect(button(tr.$tr('editDistractorLabel', { number: 2 }))).toHaveAccessibleDescription(
+        tr.$tr('errorDuplicateDistractorContent'),
+      );
       expect(
         within(pairs).getByText(tr.$tr('errorDuplicateDistractorContent')),
       ).toBeInTheDocument();
+    });
+
+    it('shows the message shared by two equal distractors once, describing both', async () => {
+      const user = userEvent.setup();
+      const { container } = renderEditor();
+      for (const content of ['Romeo', 'Romeo']) {
+        await user.click(button(tr.$tr('addDistractorBtn')));
+        await user.type(openTextarea(), content);
+      }
+      await user.click(button(editPairItem(1, 1)));
+      await nextTick();
+      expect(
+        within(container).getAllByText(tr.$tr('errorDuplicateDistractorContent')),
+      ).toHaveLength(1);
+      for (const number of [2, 3]) {
+        expect(button(tr.$tr('editDistractorLabel', { number }))).toHaveAccessibleDescription(
+          tr.$tr('errorDuplicateDistractorContent'),
+        );
+      }
     });
 
     it('stacks both faults on a pair that repeats itself and a distractor', async () => {

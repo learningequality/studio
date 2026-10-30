@@ -1,3 +1,4 @@
+import countBy from 'lodash/countBy';
 import flatten from 'lodash/flatten';
 import { ValidationError } from '../../constants';
 import { duplicateDistractorErrors } from '../../utils/distractors';
@@ -39,7 +40,7 @@ export function validateAssociateInteraction(state) {
     }
   }
 
-  let validPairs = 0;
+  const validPairs = [];
   readPairs.forEach(([first, second], index) => {
     if (!first.filled || !second.filled) {
       return;
@@ -47,17 +48,23 @@ export function validateAssociateInteraction(state) {
     if (first.key === second.key) {
       errors.push({ code: ValidationError.DUPLICATE_PAIR_CONTENT, index });
     } else {
-      validPairs += 1;
+      validPairs.push({ index, key: JSON.stringify([first.key, second.key].sort()) });
     }
   });
 
-  if (validPairs < 1) {
+  if (validPairs.length < 1) {
     errors.push({ code: ValidationError.TOO_FEW_PAIRS });
+  }
+
+  const pairKeyCounts = countBy(validPairs, 'key');
+  for (const { index, key } of validPairs) {
+    if (pairKeyCounts[key] > 1) {
+      errors.push({ code: ValidationError.REPEATED_PAIR, index });
+    }
   }
 
   // A distractor is there to be the wrong answer, so repeating another
   // distractor or an item the author already paired makes it unanswerable.
-  // Content reused across two pairs stays valid — only distractors are flagged.
   errors.push(...duplicateDistractorErrors(flatten(readPairs), readDistractors));
 
   return errors;

@@ -143,6 +143,12 @@ const rowAnswers = number =>
   screen.getByRole('list', { name: tr.$tr('rowAnswersLabel', { number }) });
 const answerItems = number => within(rowAnswers(number)).queryAllByRole('listitem');
 const distractorList = () => screen.getByRole('list', { name: tr.$tr('distractorsLabel') });
+const chipMessages = container =>
+  [
+    'errorEmptyChoiceContent',
+    'errorDuplicateMatchContent',
+    'errorDuplicateDistractorContent',
+  ].flatMap(key => container.queryAllByText(tr.$tr(key)));
 
 const renderEditor = (props = {}) =>
   render(MatchEditor, {
@@ -657,8 +663,9 @@ describe('MatchEditor', () => {
 
   describe('validation', () => {
     it('shows no errors for a question that is already complete', () => {
-      renderEditor();
+      const { container } = renderEditor();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(chipMessages(within(container))).toHaveLength(0);
     });
 
     it('reports the prompt and too-few-rows errors as soon as the state changes', async () => {
@@ -709,27 +716,32 @@ describe('MatchEditor', () => {
 
     it('flags each answer a row repeats', async () => {
       const user = userEvent.setup();
-      renderEditor();
+      const { container } = renderEditor();
       await writeAnswer(user, 1, 'Mammal');
-      expect(within(rowAnswers(1)).getAllByText(tr.$tr('errorDuplicateMatchContent'))).toHaveLength(
-        2,
-      );
+      expect(within(container).getAllByText(tr.$tr('errorDuplicateMatchContent'))).toHaveLength(1);
+      for (const position of [1, 2]) {
+        expect(button(editMatch(1, position))).toHaveAccessibleDescription(
+          tr.$tr('errorDuplicateMatchContent'),
+        );
+      }
     });
 
     it('holds a new repeat unflagged until the pointer comes up', async () => {
       const user = userEvent.setup();
-      renderEditor();
+      const { container } = renderEditor();
       await writeAnswer(user, 1, 'Canine');
       await user.click(button(editMatch(1, 2)));
       await fireEvent.pointerDown(document.body);
       await user.clear(openTextarea());
       await user.type(openTextarea(), 'Mammal', { skipClick: true });
       await nextTick();
-      expect(within(rowAnswers(1)).queryByRole('alert')).not.toBeInTheDocument();
+      expect(within(rows()[0]).queryByRole('alert')).not.toBeInTheDocument();
+      expect(chipMessages(within(rows()[0]))).toHaveLength(0);
 
       await fireEvent.pointerUp(document.body);
-      expect(within(rowAnswers(1)).getAllByText(tr.$tr('errorDuplicateMatchContent'))).toHaveLength(
-        2,
+      expect(within(container).getAllByText(tr.$tr('errorDuplicateMatchContent'))).toHaveLength(1);
+      expect(button(editMatch(1, 1))).toHaveAccessibleDescription(
+        tr.$tr('errorDuplicateMatchContent'),
       );
     });
 
@@ -804,9 +816,9 @@ describe('MatchEditor', () => {
 
     it('flags an answer parsed with no content', () => {
       renderEditor({ interaction: blockWithDecl(BLANK_ANSWER_XML, ONE_ROW_DECL_XML) });
-      expect(
-        within(rowAnswers(1)).getByText(tr.$tr('errorEmptyChoiceContent')),
-      ).toBeInTheDocument();
+      expect(button(editMatch(1, 1))).toHaveAccessibleDescription(
+        tr.$tr('errorEmptyChoiceContent'),
+      );
     });
 
     it('flags a distractor repeating an answer on both the distractor and the answer', async () => {
@@ -816,21 +828,20 @@ describe('MatchEditor', () => {
       await user.type(openTextarea(), 'Mammal');
       await user.click(button(editRow(1)));
       await nextTick();
-      expect(
-        within(distractorList()).getByText(tr.$tr('errorDuplicateDistractorContent')),
-      ).toBeInTheDocument();
-      expect(
-        within(rowAnswers(1)).getByText(tr.$tr('errorDuplicateDistractorContent')),
-      ).toBeInTheDocument();
-      expect(within(rowAnswers(2)).queryByRole('alert')).not.toBeInTheDocument();
+      for (const chip of [tr.$tr('editDistractorLabel', { number: 2 }), editMatch(1, 1)]) {
+        expect(button(chip)).toHaveAccessibleDescription(tr.$tr('errorDuplicateDistractorContent'));
+      }
+      expect(within(rows()[1]).queryByRole('alert')).not.toBeInTheDocument();
+      expect(chipMessages(within(rows()[1]))).toHaveLength(0);
     });
 
     it('accepts the same answer in two rows', async () => {
       const user = userEvent.setup();
-      renderEditor();
+      const { container } = renderEditor();
       await writeAnswer(user, 2, 'Mammal');
       expect(within(rowAnswers(2)).getByText('Mammal')).toBeInTheDocument();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(chipMessages(within(container))).toHaveLength(0);
     });
   });
 
