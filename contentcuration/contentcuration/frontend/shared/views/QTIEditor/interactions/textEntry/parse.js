@@ -41,6 +41,19 @@ const serializer = new XMLSerializer();
 export const DEFAULT_EXPECTED_LENGTH = 50;
 
 /**
+ * A new answer, with a fresh identifier.
+ *
+ * @param {Partial<TextEntryAnswer>} [fields]
+ * @returns {TextEntryAnswer}
+ */
+export const newAnswer = (fields = {}) => ({
+  id: generateRandomSlug('answer'),
+  value: '',
+  caseSensitive: false,
+  ...fields,
+});
+
+/**
  * Default state — used when bodyXml is absent or unparseable.
  *
  * @returns {TextEntryState}
@@ -48,7 +61,7 @@ export const DEFAULT_EXPECTED_LENGTH = 50;
 export function _defaultState() {
   return {
     prompt: '',
-    answers: [{ id: generateRandomSlug('answer'), value: '', caseSensitive: false }],
+    answers: [newAnswer()],
     expectedLength: DEFAULT_EXPECTED_LENGTH,
   };
 }
@@ -145,12 +158,7 @@ function extractNumericAnswers(declarationEl) {
   const mapKeys = [...declarationEl.querySelectorAll(':scope > qti-mapping qti-map-entry')]
     .filter(entry => parseFloat(entry.getAttribute('mapped-value')) >= 1)
     .map(entry => (entry.getAttribute('map-key') ?? '').trim());
-  const toAnswers = answerValues =>
-    answerValues.map(value => ({
-      id: generateRandomSlug('answer'),
-      value,
-      caseSensitive: false,
-    }));
+  const toAnswers = answerValues => answerValues.map(value => newAnswer({ value }));
   // The editor writes its first answer as the correct response and maps every answer,
   // so its map-keys are the answers as authored, repeats included.
   if (values.length === 1 && values[0] === mapKeys[0]) {
@@ -202,11 +210,7 @@ export function _extractAnswers(responseDeclarations) {
       return [];
     }
 
-    const toAnswer = (value, caseSensitive) => ({
-      id: generateRandomSlug('answer'),
-      value,
-      caseSensitive,
-    });
+    const toAnswer = (value, caseSensitive) => newAnswer({ value, caseSensitive });
     const mapEntries = declaration.mapping?.entries ?? [];
     // Key on the XML string form: both map-key and correct-response values are coerced
     // on parse (empty → null under QTI NULL semantics), so formatting both back matches

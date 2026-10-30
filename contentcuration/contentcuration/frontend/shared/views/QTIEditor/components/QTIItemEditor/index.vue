@@ -63,6 +63,7 @@
       </p>
       <InteractionSection
         v-else-if="interactions.length > 0"
+        ref="interactionSection"
         :interaction="currentInteraction"
         :mode="mode"
         :showAnswers="showAnswers"
@@ -112,7 +113,7 @@
 
 <script>
 
-  import { computed, onMounted, ref, watch } from 'vue';
+  import { computed, nextTick, onMounted, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
@@ -301,19 +302,28 @@
       }
 
       const card = ref(null);
+      const interactionSection = ref(null);
 
-      function scrollToStart() {
-        card.value.$el.scrollIntoView({ block: 'start' });
+      /**
+       * Brings an opened card to the author: scrolled to its start, with its question open and
+       * focused. Only a card opening does this; the editor itself takes no focus, so one
+       * remounted for a new question type leaves focus where the author is.
+       */
+      async function startEditing() {
+        await interactionSection.value?.focus();
+        // Once the opened question has rendered, as it makes the card taller.
+        await nextTick();
+        card.value?.$el.scrollIntoView({ block: 'start' });
       }
 
       onMounted(() => {
-        if (props.mode === 'edit') scrollToStart();
+        if (props.mode === 'edit') startEditing();
       });
 
       watch(
         () => props.mode,
         mode => {
-          if (mode === 'edit') scrollToStart();
+          if (mode === 'edit') startEditing();
         },
         // After the re-render, so the card's position is where it has settled.
         { flush: 'post' },
@@ -367,6 +377,7 @@
 
       return {
         card,
+        interactionSection,
         currentQuestionType,
         interactions,
         currentInteraction,

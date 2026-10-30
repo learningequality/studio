@@ -66,6 +66,18 @@ export function getContentHTML(el) {
   return serializeAsHtml([...el.childNodes], el.namespaceURI);
 }
 
+/**
+ * An HTML fragment, as a rich text editor writes it, parsed into the `<body>` of a new
+ * document. As HTML, not XML: the fragment can hold `<br>`, `&nbsp;` and other markup an XML
+ * parser rejects. Read it back with getContentHTML.
+ *
+ * @param {string} html
+ * @returns {HTMLElement}
+ */
+export function parseHTMLBody(html) {
+  return parseXML(`<!DOCTYPE html><body>${html ?? ''}</body>`, 'text/html').body;
+}
+
 const xmlDoc = parser.parseFromString('<root/>', 'text/xml');
 const XHTML_NS = 'http://www.w3.org/1999/xhtml';
 const DROPPED_ELEMENTS = new Set(['noscript', 'script', 'style']);

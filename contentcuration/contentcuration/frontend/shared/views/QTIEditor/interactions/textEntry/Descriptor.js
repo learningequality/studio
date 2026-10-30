@@ -6,6 +6,11 @@ import {
   buildTextEntryInteractionXML,
   isSupportedTextEntryBody,
 } from './parse';
+import {
+  exportTextEntryContent,
+  getTextEntryConversionFormat,
+  importTextEntryContent,
+} from './convert';
 import { validateTextEntryInteraction } from './validation';
 
 /**
@@ -21,7 +26,6 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
       questionTypes: [QuestionType.NUMERIC, QuestionType.TEXT_ENTRY, QuestionType.FREE_RESPONSE],
       placement: Placement.INLINE,
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {
@@ -126,6 +130,34 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state, questionType, options) {
     return validateTextEntryInteraction(state, questionType, options);
+  }
+
+  /**
+   * @param {string} questionType
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat(questionType) {
+    return getTextEntryConversionFormat(questionType);
+  }
+
+  /**
+   * @param {object} state - TextEntryState
+   * @param {string} questionType
+   * @param {{ language?: string }} [options]
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state, questionType, options) {
+    return exportTextEntryContent(state, questionType, options);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @param {string} questionType
+   * @param {{ language?: string }} [options]
+   * @returns {object} TextEntryState
+   */
+  importContent(content, questionType, options) {
+    return importTextEntryContent(content, questionType, options);
   }
 }
 

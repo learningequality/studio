@@ -64,6 +64,47 @@ export function readDropdown(el) {
 }
 
 /**
+ * A new option, with a fresh identifier.
+ *
+ * @param {string} [text]
+ * @returns {{ id: string, text: string }}
+ */
+export const newOption = (text = '') => ({ id: generateRandomSlug('choice'), text });
+
+/**
+ * A new dropdown, with a fresh response identifier.
+ *
+ * @param {Partial<InlineChoiceDropdown>} [fields]
+ * @returns {InlineChoiceDropdown}
+ */
+export const newDropdown = (fields = {}) => ({
+  responseIdentifier: generateRandomSlug('response'),
+  options: [newOption()],
+  correctId: null,
+  ...fields,
+});
+
+/**
+ * A dropdown as the passage holds it. The reverse of readDropdown.
+ *
+ * @param {Document} doc - The document of the passage it goes in
+ * @param {InlineChoiceDropdown} dropdown
+ * @returns {Element}
+ */
+export function writeDropdown(doc, { responseIdentifier, options, correctId }) {
+  const el = doc.createElement(DROPDOWN);
+  el.setAttribute('response-identifier', responseIdentifier);
+  if (correctId !== null) el.setAttribute(CORRECT_ATTR, correctId);
+  for (const { id, text } of options) {
+    const option = doc.createElement(OPTION);
+    option.setAttribute('identifier', id);
+    option.textContent = text;
+    el.appendChild(option);
+  }
+  return el;
+}
+
+/**
  * A dropdown as it is copied, as a DOM output spec. An editor without dropdowns keeps only the
  * text of an element it doesn't know, so the text is the correct answer alone, or nothing with no
  * correct answer, and the dropdown itself is held in an attribute for a passage to read back.

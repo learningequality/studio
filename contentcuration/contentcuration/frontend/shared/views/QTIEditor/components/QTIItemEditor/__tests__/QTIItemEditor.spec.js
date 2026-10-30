@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import QTIItemEditor from '../index.vue';
@@ -98,8 +98,11 @@ afterAll(() => {
 // jest_config/setup.js adds a hidden csrf input to the document.
 const isAuthorInput = el => el.name !== 'csrfmiddlewaretoken';
 
+// The mock rich text editor renders a <textarea> only for the field that is open.
+const openField = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
+
 describe('QTIItemEditor', () => {
-  beforeEach(() => scrollIntoView.mockClear());
+  beforeEach(() => scrollIntoView.mockReset());
   afterEach(() => jest.restoreAllMocks());
 
   describe('view mode', () => {
@@ -189,14 +192,29 @@ describe('QTIItemEditor', () => {
     test('scrolls the start of the card into view when it opens', async () => {
       const { container, updateProps } = renderComponent({ mode: 'view' });
       await updateProps({ mode: 'edit' });
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' }));
       expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
     });
 
-    test('scrolls the start of a card into view when it is created open', () => {
+    test('scrolls the start of a card into view when it is created open', async () => {
       const { container } = renderComponent({ mode: 'edit' });
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' }));
       expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
+    });
+
+    // Opening the question makes the card taller, so a card near the end of the list scrolled
+    // before that would leave the question below the screen.
+    test.each([
+      ['a choice', VALID_CHOICE_ITEM_DOCUMENT],
+      ['an associate', VALID_ASSOCIATE_ITEM_DOCUMENT],
+      ['a match', VALID_MATCH_ITEM_DOCUMENT],
+    ])('scrolls %s card into view once its question is open', async (_, document) => {
+      const questionOpenOnScroll = [];
+      scrollIntoView.mockImplementation(() => questionOpenOnScroll.push(Boolean(openField())));
+      const { updateProps } = renderDocument(document, { mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+      expect(questionOpenOnScroll).toEqual([true]);
     });
 
     test('leaves the scroll position alone for a closed card', () => {
@@ -209,6 +227,31 @@ describe('QTIItemEditor', () => {
       scrollIntoView.mockClear();
       await updateProps({ mode: 'view' });
       expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('focusing an opened card', () => {
+    test('opens and focuses the question when the card opens', async () => {
+      const { updateProps } = renderDocument(VALID_CHOICE_ITEM_DOCUMENT, { mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+      expect(openField().value).toContain('Pick one.');
+    });
+
+    test('opens and focuses the question of a card created open', async () => {
+      renderDocument(VALID_CHOICE_ITEM_DOCUMENT, { mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
+    });
+
+    // Associate and match open their question only once their own mode is edit, which they
+    // hear about a render after the card does.
+    test.each([
+      ['an associate', VALID_ASSOCIATE_ITEM_DOCUMENT],
+      ['a match', VALID_MATCH_ITEM_DOCUMENT],
+    ])('opens and focuses the question of %s card when it opens', async (_, document) => {
+      const { updateProps } = renderDocument(document, { mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await waitFor(() => expect(openField()).toHaveFocus());
     });
   });
 
@@ -276,6 +319,8 @@ describe('QTIItemEditor', () => {
       language: 'fr',
     });
     const input = await screen.findByRole('textbox', { name: answerValuePlaceholder$() });
+    // A card created open focuses its question; the author moves on from there.
+    await waitFor(() => expect(document.activeElement.tagName).toBe('TEXTAREA'));
     input.focus();
     await updateProps({ language: 'en' });
 
