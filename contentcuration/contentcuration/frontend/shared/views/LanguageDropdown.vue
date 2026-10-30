@@ -103,15 +103,13 @@
           clearAction$,
           optionRemovedLabel$,
           languageItemsSelectedLabel$,
-          languageSelectionsClearedLabel$,
+          selectionsClearedLabel$,
         } = commonStrings;
         return createMultiSelectMessages({
           clearText: clearAction$,
           itemsSelected: languageItemsSelectedLabel$,
           cleared: ({ label, count }) =>
-            this.multiple
-              ? languageSelectionsClearedLabel$({ count })
-              : optionRemovedLabel$({ label }),
+            this.multiple ? selectionsClearedLabel$({ count }) : optionRemovedLabel$({ label }),
         });
       },
     },

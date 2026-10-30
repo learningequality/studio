@@ -131,10 +131,7 @@
 
         <!-- Location -->
         <h2 class="section-header">{{ $tr('locationLabel') }}*</h2>
-        <CountryField
-          v-model="form.locations"
-          clearable
-        />
+        <CountryField v-model="form.locations" />
         <div
           v-if="!valid && (!form.locations || !form.locations.length)"
           :style="{ color: $themeTokens.error }"
