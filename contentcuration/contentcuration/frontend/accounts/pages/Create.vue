@@ -499,7 +499,7 @@
         cleanedData.policies = JSON.stringify(cleanedData.policies);
         return cleanedData;
       },
-      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       onValidationFailed() {
         // Also validate non-mixin fields so all errors appear at once
         const isOtherUseValid =
@@ -510,7 +510,7 @@
           this.$refs.top.scrollIntoView({ behavior: 'smooth' });
         }
       },
-      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       onSubmit() {
         this.serverErrors = {};
         if (this.submitting) return;

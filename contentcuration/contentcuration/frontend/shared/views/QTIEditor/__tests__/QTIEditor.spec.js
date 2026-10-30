@@ -46,19 +46,19 @@ afterAll(() => {
 
 describe('QTIEditor', () => {
   describe('opening a question', () => {
-    test('opens a question from its Edit action', async () => {
+    it('opens a question from its Edit action', async () => {
       renderComponent([QTI_ITEM]);
       await fireEvent.click(editButton());
       expect(screen.getByRole('button', { name: closeBtnLabel$() })).toBeInTheDocument();
     });
 
-    test('opens a question when its card is clicked', async () => {
+    it('opens a question when its card is clicked', async () => {
       renderComponent([QTI_ITEM]);
       await fireEvent.click(screen.getByTestId('item'));
       expect(screen.getByRole('button', { name: closeBtnLabel$() })).toBeInTheDocument();
     });
 
-    test('keeps a question closed after its Close button is clicked', async () => {
+    it('keeps a question closed after its Close button is clicked', async () => {
       renderComponent([QTI_ITEM]);
       await fireEvent.click(editButton());
       // A real click lets Vue re-render between listeners as it bubbles, so the card already
@@ -72,7 +72,7 @@ describe('QTIEditor', () => {
       expect(screen.queryByRole('button', { name: closeBtnLabel$() })).not.toBeInTheDocument();
     });
 
-    test('moves focus to the Edit action when a question is closed', async () => {
+    it('moves focus to the Edit action when a question is closed', async () => {
       // The Close button goes with the card, taking focus with it.
       renderComponent([QTI_ITEM]);
       await fireEvent.click(editButton());
@@ -81,20 +81,20 @@ describe('QTIEditor', () => {
       expect(editButton()).toHaveFocus();
     });
 
-    test('offers no Edit action on a question that is already open', async () => {
+    it('offers no Edit action on a question that is already open', async () => {
       renderComponent([QTI_ITEM]);
       await fireEvent.click(editButton());
       expect(editButton()).toBeDisabled();
     });
 
-    test('offers no Edit action on an item authored elsewhere', () => {
+    it('offers no Edit action on an item authored elsewhere', () => {
       renderComponent([
         { assessment_id: 'perseus-item', type: 'perseus_question', raw_data: '{}' },
       ]);
       expect(editButton()).toBeDisabled();
     });
 
-    test('offers no Edit action on a question whose XML cannot be read', () => {
+    it('offers no Edit action on a question whose XML cannot be read', () => {
       renderComponent([
         {
           assessment_id: 'broken-item',

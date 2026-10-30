@@ -2,7 +2,7 @@ import { computed, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { factory } from '../../../../store';
 
-import SubmitToCommunityLibrarySidePanel from '../';
+import SubmitToCommunityLibrarySidePanel from '..';
 import Box from '../Box.vue';
 
 import { useVersionDetail } from '../composables/useVersionDetail';

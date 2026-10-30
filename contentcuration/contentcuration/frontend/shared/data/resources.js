@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/no-named-as-default
+// eslint-disable-next-line import-x/no-named-as-default
 import Dexie, { liveQuery } from 'dexie';
 import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';

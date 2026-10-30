@@ -1,8 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
-// The resolver does not read package `exports` subpaths.
-// eslint-disable-next-line import/no-unresolved
 import { closeHistory } from '@tiptap/pm/history';
 import { getDropdowns, parseInlineChoiceInteraction } from '../parse';
 import { chip, findChip, renderPassage } from './renderPassage';

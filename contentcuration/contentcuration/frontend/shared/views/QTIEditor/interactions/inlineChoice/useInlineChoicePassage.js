@@ -1,9 +1,6 @@
 import { computed, readonly, ref, unref } from 'vue';
-// The resolver does not read package `exports` subpaths.
-/* eslint-disable import/no-unresolved */
 import { redoNoScroll, undoNoScroll } from '@tiptap/pm/history';
 import { AllSelection, Plugin } from '@tiptap/pm/state';
-/* eslint-enable import/no-unresolved */
 import { findChildren } from '@tiptap/core';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { qtiEditorStrings } from '../../qtiEditorStrings';

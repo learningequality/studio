@@ -27,6 +27,7 @@
   import client from 'shared/client';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612#issuecomment-576807171
+  // eslint-disable-next-line import-x/no-commonjs
   const pdfJSLib = require('pdfjs-dist');
 
   pdfJSLib.GlobalWorkerOptions.workerSrc = PDFJSWorker;
