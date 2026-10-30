@@ -2,6 +2,7 @@ import { readonly } from 'vue';
 import { matchInteractionDescriptor } from '../interactions/match/Descriptor';
 import { newChoice } from '../interactions/associate/parse';
 import { newRow } from '../interactions/match/parse';
+import { useDistractors } from './useDistractors';
 import { useInteraction } from './useInteraction';
 
 /**
@@ -60,29 +61,6 @@ export function useMatchInteraction(interactionBlock, questionType) {
     }));
   }
 
-  function addDistractor(content = '') {
-    state.value = {
-      ...state.value,
-      distractors: [...state.value.distractors, newChoice(content)],
-    };
-  }
-
-  function removeDistractor(index) {
-    state.value = {
-      ...state.value,
-      distractors: state.value.distractors.filter((_, i) => i !== index),
-    };
-  }
-
-  function setDistractorContent(index, html) {
-    state.value = {
-      ...state.value,
-      distractors: state.value.distractors.map((choice, i) =>
-        i === index ? { ...choice, content: html } : choice,
-      ),
-    };
-  }
-
   function setPrompt(html) {
     state.value = { ...state.value, prompt: html };
   }
@@ -96,9 +74,7 @@ export function useMatchInteraction(interactionBlock, questionType) {
     addMatch,
     removeMatch,
     setMatchContent,
-    addDistractor,
-    removeDistractor,
-    setDistractorContent,
+    ...useDistractors(state),
     setPrompt,
   };
 }

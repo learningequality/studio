@@ -38,9 +38,9 @@ export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
 
 /**
  * Interactions with a descriptor but no editor in index.js yet. Items holding one are
- * shown read-only. TODO: #6204 removes gap match.
+ * shown read-only.
  */
-export const HEADLESS_INTERACTIONS = Object.freeze([QtiInteraction.GAP_MATCH]);
+export const HEADLESS_INTERACTIONS = Object.freeze([]);
 
 /**
  * Inline interactions whose editor holds one per item body. A body with several would

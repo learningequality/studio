@@ -219,6 +219,7 @@
           [QuestionType.ASSOCIATE]: qtiEditorStrings.associateLabel$,
           [QuestionType.MATCH]: qtiEditorStrings.matchLabel$,
           [QuestionType.INLINE_CHOICE]: qtiEditorStrings.inlineChoiceLabel$,
+          [QuestionType.GAP_MATCH]: qtiEditorStrings.gapMatchLabel$,
         };
         return (QUESTION_TYPE_LABELS[type] ?? unknownTypeLabel$)();
       });

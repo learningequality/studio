@@ -48,9 +48,9 @@ describe('gapMatchInteractionDescriptor', () => {
       expect(result.questionType).toBe(QuestionType.GAP_MATCH);
     });
 
-    it('shows the item read-only until the interaction has an editor', () => {
+    it('opens the item for editing', () => {
       const { interactions, itemBodyXml } = parseItem(ITEM);
-      expect(isSupportedItem(interactions, itemBodyXml)).toBe(false);
+      expect(isSupportedItem(interactions, itemBodyXml)).toBe(true);
     });
   });
 
@@ -107,7 +107,13 @@ describe('gapMatchInteractionDescriptor', () => {
     expect(declXml).toContain('cardinality="multiple"');
   });
 
-  it('offers no question type option yet', () => {
-    expect(descriptor.getTypeOptions(qtiEditorStrings)).toEqual([]);
+  it('offers Gap match in the question type selector', () => {
+    expect(descriptor.getTypeOptions(qtiEditorStrings)).toEqual([
+      {
+        value: QuestionType.GAP_MATCH,
+        label: qtiEditorStrings.gapMatchLabel$(),
+        description: qtiEditorStrings.gapMatchDescription$(),
+      },
+    ]);
   });
 });

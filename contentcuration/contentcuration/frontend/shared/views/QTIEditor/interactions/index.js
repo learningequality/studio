@@ -5,6 +5,7 @@ import OrderingEditor from './ordering/Editor.vue';
 import AssociateEditor from './associate/Editor.vue';
 import MatchEditor from './match/Editor.vue';
 import InlineChoiceEditor from './inlineChoice/Editor.vue';
+import GapMatchEditor from './gapMatch/Editor.vue';
 
 /**
  * Entry point for the editor tree: the descriptors, plus the Vue component that edits each
@@ -21,6 +22,7 @@ export const editors = Object.freeze({
   [QtiInteraction.ASSOCIATE]: AssociateEditor,
   [QtiInteraction.MATCH]: MatchEditor,
   [QtiInteraction.INLINE_CHOICE]: InlineChoiceEditor,
+  [QtiInteraction.GAP_MATCH]: GapMatchEditor,
 });
 
 export { descriptors, registry } from './descriptors';

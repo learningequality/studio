@@ -643,4 +643,65 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Insert at least one inline choice',
     context: 'Validation error when the passage of an inline choice question has no dropdown',
   },
+  gapWithAnswer: {
+    message: '{answer}, gap {number}',
+    context:
+      'Accessible name of a gap in the passage of a gap match question. {answer} is the answer typed in the gap, and comes first so that speech input finds the gap by the text it shows. {number} is its position in the passage',
+  },
+  gapEmpty: {
+    message: 'Empty gap {number}',
+    context:
+      'Accessible name of a gap in the passage of a gap match question that has no answer yet. {number} is its position in the passage',
+  },
+  gapMatchLabel: {
+    message: 'Gap match',
+    context: 'Display name for a gap match question type shown in the question type selector',
+  },
+  gapMatchDescription: {
+    message:
+      'Learners fill the gaps in a passage with answers from a shuffled set. Include distractors to increase difficulty.',
+    context: 'Description for the gap match question type in the info modal',
+  },
+  gapPassageEditorDescription: {
+    message: 'Gap widgets can be inserted blank or converted from highlighted text.',
+    context: 'Instruction under the passage editor header of a gap match question',
+  },
+  gapMatchAnswersLabel: {
+    message: 'Answers',
+    context:
+      'Section header above the passage of a gap match question, with its gaps, as a preview shows it',
+  },
+  errorNoGap: {
+    message: 'Insert at least one gap',
+    context: 'Validation error when the passage of a gap match question has no gap',
+  },
+  errorEmptyGap: {
+    message: 'One or more gaps have no answer',
+    context: 'Validation error above the passage when any of its gaps has no answer',
+  },
+  insertGap: {
+    message: 'Insert',
+    context:
+      "Button in the passage toolbar of a gap match question that adds a gap at the cursor, or turns the highlighted text into a gap's answer",
+  },
+  gapRemoved: {
+    message: '{name}, removed',
+    context:
+      "Announced to screen readers when a gap is deleted from the passage of a gap match question. {name} is the gap's accessible name, such as 'winter, gap 2'",
+  },
+  gapsRemoved: {
+    message: '{count, plural, one {# gap removed} other {# gaps removed}}',
+    context:
+      'Announced to screen readers when several gaps are deleted from the passage of a gap match question at once',
+  },
+  gapsAdded: {
+    message: '{count, plural, one {# gap added} other {# gaps added}}',
+    context:
+      'Announced to screen readers when several gaps are added to the passage of a gap match question at once, for example when an undo restores them',
+  },
+  gapHidden: {
+    message: 'Gap {number}',
+    context:
+      'Accessible name of a gap in a preview of a gap match question that hides the answers. {number} is its position in the passage',
+  },
 });

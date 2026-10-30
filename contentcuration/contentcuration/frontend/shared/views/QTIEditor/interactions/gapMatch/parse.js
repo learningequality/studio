@@ -19,10 +19,10 @@ import {
 
 const serializer = new XMLSerializer();
 
-const GAP = 'qti-gap';
+export const GAP = 'qti-gap';
 const GAP_TEXT = 'qti-gap-text';
 const PROMPT = 'qti-prompt';
-const CORRECT_ATTR = 'data-studio-correct';
+export const CORRECT_ATTR = 'data-studio-correct';
 const SENTINEL_ID = 'studio_sentinel';
 
 /**
