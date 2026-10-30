@@ -270,6 +270,7 @@
   import { ValidationError } from '../../constants';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
+  import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
@@ -395,7 +396,11 @@
         bodyXml: bodyXml.value,
         responseDeclarations: responseDeclarations.value,
       }));
-      watch(workingInteraction, newVal => emit('update:interaction', newVal), { immediate: true });
+      useInteractionUpdates(
+        workingInteraction,
+        () => props.mode,
+        newVal => emit('update:interaction', newVal),
+      );
 
       // Errors are reported the same way, for the card to show that the question needs work.
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });

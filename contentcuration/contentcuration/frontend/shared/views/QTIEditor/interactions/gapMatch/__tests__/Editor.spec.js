@@ -6,6 +6,7 @@ import { gapMatchInteractionDescriptor as descriptor } from '../Descriptor';
 import { getGaps } from '../parse';
 import { QuestionType, ValidationError } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
+import { updates } from '../../../utils/testingFixtures';
 import { gap } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
@@ -146,8 +147,14 @@ describe('GapMatchEditor', () => {
   });
 
   it('restores the question, every answer and the distractors when a saved item reopens', async () => {
-    const { emitted, unmount } = await renderEditor();
-    const [interaction] = emitted()['update:interaction'].at(-1);
+    const { user, emitted, unmount } = await renderEditor({
+      interaction: interactionOf({
+        distractors: [...DISTRACTORS, { id: 'choice_x', content: 'x' }],
+      }),
+    });
+    await user.click(screen.getByRole('button', { name: tr.deleteDistractorBtn$({ number: 2 }) }));
+    await waitFor(() => expect(updates(emitted)).toHaveLength(1));
+    const [interaction] = updates(emitted).at(-1);
     unmount();
 
     await renderEditor({ interaction });
@@ -162,6 +169,38 @@ describe('GapMatchEditor', () => {
     ).toBeInTheDocument();
     expect(section(tr.distractorsLabel$())).toHaveTextContent('spring');
     expect(section(tr.questionOptionalLabel$())).toHaveTextContent('Fill in the seasons');
+  });
+
+  describe('emits', () => {
+    it('does not emit update:interaction on opening the passage editor', async () => {
+      const { emitted } = await renderEditor();
+      await waitFor(() => expect(screen.getAllByRole('group', GAP)).toHaveLength(2));
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction when the mode changes', async () => {
+      const { emitted, updateProps } = await renderEditor({ mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction when the question is left without content', async () => {
+      const { user, emitted } = await renderEditor({ interaction: interactionOf({ prompt: '' }) });
+      await user.click(screen.getByRole('button', { name: tr.editQuestionLabel$() }));
+      const question = await within(section(tr.questionOptionalLabel$())).findByRole('textbox', {
+        name: /text editor/,
+      });
+      question.querySelector('.ProseMirror').editor.chain().focus().insertContent(' ').run();
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('emits update:interaction for an edit made as the card closes', async () => {
+      const { emitted, updateProps } = await renderEditor();
+      screen.getByRole('button', { name: tr.deleteDistractorBtn$({ number: 1 }) }).click();
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(1);
+    });
   });
 
   describe('validation', () => {

@@ -191,6 +191,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
+  import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import { formatLocaleNumber } from '../../utils/localeNumbers';
   import { textEntryInteractionDescriptor } from './Descriptor';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
@@ -343,14 +344,10 @@
         bodyXml: composableBodyXml.value,
         responseDeclarations: composableDeclarations.value,
       }));
-      watch(
+      useInteractionUpdates(
         workingInteraction,
-        newVal => {
-          if (props.mode !== 'edit') return;
-          if (!newVal.bodyXml) return;
-          emit('update:interaction', newVal);
-        },
-        { immediate: true },
+        () => props.mode,
+        newVal => emit('update:interaction', newVal),
       );
 
       const answerValues = ({ bodyXml, responseDeclarations }) =>
@@ -360,7 +357,7 @@
 
       watch(
         () => props.mode,
-        (newMode, oldMode) => {
+        newMode => {
           if (newMode !== 'edit') {
             isPromptOpen.value = false;
             return;
@@ -370,7 +367,6 @@
           showStoredAnswerValue();
           // Opening a card does not remount it, so report answers stored in another form here.
           if (
-            oldMode !== undefined &&
             isNumeric.value &&
             workingInteraction.value.bodyXml &&
             !isEqual(answerValues(workingInteraction.value), answerValues(props.interaction))
