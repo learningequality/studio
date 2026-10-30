@@ -11,8 +11,12 @@ const isBesideGap = ($pos, isGap) =>
 
 const hasTextBeside = $pos => Boolean($pos.nodeBefore?.isText || $pos.nodeAfter?.isText);
 
-// The browser has no text there to draw its own caret in.
-const needsDrawnCaret = ($pos, isGap) => isBesideGap($pos, isGap) && !hasTextBeside($pos);
+const isAtAnswerStart = ($pos, isGap) => isGap($pos.parent) && $pos.pos === $pos.start();
+
+// Beside a gap, the browser has no text there to draw its own caret in. At the start of an
+// answer, including a blank one, Chrome draws it outside the gap, before it.
+const needsDrawnCaret = ($pos, isGap) =>
+  (isBesideGap($pos, isGap) && !hasTextBeside($pos)) || isAtAnswerStart($pos, isGap);
 
 function drawnCaret() {
   const caret = document.createElement('span');
@@ -26,16 +30,25 @@ function drawnCaret() {
 function caretDecorations(state, isGap) {
   const $pos = caretOf(state);
   if (!$pos) return null;
+  const decorations = [];
   if (isGap($pos.parent)) {
-    const mark = Decoration.node($pos.before(), $pos.after(), { class: 'has-caret' });
-    return DecorationSet.create(state.doc, [mark]);
+    decorations.push(Decoration.node($pos.before(), $pos.after(), { class: 'is-active' }));
   }
-  if (!needsDrawnCaret($pos, isGap)) return null;
-  const caret = Decoration.widget($pos.pos, drawnCaret, {
-    key: 'gap-caret',
-    ignoreSelection: true,
-  });
-  return DecorationSet.create(state.doc, [caret]);
+  // At an answer's start, before the browser's caret, which stays in the answer's text.
+  if (isAtAnswerStart($pos, isGap)) {
+    decorations.push(
+      Decoration.widget($pos.pos, drawnCaret, {
+        key: 'gap-caret-start',
+        side: -1,
+        ignoreSelection: true,
+      }),
+    );
+  } else if (needsDrawnCaret($pos, isGap)) {
+    decorations.push(
+      Decoration.widget($pos.pos, drawnCaret, { key: 'gap-caret', ignoreSelection: true }),
+    );
+  }
+  return decorations.length ? DecorationSet.create(state.doc, decorations) : null;
 }
 
 function browserCaretPoint(view, isGap) {

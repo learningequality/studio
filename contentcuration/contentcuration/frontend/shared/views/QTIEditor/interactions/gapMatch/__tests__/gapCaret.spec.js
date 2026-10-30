@@ -79,6 +79,32 @@ describe('gap caret', () => {
       expect(editor.view.dom).toHaveClass('hides-caret');
     });
 
+    it('is drawn at the start of an answer, where the browser draws its caret before the gap', async () => {
+      const editor = await renderAt(5);
+
+      press(editor, 'ArrowLeft');
+
+      const [caret] = drawnCarets(editor);
+      expect(editor.state.selection.from).toBe(4);
+      expect(caret.closest('.answer')).toHaveTextContent('xy');
+      expect(editor.view.dom).toHaveClass('hides-caret');
+    });
+
+    it('is drawn in a blank gap', async () => {
+      const editor = await renderAt(4, `<p>ab${gap('gap_a')}cd</p>`);
+
+      const [caret] = drawnCarets(editor);
+      expect(caret.closest('.answer')).not.toBeNull();
+      expect(editor.view.dom).toHaveClass('hides-caret');
+    });
+
+    it('is not drawn at the end of an answer', async () => {
+      const editor = await renderAt(6);
+
+      expect(drawnCarets(editor)).toEqual([]);
+      expect(editor.view.dom).not.toHaveClass('hides-caret');
+    });
+
     it('is not drawn where text is beside the caret', async () => {
       const editor = await renderAt(4);
 
@@ -261,7 +287,7 @@ describe('gap caret', () => {
     });
   });
 
-  describe('outline', () => {
+  describe('active gap', () => {
     const TWO_GAPS = `<p>ab${gap('gap_a', 'xy')}cd${gap('gap_b', 'z')}</p>`;
     const { gapWithAnswer$ } = qtiEditorStrings;
     const chip = (answer, number) =>
@@ -271,8 +297,8 @@ describe('gap caret', () => {
       await renderAt(5, TWO_GAPS);
       await nextTick();
 
-      expect(chip('xy', 1)).toHaveClass('has-caret');
-      expect(chip('z', 2)).not.toHaveClass('has-caret');
+      expect(chip('xy', 1)).toHaveClass('is-active');
+      expect(chip('z', 2)).not.toHaveClass('is-active');
     });
 
     it('marks no gap while the caret is outside every gap', async () => {
@@ -282,7 +308,7 @@ describe('gap caret', () => {
       editor.commands.setTextSelection(2);
       await nextTick();
 
-      expect(chip('xy', 1)).not.toHaveClass('has-caret');
+      expect(chip('xy', 1)).not.toHaveClass('is-active');
     });
   });
 });
