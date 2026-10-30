@@ -126,6 +126,56 @@ describe('validateAssociateInteraction()', () => {
     });
   });
 
+  describe('REPEATED_PAIR', () => {
+    const pair = (first, second) => [
+      { id: `choice_${first}`, content: first },
+      { id: `choice_${second}`, content: second },
+    ];
+    const repeatedPairIndexes = state =>
+      validateAssociateInteraction(state)
+        .filter(e => e.code === ValidationError.REPEATED_PAIR)
+        .map(e => e.index);
+
+    it('flags every pair that repeats another, by pair index', () => {
+      const state = makeState({
+        pairs: [
+          pair('Antonio', 'Prospero'),
+          pair('Romeo', 'Tybalt'),
+          pair('Antonio', '<b>Prospero</b>'),
+        ],
+      });
+      expect(repeatedPairIndexes(state)).toEqual([0, 2]);
+    });
+
+    it('flags a pair that repeats another in reverse order', () => {
+      const state = makeState({
+        pairs: [pair('Antonio', 'Prospero'), pair('Prospero', 'Antonio')],
+      });
+      expect(repeatedPairIndexes(state)).toEqual([0, 1]);
+    });
+
+    it('does not flag pairs that share only one item', () => {
+      const state = makeState({
+        pairs: [pair('Antonio', 'Prospero'), pair('Antonio', 'Tybalt')],
+      });
+      expect(repeatedPairIndexes(state)).toEqual([]);
+    });
+
+    it('does not flag repeated pairs with a blank member', () => {
+      const state = makeState({
+        pairs: [pair('Antonio', ''), pair('Antonio', '')],
+      });
+      expect(repeatedPairIndexes(state)).toEqual([]);
+    });
+
+    it('does not flag repeated pairs whose members match each other', () => {
+      const state = makeState({
+        pairs: [pair('Antonio', 'Antonio'), pair('Antonio', 'Antonio')],
+      });
+      expect(repeatedPairIndexes(state)).toEqual([]);
+    });
+  });
+
   describe('DUPLICATE_DISTRACTOR_CONTENT', () => {
     it('flags a distractor repeated among the distractors, by its text', () => {
       const state = makeState({

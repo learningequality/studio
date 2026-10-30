@@ -111,6 +111,9 @@ const renderEditor = (props = {}) =>
     routes: new VueRouter(),
   });
 
+const pairRows = () =>
+  within(screen.getByRole('list', { name: tr.$tr('correctPairsLabel') })).getAllByRole('listitem');
+
 const updates = emitted => emitted()['update:interaction'] || [];
 const latestBodyXml = emitted => updates(emitted).at(-1)[0].bodyXml;
 
@@ -224,11 +227,6 @@ describe('AssociateEditor', () => {
   });
 
   describe('pair layout below the large breakpoint', () => {
-    const pairRows = () =>
-      within(screen.getByRole('list', { name: tr.$tr('correctPairsLabel') })).getAllByRole(
-        'listitem',
-      );
-
     it('stacks only the row whose editor is open', async () => {
       mockWindowIsLarge = false;
       const user = userEvent.setup();
@@ -551,6 +549,24 @@ describe('AssociateEditor', () => {
       }
       await nextTick();
       expect(screen.getByText(tr.$tr('errorDuplicatePairContent'))).toBeInTheDocument();
+    });
+
+    it('flags both pairs when one repeats the other in reverse', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      for (const [position, content] of [
+        [1, 'Prospero'],
+        [2, 'Antonio'],
+      ]) {
+        await user.click(button(editPairItem(2, position)));
+        await user.clear(openTextarea());
+        await user.type(openTextarea(), content);
+      }
+      await user.click(button(editPairItem(1, 1)));
+      await nextTick();
+      for (const row of pairRows()) {
+        expect(within(row).getByText(tr.$tr('errorRepeatedPair'))).toBeInTheDocument();
+      }
     });
 
     it('flags a distractor parsed with no content', async () => {
