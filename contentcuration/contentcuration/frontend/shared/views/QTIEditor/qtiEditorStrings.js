@@ -169,6 +169,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Button that saves the answer or distractor being edited and closes its editor; a new one joins its list',
   },
+  closeChipEditorBtn: {
+    message: 'Close editor',
+    context:
+      'Accessible label for the icon button beside the only answer or distractor a list must keep, while it is being edited; it saves the edits and closes the editor',
+  },
   editPairItemLabel: {
     message: 'Edit pair {number}, item {position}',
     context: 'Accessible label for the clickable region to edit one item of a pair',
