@@ -527,8 +527,11 @@ describe('AssociateEditor', () => {
 
   describe('validation', () => {
     it('shows no errors for a question that is already complete', () => {
-      renderEditor();
+      const { container } = renderEditor();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      for (const key of ['errorEmptyChoiceContent', 'errorDuplicateDistractorContent']) {
+        expect(within(container).queryByText(tr.$tr(key))).not.toBeInTheDocument();
+      }
     });
 
     it('reports the prompt and too-few-pairs errors as soon as the state changes', async () => {
@@ -582,14 +585,32 @@ describe('AssociateEditor', () => {
       await user.type(openTextarea(), 'Antonio');
       await user.click(button(editPairItem(1, 2)));
       await nextTick();
-      const distractors = screen.getByRole('list', { name: tr.$tr('distractorsLabel') });
       const pairs = screen.getByRole('list', { name: tr.$tr('correctPairsLabel') });
-      expect(
-        within(distractors).getByText(tr.$tr('errorDuplicateDistractorContent')),
-      ).toBeInTheDocument();
+      expect(button(tr.$tr('editDistractorLabel', { number: 2 }))).toHaveAccessibleDescription(
+        tr.$tr('errorDuplicateDistractorContent'),
+      );
       expect(
         within(pairs).getByText(tr.$tr('errorDuplicateDistractorContent')),
       ).toBeInTheDocument();
+    });
+
+    it('shows the message shared by two equal distractors once, describing both', async () => {
+      const user = userEvent.setup();
+      const { container } = renderEditor();
+      for (const content of ['Romeo', 'Romeo']) {
+        await user.click(button(tr.$tr('addDistractorBtn')));
+        await user.type(openTextarea(), content);
+      }
+      await user.click(button(editPairItem(1, 1)));
+      await nextTick();
+      expect(
+        within(container).getAllByText(tr.$tr('errorDuplicateDistractorContent')),
+      ).toHaveLength(1);
+      for (const number of [2, 3]) {
+        expect(button(tr.$tr('editDistractorLabel', { number }))).toHaveAccessibleDescription(
+          tr.$tr('errorDuplicateDistractorContent'),
+        );
+      }
     });
 
     it('stacks both faults on a pair that repeats itself and a distractor', async () => {
