@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="box"
     data-editor-scope
     :class="['pool-box', { 'is-region': addMode === 'region' }]"
     :style="{ borderColor: $themeTokens.fineLine }"
@@ -58,7 +59,7 @@
                     :tabindex="-1"
                     class="editor"
                     @update="html => onChipUpdate(index, html)"
-                    @minimize="close"
+                    @minimize="onMinimize"
                   />
                   <div
                     v-if="isChipOpen(index)"
@@ -125,7 +126,7 @@
               :tabindex="-1"
               class="editor"
               @update="onDraftUpdate"
-              @minimize="close"
+              @minimize="onMinimize"
             />
             <div class="save-row">
               <KButton
@@ -194,6 +195,7 @@
       const tokens = themeTokens();
       const { saveChipBtn$, closeChipEditorBtn$ } = qtiEditorStrings;
 
+      const box = ref(null);
       const rootEl = ref(null);
       const addButton = ref(null);
       const deleteButtons = ref([]);
@@ -348,6 +350,18 @@
 
       async function onSave(event) {
         event.stopPropagation();
+        await closeAndRefocus();
+      }
+
+      function onMinimize() {
+        if (box.value.contains(document.activeElement)) {
+          closeAndRefocus();
+        } else {
+          close();
+        }
+      }
+
+      async function closeAndRefocus() {
         const { index } = open.value;
         const wasNew = index === null;
         const wasDropped = commit() !== null;
@@ -395,6 +409,7 @@
       return {
         EditorImageProcessor,
         NO_BREAK_SPACE,
+        box,
         rootEl,
         addButton,
         deleteButtons,
@@ -418,6 +433,7 @@
         onDraftUpdate,
         onDeleteButton,
         onSave,
+        onMinimize,
         onDiscard,
         onOpenChipClick,
         onWrapperClick,

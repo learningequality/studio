@@ -18,6 +18,7 @@
       >
         {{ action.title }}
       </button>
+      <button @click="$emit('minimize')">Minimize</button>
     </template>
   </div>
 
