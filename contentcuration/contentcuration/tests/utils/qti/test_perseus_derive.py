@@ -6,6 +6,7 @@ from le_utils.constants import exercises
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import ENTITY_CHOICE_ITEM
 from contentcuration.tests.utils.qti.test_validation import HINTED_EDITOR_ITEM
+from contentcuration.utils.assessment.qti.archive import qti_package_identifier
 from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
 from contentcuration.utils.assessment.qti.perseus_derive import (
     is_answerless_numeric_entry,
@@ -20,6 +21,7 @@ class _Item:
         self.raw_data = raw_data
         self.randomize = randomize
         self.assessment_id = assessment_id
+        self.type = exercises.QTI
 
 
 def _choice_item(
@@ -63,6 +65,7 @@ def _text_item(
     prompt="<p>What is 6 times 7?</p>",
     base_type="float",
     map_entries=(),
+    identifier="item_text",
 ):
     correct = ""
     if correct_values:
@@ -78,7 +81,7 @@ def _text_item(
             )
         )
     return _item_xml(
-        "item_text",
+        identifier,
         "Text Item",
         '<qti-response-declaration identifier="RESPONSE" cardinality="{}" '
         'base-type="{}">{}{}</qti-response-declaration>'.format(
@@ -199,23 +202,53 @@ def test_choice_padded_correct_value_matches_identifier():
     assert [a["correct"] for a in answers] == [True, False]
 
 
-def test_overflowing_correct_value_is_dropped():
-    raw_data = _text_item("single", ["42", "1e400"])
+@pytest.mark.parametrize(
+    "correct_values",
+    [
+        pytest.param(["42", "1e400"], id="overflowing_value"),
+        pytest.param(["42", "1/2"], id="fraction_value"),
+        pytest.param(["42", "False"], id="non_number_value"),
+    ],
+)
+def test_unreadable_correct_value_is_left_out_of_package(correct_values):
+    raw_data = _text_item("single", correct_values)
     assert is_perseus_derivable(raw_data) is True
-    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
-    assert [a["answer"] for a in answers] == ["42"]
+    assert qti_package_identifier(_Item(raw_data)) is None
 
 
-def test_answerless_float_entry_is_skipped_but_node_stays_derivable(caplog):
+@pytest.mark.parametrize(
+    "raw_data",
+    [
+        pytest.param(_text_item("single", ["42", "+3", "1E3"]), id="numbers"),
+        pytest.param(_text_item("single", ["cat"], base_type="string"), id="string"),
+        pytest.param(
+            _text_item("single", ["42"], map_entries=[("1/2", "1.0")]),
+            id="unreadable_map_key",
+        ),
+    ],
+)
+def test_readable_declarations_ship_in_package(raw_data):
+    assert qti_package_identifier(_Item(raw_data)) is not None
+
+
+def test_answerless_float_entry_is_left_out_but_node_stays_derivable():
     raw_data = _text_item("single", [])
-    assert derive_perseus_item(_Item(raw_data)) is None
-    assert "no correct answer" in caplog.text
+    assert qti_package_identifier(_Item(raw_data)) is None
+    assert is_perseus_derivable(raw_data) is True
+
+
+def test_schema_invalid_item_is_left_out_but_node_stays_derivable():
+    raw_data = _text_item("single", ["4"]).replace(
+        'expected-length="50"', 'expected-length="abc"'
+    )
+    assert qti_package_identifier(_Item(raw_data)) is None
     assert is_perseus_derivable(raw_data) is True
 
 
 def test_math_prompt_survives_into_question():
     prompt = (
-        "<p>Solve <math><semantics><mrow><mi>x</mi></mrow>"
+        '<p>Solve <math xmlns="http://www.w3.org/1998/Math/MathML">'
+        "<semantics><mrow><mi>x</mi></mrow>"
         '<annotation encoding="application/x-tex">x^2</annotation>'
         "</semantics></math></p>"
     )
@@ -356,8 +389,7 @@ MATCH_CORRECT_PROCESSING = (
     'rptemplates/match_correct.xml" />'
 )
 
-TOLERANCE_ITEM = _text_item("single", []).replace(
-    MATCH_CORRECT_PROCESSING,
+TOLERANCE_PROCESSING = (
     "<qti-response-processing><qti-response-condition><qti-response-if>"
     '<qti-equal tolerance-mode="absolute" tolerance="0.5">'
     '<qti-variable identifier="RESPONSE" />'
@@ -365,7 +397,11 @@ TOLERANCE_ITEM = _text_item("single", []).replace(
     '<qti-set-outcome-value identifier="SCORE">'
     '<qti-base-value base-type="float">1</qti-base-value>'
     "</qti-set-outcome-value></qti-response-if></qti-response-condition>"
-    "</qti-response-processing>",
+    "</qti-response-processing>"
+)
+
+TOLERANCE_ITEM = _text_item("single", []).replace(
+    MATCH_CORRECT_PROCESSING, TOLERANCE_PROCESSING
 )
 
 
@@ -510,6 +546,17 @@ def test_comment_inside_prompt_markup_does_not_change_question(prompt):
         pytest.param(
             _text_item("single", ["1" + "0" * 400]), True, id="float_overflow_integer"
         ),
+        pytest.param(_text_item("single", ["1_000"]), True, id="float_underscore"),
+        pytest.param(
+            _text_item("single", ["1_0E3"]), True, id="float_underscore_exponent"
+        ),
+        pytest.param(_text_item("single", ["٥"]), True, id="float_arabic_indic"),
+        pytest.param(_text_item("single", ["５"]), True, id="float_fullwidth"),
+        pytest.param(_text_item("single", ["1/2"]), True, id="float_fraction"),
+        pytest.param(_text_item("single", ["1,000"]), True, id="float_comma"),
+        pytest.param(_text_item("single", ["50%"]), True, id="float_percent"),
+        pytest.param(_text_item("single", ["+3"]), False, id="float_plus_sign"),
+        pytest.param(_text_item("single", ["1E3"]), False, id="float_exponent"),
         pytest.param(
             _text_item("single", [], map_entries=[("13", "1.0"), ("12", "1.0")]),
             False,
