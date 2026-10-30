@@ -592,3 +592,5 @@ export const mockInteractionBlockWithDecl = (bodyXml, declarationXml) => ({
   bodyXml,
   responseDeclarations: [declarationXml],
 });
+
+export const updates = emitted => emitted()['update:interaction'] || [];

@@ -138,6 +138,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { ValidationError } from '../../constants';
   import { useInlineChoiceInteraction } from '../../composables/useInlineChoiceInteraction';
+  import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import AnswerSettings from '../choice/components/AnswerSettings/index.vue';
@@ -337,7 +338,7 @@
         bodyXml: bodyXml.value,
         responseDeclarations: responseDeclarations.value,
       }));
-      watch(workingInteraction, newVal => emit('update:interaction', newVal), { immediate: true });
+      useInteractionUpdates(workingInteraction, props, emit);
 
       // Errors are reported the same way, for the card to show that the question needs work.
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });

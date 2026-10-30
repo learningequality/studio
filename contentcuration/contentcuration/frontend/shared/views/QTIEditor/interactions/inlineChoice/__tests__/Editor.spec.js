@@ -7,6 +7,7 @@ import { inlineChoiceInteractionDescriptor as descriptor } from '../Descriptor';
 import { getDropdowns } from '../parse';
 import { QuestionType } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
+import { updates } from '../../../utils/testingFixtures';
 import { CHIP, chip } from './renderPassage';
 import { dragSortStrings as dragTr } from 'shared/views/dragSort/dragSortStrings';
 import { getTipTapEditorStrings } from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditorStrings';
@@ -97,7 +98,7 @@ const section = name => screen.getByRole('heading', { name }).parentElement;
 
 /** The dropdowns of the last interaction the editor emitted, as saved and read back. */
 function savedDropdowns(emitted) {
-  const [interaction] = emitted['update:interaction'].at(-1);
+  const [interaction] = updates(emitted).at(-1);
   const state = descriptor.parse(interaction.bodyXml, interaction.responseDeclarations);
   return getDropdowns(state.passage);
 }
@@ -216,7 +217,7 @@ describe('InlineChoiceEditor', () => {
 
       expect(input).toHaveValue('spins');
       expect(chips()[1]).toHaveTextContent('spins');
-      expect(savedDropdowns(emitted())[1].options).toEqual([
+      expect(savedDropdowns(emitted)[1].options).toEqual([
         { id: 'revolves', text: 'spins' },
         { id: 'circles', text: 'circles' },
       ]);
@@ -231,7 +232,7 @@ describe('InlineChoiceEditor', () => {
       await waitFor(() => expect(optionInputs()[2]).toHaveFocus());
       await user.keyboard('rotates');
       expect(chips()[1]).toHaveTextContent(/^3/);
-      expect(savedDropdowns(emitted())[1].options.map(o => o.text)).toEqual([
+      expect(savedDropdowns(emitted)[1].options.map(o => o.text)).toEqual([
         'revolves',
         'circles',
         'rotates',
@@ -248,7 +249,7 @@ describe('InlineChoiceEditor', () => {
       expect(optionInputs().map(input => input.value)).toEqual(['Sun', 'Stars']);
       // The chip needs a correct answer, so its count is in its name, beside the error icon.
       expect(chips()[0]).toHaveAccessibleName(/2 options/);
-      expect(savedDropdowns(emitted())[0].options.map(o => o.text)).toEqual(['Sun', 'Stars']);
+      expect(savedDropdowns(emitted)[0].options.map(o => o.text)).toEqual(['Sun', 'Stars']);
     });
 
     it('keeps focus in the panel on the option that takes a removed one’s place', async () => {
@@ -295,7 +296,7 @@ describe('InlineChoiceEditor', () => {
       expect(radio(2)).not.toBeChecked();
       expect(radio(3)).toBeChecked();
       expect(chips()[0]).toHaveTextContent('Stars');
-      expect(savedDropdowns(emitted())[0].correctId).toBe('stars');
+      expect(savedDropdowns(emitted)[0].correctId).toBe('stars');
     });
 
     it('keeps the correct mark on the same option when it moves', async () => {
@@ -313,7 +314,7 @@ describe('InlineChoiceEditor', () => {
       expect(
         screen.getByRole('radio', { name: tr.markInlineChoiceOptionCorrect$({ number: 2 }) }),
       ).toBeChecked();
-      const [, dropdown] = savedDropdowns(emitted());
+      const [, dropdown] = savedDropdowns(emitted);
       expect(dropdown.options.map(o => o.text)).toEqual(['circles', 'revolves', 'rotates']);
       expect(dropdown.correctId).toBe('revolves');
     });
@@ -327,7 +328,7 @@ describe('InlineChoiceEditor', () => {
       );
 
       expect(chips()[1]).toHaveTextContent(tr.errorNoCorrectAnswer$());
-      expect(savedDropdowns(emitted())[1].correctId).toBeNull();
+      expect(savedDropdowns(emitted)[1].correctId).toBeNull();
     });
 
     it('restores the list when the edit is undone in the passage', async () => {
@@ -519,7 +520,7 @@ describe('InlineChoiceEditor', () => {
       const { emitted, user } = await renderEditor();
       await user.click(shuffle());
 
-      const [interaction] = emitted()['update:interaction'].at(-1);
+      const [interaction] = updates(emitted).at(-1);
       expect([...interaction.bodyXml.matchAll(/shuffle="(\w+)"/g)].map(m => m[1])).toEqual([
         'true',
         'true',
@@ -690,7 +691,7 @@ describe('InlineChoiceEditor', () => {
     await screen.findByRole('dialog');
     await waitFor(() => expect(optionInputs()[0]).toHaveFocus());
     await user.keyboard('Venus');
-    const saved = savedDropdowns(emitted());
+    const saved = savedDropdowns(emitted);
     expect(saved).toHaveLength(3);
     expect(saved.map(d => d.options.map(o => o.text))).toContainEqual(['Venus']);
   });
@@ -717,16 +718,36 @@ describe('InlineChoiceEditor', () => {
     await openChip(user, 1);
     await user.type(optionInputs()[0], 's');
 
-    const [interaction] = emitted()['update:interaction'].at(-1);
+    const [interaction] = updates(emitted).at(-1);
     expect(interaction.bodyXml).toContain(`src="${image}"`);
     expect(interaction.bodyXml).not.toContain('/content/storage/');
   });
 
-  it('does not save which chip is open', async () => {
-    const { emitted, user } = await renderEditor();
-    const before = emitted()['update:interaction'].at(-1)[0].bodyXml;
-    await openChip(user, 0);
-    expect(emitted()['update:interaction'].at(-1)[0].bodyXml).toBe(before);
+  describe('emits', () => {
+    it('emits update:interaction for an edit made as the card closes', async () => {
+      const { emitted, updateProps } = await renderEditor();
+      fireEvent.click(screen.getByRole('checkbox', { name: tr.shuffleAnswersLabel$() }));
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(1);
+    });
+
+    it('does not emit update:interaction on mount in edit mode', async () => {
+      const { emitted } = await renderEditor();
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction when the mode changes', async () => {
+      const { emitted, updateProps } = await renderEditor({ mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction on opening a chip', async () => {
+      const { emitted, user } = await renderEditor();
+      await openChip(user, 0);
+      expect(updates(emitted)).toHaveLength(0);
+    });
   });
 
   it('restores every chip’s options and correct answer when reopened', async () => {
@@ -735,7 +756,7 @@ describe('InlineChoiceEditor', () => {
     await user.click(
       screen.getByRole('radio', { name: tr.markInlineChoiceOptionCorrect$({ number: 3 }) }),
     );
-    const [saved] = emitted()['update:interaction'].at(-1);
+    const [saved] = updates(emitted).at(-1);
     unmount();
 
     await renderEditor({ interaction: saved });

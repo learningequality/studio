@@ -298,12 +298,12 @@
 
   import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
   import groupBy from 'lodash/groupBy';
-  import isEqual from 'lodash/isEqual';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { ValidationError } from '../../constants';
   import { useMatchInteraction } from '../../composables/useMatchInteraction';
+  import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
@@ -550,12 +550,7 @@
         { immediate: true },
       );
 
-      // Rebuilding yields a fresh object on every state change, so compare by
-      // value — reopening an editor or retyping the same text is not a change.
-      watch(workingInteraction, (newVal, oldVal) => {
-        if (props.mode !== 'edit' || isEqual(newVal, oldVal)) return;
-        emit('update:interaction', newVal);
-      });
+      useInteractionUpdates(workingInteraction, props, emit);
 
       // Errors are reported the same way, for the card to show that the question needs work.
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });

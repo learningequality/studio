@@ -13,6 +13,7 @@ import {
   CHOICE_MULTI_DECL_XML as MULTI_DECL,
   mockInteractionBlock as block,
   mockInteractionBlockWithDecl as blockWithDecl,
+  updates,
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
@@ -67,6 +68,8 @@ const renderEditor = (props = {}) =>
     props: { mode: 'edit', teleportTargetId: 'test-settings-target', ...props },
     routes: new VueRouter(),
   });
+
+const openTextarea = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
 
 const dragFirstRowToLast = async () => {
   const { options, el } = mockSortableInstances[mockSortableInstances.length - 1];
@@ -655,15 +658,52 @@ describe('ChoiceInteractionEditor', () => {
   });
 
   describe('emits', () => {
-    it('emits update:interaction on mount with the rebuilt XML and declarations', () => {
+    it('emits update:interaction for an edit made as the card closes', async () => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(1);
+    });
+
+    it('does not emit update:interaction on mount in edit mode', () => {
       const { emitted } = renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      expect(emitted()['update:interaction']).toBeTruthy();
-      const payload = emitted()['update:interaction'][0][0];
-      expect(typeof payload.bodyXml).toBe('string');
-      expect(Array.isArray(payload.responseDeclarations)).toBe(true);
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction when the mode changes', async () => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+        mode: 'view',
+      });
+      await updateProps({ mode: 'edit' });
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction when the question is retyped unchanged', async () => {
+      const { emitted } = renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await fireEvent.update(openTextarea(), openTextarea().value);
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('emits update:interaction once when switching to multiple select', async () => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await updateProps({ questionType: QuestionType.MULTI_SELECT });
+      expect(updates(emitted)).toHaveLength(1);
+      expect(updates(emitted)[0][0].responseDeclarations[0]).toContain('cardinality="multiple"');
     });
 
     it('emits update:interaction after adding a choice', async () => {
@@ -671,9 +711,9 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      const before = emitted()['update:interaction'].length;
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
-      expect(emitted()['update:interaction'].length).toBeGreaterThan(before);
+      const { bodyXml } = updates(emitted).at(-1)[0];
+      expect(bodyXml.match(/<qti-simple-choice/g)).toHaveLength(4);
     });
   });
 
