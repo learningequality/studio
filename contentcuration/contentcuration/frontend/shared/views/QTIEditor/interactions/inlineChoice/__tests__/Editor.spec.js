@@ -942,6 +942,63 @@ describe('InlineChoiceEditor', () => {
       expect(optionInputs()[0]).not.toHaveAttribute('aria-describedby');
     });
 
+    describe('too many options warning', () => {
+      const tooManyWarning = () => tr.warningTooManyInlineChoiceOptions$({ count: 5 });
+      const renderWithOptions = count => {
+        const options = Array.from({ length: count }, (_, i) => [`o${i}`, `Option text ${i}`]);
+        return renderEditor({
+          interaction: interactionOf({ passage: `<p>The ${chip('r1', options, 'o0')} rises</p>` }),
+        });
+      };
+      const openClearingAnnouncements = async user => {
+        mockSendAssertiveMessage.mockClear();
+        mockSendPoliteMessage.mockClear();
+        return openChip(user, 0);
+      };
+
+      it('does not warn on a dropdown with 5 options', async () => {
+        const { user } = await renderWithOptions(5);
+        await openChip(user, 0);
+        expect(within(dialog()).queryByText(tooManyWarning())).not.toBeInTheDocument();
+      });
+
+      it('describes the panel of a dropdown with 6 options with it, unannounced', async () => {
+        const { emitted, user } = await renderWithOptions(6);
+        expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+        await openClearingAnnouncements(user);
+        expect(dialog()).toHaveAccessibleDescription(tooManyWarning());
+        expect(mockSendPoliteMessage).not.toHaveBeenCalled();
+        expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+      });
+
+      it('leaves the chip’s label and name as they are', async () => {
+        await renderWithOptions(6);
+        expect(chips()[0]).toHaveTextContent(/^6 Option text 0$/);
+        expect(chips()[0]).toHaveAccessibleName(
+          tr.answerDropdownWithCorrect$({ label: 'Option text 0', count: 6 }),
+        );
+      });
+
+      it('announces it politely when a 6th option is added', async () => {
+        const { user } = await renderWithOptions(5);
+        await openClearingAnnouncements(user);
+        await user.click(screen.getByRole('button', { name: tr.addInlineChoiceOptionBtn$() }));
+        await waitFor(() => expect(optionInputs()[5]).toHaveFocus());
+        expect(within(dialog()).getByText(tooManyWarning())).toBeInTheDocument();
+        expect(mockSendPoliteMessage).toHaveBeenCalledWith(tooManyWarning());
+        expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+      });
+
+      it('stops warning once an option is removed, leaving 5', async () => {
+        const { user } = await renderWithOptions(6);
+        await openChip(user, 0);
+        await user.click(
+          screen.getByRole('button', { name: tr.deleteInlineChoiceOptionBtn$({ number: 6 }) }),
+        );
+        expect(within(dialog()).queryByText(tooManyWarning())).not.toBeInTheDocument();
+      });
+    });
+
     it('shows a passage without dropdowns on the passage editor', async () => {
       render(InlineChoiceEditor, {
         props: {

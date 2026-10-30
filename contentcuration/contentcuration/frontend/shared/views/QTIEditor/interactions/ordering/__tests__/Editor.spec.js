@@ -33,6 +33,8 @@ jest.mock('kolibri-design-system/lib/composables/useKLiveRegion');
 
 let sendPoliteMessage;
 
+const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+
 beforeEach(() => {
   mockSortableInstances = [];
   sendPoliteMessage = jest.fn();
@@ -345,6 +347,82 @@ describe('OrderingEditor', () => {
       await nextTick();
 
       expect(screen.getByText(tr.errorPromptRequired$())).toBeInTheDocument();
+    });
+  });
+
+  describe('too many items warning', () => {
+    const tooManyWarning = () => tr.$tr('warningTooManyOrderItems', { count: 5 });
+    const ids = count => Array.from({ length: count }, (_, i) => `item${i}`);
+    const itemsXml =
+      count => `<qti-order-interaction response-identifier="RESPONSE" orientation="vertical" shuffle="true">
+      <qti-prompt><p>Put these in order.</p></qti-prompt>
+      ${ids(count)
+        .map(id => `<qti-simple-choice identifier="${id}">Item ${id}</qti-simple-choice>`)
+        .join('')}
+    </qti-order-interaction>`;
+    const itemsDecl =
+      count => `<qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
+      <qti-correct-response>
+        ${ids(count)
+          .map(id => `<qti-value>${id}</qti-value>`)
+          .join('')}
+      </qti-correct-response>
+    </qti-response-declaration>`;
+    const renderWithItems = (count, props = {}) =>
+      renderEditor({
+        interaction: blockWithDecl(itemsXml(count), itemsDecl(count)),
+        questionType: QuestionType.ORDERING,
+        ...props,
+      });
+
+    it('does not warn at 5 items', async () => {
+      renderWithItems(5);
+      expect(screen.queryByText(tooManyWarning())).not.toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).not.toHaveBeenCalledWith(tooManyWarning());
+    });
+
+    it('warns and announces at 6 items without reporting an error', async () => {
+      const { emitted } = renderWithItems(6);
+      expect(
+        within(screen.getByTestId('itemsSection')).getByText(tooManyWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).toHaveBeenCalledWith(tooManyWarning());
+      expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+    });
+
+    it('warns as soon as a blank 6th item is added', async () => {
+      renderWithItems(5);
+      await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addItemBtn') }));
+      expect(
+        within(screen.getByTestId('itemsSection')).getByText(tooManyWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).toHaveBeenCalledWith(tooManyWarning());
+    });
+
+    it('stops warning once an item is deleted, leaving 5', async () => {
+      renderWithItems(6);
+      await fireEvent.click(
+        screen.getByRole('button', { name: tr.$tr('deleteItemBtn', { number: 6 }) }),
+      );
+      expect(screen.queryByText(tooManyWarning())).not.toBeInTheDocument();
+    });
+
+    it('still adds a 7th item', async () => {
+      renderWithItems(6);
+      await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addItemBtn') }));
+      expect(
+        screen.getByRole('button', { name: tr.$tr('deleteItemBtn', { number: 7 }) }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not warn in view mode', async () => {
+      renderWithItems(6, { mode: 'view', showAnswers: true });
+      expect(screen.queryByText(tooManyWarning())).not.toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).not.toHaveBeenCalledWith(tooManyWarning());
     });
   });
 

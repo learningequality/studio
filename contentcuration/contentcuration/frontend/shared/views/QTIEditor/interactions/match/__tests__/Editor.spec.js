@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
+import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
 import MatchEditor from '../Editor.vue';
 
@@ -15,6 +16,16 @@ import { QuestionType, ValidationError } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
+jest.mock('kolibri-design-system/lib/composables/useKLiveRegion');
+
+let sendPoliteMessage;
+
+const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+beforeEach(() => {
+  sendPoliteMessage = jest.fn();
+  useKLiveRegion.mockReturnValue({ sendPoliteMessage });
+});
 
 let mockWindowIsLarge = true;
 let mockWindowIsSmall = false;
@@ -831,6 +842,143 @@ describe('MatchEditor', () => {
       await writeAnswer(user, 2, 'Mammal');
       expect(within(rowAnswers(2)).getByText('Mammal')).toBeInTheDocument();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('too many rows and distractors warnings', () => {
+    const rowsWarning = () => tr.$tr('warningTooManyRows', { count: 5 });
+    const distractorsWarning = () => tr.$tr('warningTooManyDistractors', { count: 5 });
+    const range = count => Array.from({ length: count }, (_, i) => i);
+    const choice = (id, content) =>
+      `<qti-simple-associable-choice identifier="${id}" match-max="1">${content}</qti-simple-associable-choice>`;
+    const countedXml = (
+      rowCount,
+      distractors,
+    ) => `<qti-match-interaction response-identifier="RESPONSE">
+      <qti-prompt><p>Match each animal to its class.</p></qti-prompt>
+      <qti-simple-match-set>
+        ${range(rowCount)
+          .map(i => choice(`row${i}`, `Row ${i}`))
+          .join('')}
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        ${range(rowCount)
+          .map(i => choice(`answer${i}`, `Answer ${i}`))
+          .join('')}
+        ${range(distractors)
+          .map(i => choice(`extra${i}`, `Extra ${i}`))
+          .join('')}
+      </qti-simple-match-set>
+    </qti-match-interaction>`;
+    const countedDecl =
+      rowCount => `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+      <qti-correct-response>
+        ${range(rowCount)
+          .map(i => `<qti-value>row${i} answer${i}</qti-value>`)
+          .join('')}
+      </qti-correct-response>
+    </qti-response-declaration>`;
+    const renderCounted = (rowCount, distractors, props = {}) =>
+      renderEditor({
+        interaction: blockWithDecl(countedXml(rowCount, distractors), countedDecl(rowCount)),
+        ...props,
+      });
+
+    it('does not warn at 5 rows and 5 distractors', async () => {
+      renderCounted(5, 5);
+      expect(screen.queryByText(rowsWarning())).not.toBeInTheDocument();
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).not.toHaveBeenCalled();
+    });
+
+    it('warns only about rows at 6 rows, without reporting an error', async () => {
+      const { emitted } = renderCounted(6, 5);
+      expect(
+        within(screen.getByTestId('rowsSection')).getByText(rowsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).toHaveBeenCalledWith(rowsWarning());
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+      expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+    });
+
+    it('warns only about distractors at 6 distractors, without reporting an error', async () => {
+      const { emitted } = renderCounted(5, 6);
+      expect(
+        within(screen.getByTestId('distractorsSection')).getByText(distractorsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).toHaveBeenCalledWith(distractorsWarning());
+      expect(screen.queryByText(rowsWarning())).not.toBeInTheDocument();
+      expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+    });
+
+    it('warns and announces both at 6 rows and 6 distractors', async () => {
+      renderCounted(6, 6);
+      expect(
+        within(screen.getByTestId('rowsSection')).getByText(rowsWarning()),
+      ).toBeInTheDocument();
+      expect(
+        within(screen.getByTestId('distractorsSection')).getByText(distractorsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      const announced = sendPoliteMessage.mock.calls.at(-1)[0];
+      expect(announced).toContain(rowsWarning());
+      expect(announced).toContain(distractorsWarning());
+    });
+
+    it('warns as soon as a blank 6th row is added', async () => {
+      const user = userEvent.setup();
+      renderCounted(5, 0);
+      await user.click(button(tr.$tr('addRowBtn')));
+      expect(
+        within(screen.getByTestId('rowsSection')).getByText(rowsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).toHaveBeenCalledWith(rowsWarning());
+    });
+
+    it('warns once a 6th distractor is committed', async () => {
+      const user = userEvent.setup();
+      renderCounted(1, 5);
+      await user.click(button(tr.$tr('addDistractorBtn')));
+      await user.type(openTextarea(), 'Fish');
+      await user.click(button(editRow(1)));
+      expect(
+        within(screen.getByTestId('distractorsSection')).getByText(distractorsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).toHaveBeenCalledWith(distractorsWarning());
+    });
+
+    it('stops warning once a row is deleted, leaving 5', async () => {
+      const user = userEvent.setup();
+      renderCounted(6, 0);
+      await user.click(button(deleteRow(6)));
+      expect(screen.queryByText(rowsWarning())).not.toBeInTheDocument();
+    });
+
+    it('stops warning once a distractor is deleted, leaving 5', async () => {
+      const user = userEvent.setup();
+      renderCounted(1, 6);
+      await user.click(button(tr.$tr('deleteDistractorBtn', { number: 6 })));
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+    });
+
+    it('still adds a 7th row', async () => {
+      const user = userEvent.setup();
+      renderCounted(6, 0);
+      await user.click(button(tr.$tr('addRowBtn')));
+      expect(rows()).toHaveLength(7);
+    });
+
+    it('does not warn in view mode', async () => {
+      renderCounted(6, 6, { mode: 'view', showAnswers: true });
+      expect(screen.queryByText(rowsWarning())).not.toBeInTheDocument();
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+      await nextFrame();
+      expect(sendPoliteMessage).not.toHaveBeenCalled();
     });
   });
 

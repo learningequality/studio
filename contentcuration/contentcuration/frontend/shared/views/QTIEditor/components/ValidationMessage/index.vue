@@ -15,7 +15,7 @@
     <p
       v-else
       class="validation-message"
-      :role="alert ? 'alert' : null"
+      :role="announce ? 'alert' : null"
     >
       <slot></slot>
     </p>
@@ -26,8 +26,19 @@
 
 <script>
 
-  import { onMounted, ref } from 'vue';
+  import { onBeforeUnmount, onMounted, ref } from 'vue';
   import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
+
+  // KDS writes each message over the live region's text, so a warning sent in
+  // the same frame as another would replace it before it is read.
+  let sameFrameWarnings = [];
+  let sameFrameRequest = null;
+
+  function announceSameFrameWarnings() {
+    sameFrameWarnings[0].sendPoliteMessage(sameFrameWarnings.map(w => w.text).join(' '));
+    sameFrameWarnings = [];
+    sameFrameRequest = null;
+  }
 
   export default {
     name: 'ValidationMessage',
@@ -35,16 +46,29 @@
     setup(props) {
       const { sendPoliteMessage } = useKLiveRegion();
       const warningText = ref(null);
+      let queuedWarning = null;
 
       // A polite region inserted already filled is often skipped by screen readers,
       // so announce through KDS's persistent live region instead.
       function announceWarning() {
-        if (props.warning) {
-          sendPoliteMessage(warningText.value.textContent.trim());
+        if (!props.warning || !props.announce) return;
+        queuedWarning = { text: warningText.value.textContent.trim(), sendPoliteMessage };
+        sameFrameWarnings.push(queuedWarning);
+        if (sameFrameRequest === null) {
+          sameFrameRequest = requestAnimationFrame(announceSameFrameWarnings);
+        }
+      }
+
+      function dropQueuedWarning() {
+        sameFrameWarnings = sameFrameWarnings.filter(w => w !== queuedWarning);
+        if (!sameFrameWarnings.length && sameFrameRequest !== null) {
+          cancelAnimationFrame(sameFrameRequest);
+          sameFrameRequest = null;
         }
       }
 
       onMounted(announceWarning);
+      onBeforeUnmount(dropQueuedWarning);
 
       return { warningText };
     },
@@ -56,10 +80,10 @@
         default: false,
       },
       /**
-       * Whether an error is an alert, read out as it appears. Off when the component showing
-       * it announces its messages itself.
+       * Whether the message is read out as it appears: an error as an alert, a warning through
+       * KDS's live region. Off when the component showing it announces its messages itself.
        */
-      alert: {
+      announce: {
         type: Boolean,
         default: true,
       },
