@@ -361,6 +361,18 @@ describe('MatchEditor', () => {
       expect(button(deleteMatch(1, 1))).toBeDisabled();
     });
 
+    it("keeps a row's only answer, written into, when its open editor's close button is pressed", async () => {
+      const user = userEvent.setup();
+      const { emitted } = renderEditor();
+      await user.click(button(editMatch(1, 1)));
+      await user.type(openTextarea(), 's');
+      await user.click(button(tr.$tr('closeChipEditorBtn')));
+
+      expect(openTextarea()).toBeUndefined();
+      expect(within(rowAnswers(1)).getByText('Mammals')).toBeInTheDocument();
+      expect(latestBodyXml(emitted)).toContain('Mammals');
+    });
+
     it('shows a placeholder in a blank answer', () => {
       renderEditor({ interaction: blockWithDecl(BLANK_ANSWER_XML, ONE_ROW_DECL_XML) });
       expect(within(rowAnswers(1)).getByText(tr.$tr('answerPlaceholder'))).toBeInTheDocument();

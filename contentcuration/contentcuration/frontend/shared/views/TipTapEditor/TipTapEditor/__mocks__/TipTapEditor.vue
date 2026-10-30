@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div ref="container">
     <p v-if="value">{{ value }}</p>
     <template v-if="mode === 'edit'">
       <textarea
@@ -18,6 +18,7 @@
       >
         {{ action.title }}
       </button>
+      <button @click="$emit('minimize')">Minimize</button>
     </template>
   </div>
 
@@ -27,6 +28,7 @@
 <script>
 
   import { computed, nextTick, onMounted, ref, watch } from 'vue';
+  import { useClickOutside } from '../composables/useClickOutside';
   import { useEditor } from '../composables/useEditor';
   import { resolveInsertAction } from '../composables/useToolbarActions';
   import { toInlineHTML } from '../utils/inlineContent';
@@ -35,6 +37,7 @@
     name: 'RichTextEditor',
     setup(props, { emit, listeners }) {
       const input = ref(null);
+      const container = ref(null);
       const { editor, isReady, insertContext, initializeEditor } = useEditor();
       const content = value => (props.inlineOnly ? toInlineHTML(value) : value);
 
@@ -88,7 +91,15 @@
         },
       );
 
-      return { input, resolvedInsertActions, onFocus };
+      useClickOutside({
+        container,
+        isFocused: ref(false),
+        isEditing: () => props.mode === 'edit',
+        syncContent: () => {},
+        close: () => emit('minimize'),
+      });
+
+      return { input, container, resolvedInsertActions, onFocus };
     },
     props: {
       value: {
@@ -116,7 +127,7 @@
         default: false,
       },
     },
-    emits: ['update', 'ready'],
+    emits: ['update', 'minimize', 'ready'],
   };
 
 </script>
