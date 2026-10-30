@@ -40,7 +40,6 @@ const GETTERS = {
 
 const ACTIONS = {
   global: {
-    showSnackbar: jest.fn(),
     addViewModeOverride: jest.fn(),
     removeViewModeOverride: jest.fn(),
   },

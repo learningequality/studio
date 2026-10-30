@@ -1,3 +1,4 @@
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { Store } from 'vuex';
 import { mount } from '@vue/test-utils';
 import camelCase from 'lodash/camelCase';
@@ -91,6 +92,7 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
 
 describe('EditBooleanMapModal', () => {
   beforeEach(() => {
+    useKSnackbar().clearSnackbar();
     nodes = {
       node1: { id: 'node1' },
       node2: { id: 'node2' },
@@ -101,9 +103,7 @@ describe('EditBooleanMapModal', () => {
       updateContentNode: jest.fn(),
       updateContentNodeDescendants: jest.fn(),
     };
-    generalActions = {
-      showSnackbarSimple: jest.fn(),
-    };
+    generalActions = {};
     store = new Store({
       actions: generalActions,
       modules: {
@@ -241,7 +241,7 @@ describe('EditBooleanMapModal', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
       await wrapper.vm.handleSave();
-      expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
+      expect(useKSnackbar().snackbarOptions.value.text).toBe('edited');
     });
   });
 

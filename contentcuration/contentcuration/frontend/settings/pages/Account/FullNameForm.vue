@@ -32,6 +32,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
@@ -46,6 +47,10 @@
   export default {
     name: 'FullNameForm',
     mixins: [formMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       value: {
         type: Boolean,
@@ -83,10 +88,16 @@
         this.saveFullName(formData)
           .then(() => {
             this.dialog = false;
-            this.$store.dispatch('showSnackbar', { text: this.$tr('changesSavedMessage') });
+            this.createSnackbar({
+              text: this.$tr('changesSavedMessage'),
+              announce: true,
+            });
           })
           .catch(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('failedToSaveMessage') });
+            this.createSnackbar({
+              text: this.$tr('failedToSaveMessage'),
+              announce: true,
+            });
           });
       },
     },

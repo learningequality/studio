@@ -2,6 +2,7 @@ import { render, screen, waitFor, configure, within } from '@testing-library/vue
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
 import TrashModal from '../TrashModal';
@@ -99,6 +100,7 @@ async function makeWrapper(items = testChildren, { isLoading = false, hasMore = 
 describe('TrashModal', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+    useKSnackbar().clearSnackbar();
   });
 
   describe('on load', () => {
@@ -224,8 +226,7 @@ describe('TrashModal', () => {
     it('successful deletion triggers snackbar and reloads nodes', async () => {
       jest.spyOn(TrashModal.methods, 'deleteContentNodes').mockResolvedValue();
 
-      const { user, loadNodesSpy, store } = await makeWrapper();
-      const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
+      const { user, loadNodesSpy } = await makeWrapper();
 
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
       await user.click(screen.getByRole('button', { name: tr.$tr('deleteButton') }));
@@ -234,9 +235,7 @@ describe('TrashModal', () => {
       );
 
       await waitFor(() => {
-        expect(dispatchSpy).toHaveBeenCalledWith('showSnackbar', {
-          text: tr.$tr('deleteSuccessMessage'),
-        });
+        expect(useKSnackbar().snackbarOptions.value.text).toBe(tr.$tr('deleteSuccessMessage'));
         expect(loadNodesSpy).toHaveBeenCalled();
       });
     });

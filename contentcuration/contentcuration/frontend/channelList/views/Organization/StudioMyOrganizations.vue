@@ -73,6 +73,7 @@
 
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { RouteNames, OrganizationEditTabs } from '../../constants';
   import { useOrganizationList } from '../../composables/useOrganizationList';
   import { useOrganizationInvitations } from '../../composables/useOrganizationInvitations';
@@ -81,7 +82,6 @@
   import OrganizationInvitation from './OrganizationInvitation.vue';
   import { organizationStrings } from 'shared/strings/organizationStrings';
   import StudioRaisedBox from 'shared/views/StudioRaisedBox';
-  import useSnackbar from 'shared/composables/useSnackbar';
 
   export default {
     name: 'StudioMyOrganizations',
@@ -99,7 +99,7 @@
         refresh: refreshOrganizations,
       } = useOrganizationList();
       const { invitations, accept, decline } = useOrganizationInvitations();
-      const { createSnackbar } = useSnackbar();
+      const { createSnackbar } = useKSnackbar();
 
       return {
         show,
@@ -129,16 +129,18 @@
         this.accept(invitationId)
           .then(() => this.refreshOrganizations())
           .catch(error => {
-            this.createSnackbar(
-              getApiErrorMessage(error, organizationStrings.invitationActionError$()),
-            );
+            this.createSnackbar({
+              text: getApiErrorMessage(error, organizationStrings.invitationActionError$()),
+              announce: true,
+            });
           });
       },
       declineInvitation(invitationId) {
         this.decline(invitationId).catch(error => {
-          this.createSnackbar(
-            getApiErrorMessage(error, organizationStrings.invitationActionError$()),
-          );
+          this.createSnackbar({
+            text: getApiErrorMessage(error, organizationStrings.invitationActionError$()),
+            announce: true,
+          });
         });
       },
     },

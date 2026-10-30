@@ -178,6 +178,7 @@
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
   import CatalogFilterBar from './CatalogFilterBar';
@@ -207,9 +208,11 @@
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
     setup() {
+      const { createSnackbar } = useKSnackbar();
       const { windowIsSmall, windowBreakpoint } = useKResponsiveWindow();
 
       return {
+        createSnackbar,
         windowIsSmall,
         windowBreakpoint,
       };
@@ -404,7 +407,10 @@
         }
       },
       downloadCSV() {
-        this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingMessage') });
+        this.createSnackbar({
+          text: this.$tr('downloadingMessage'),
+          announce: true,
+        });
         const params = {
           excluded: this.excluded.slice(0),
           ...this.$route.query,
@@ -413,7 +419,10 @@
         return this.downloadChannelsCSV(params);
       },
       downloadPDF() {
-        this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingMessage') });
+        this.createSnackbar({
+          text: this.$tr('downloadingMessage'),
+          announce: true,
+        });
         const params = {
           excluded: this.excluded.slice(0),
           ...this.$route.query,

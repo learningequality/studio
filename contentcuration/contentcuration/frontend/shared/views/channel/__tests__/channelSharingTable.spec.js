@@ -37,7 +37,6 @@ const mockActions = {
   deleteInvitation: jest.fn(() => Promise.resolve()),
   makeEditor: jest.fn(() => Promise.resolve()),
   removeViewer: jest.fn(() => Promise.resolve()),
-  showSnackbar: jest.fn(() => Promise.resolve()),
 };
 
 const createMockStore = (users = [currentUser, otherUser], invitations = [pendingInvitation]) => {
@@ -62,9 +61,7 @@ const createMockStore = (users = [currentUser, otherUser], invitations = [pendin
         },
       },
     },
-    actions: {
-      showSnackbar: mockActions.showSnackbar,
-    },
+    actions: {},
   });
 };
 

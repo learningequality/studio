@@ -51,6 +51,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapGetters, mapActions } from 'vuex';
   import { RolesList, RolesNames } from 'shared/leUtils/Roles';
   import { ResourcesNeededTypes } from 'shared/constants';
@@ -61,6 +63,10 @@
   export default {
     name: 'EditAudienceModal',
     mixins: [constantsTranslationMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeIds: {
         type: Array,
@@ -154,8 +160,11 @@
             });
           }),
         );
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
+        this.createSnackbar({
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          text: commonStrings.$tr('changesSaved'),
+          announce: true,
+        });
         this.close(changed);
       },
     },

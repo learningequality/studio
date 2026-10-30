@@ -260,6 +260,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import get from 'lodash/get';
   import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
   import MoveModal from '../components/move/MoveModal';
@@ -314,7 +315,8 @@
     },
     mixins: [titleMixin, routerMixin],
     setup() {
-      return { searchRecommendationsStrings };
+      const { createSnackbar, clearSnackbar } = useKSnackbar();
+      return { searchRecommendationsStrings, createSnackbar, clearSnackbar };
     },
     props: {
       topicId: {
@@ -645,7 +647,6 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
@@ -909,11 +910,14 @@
           if (nextRoute) {
             this.$router.replace(nextRoute);
           }
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),
+            autofocus: true,
             actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            hideCallback: () => changeTracker.cleanUp(),
+            announce: true,
+          });
         });
       }),
       copyToClipboard: withChangeTracker(function (ids, changeTracker) {
@@ -922,19 +926,22 @@
 
         return this.copyAll({ nodes }).then(() => {
           this.clearSelections();
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            hideCallback: () => changeTracker.cleanUp(),
+            announce: true,
+          });
         });
       }),
       duplicateNodes: withChangeTracker(function (id__in, changeTracker) {
         this.trackClickEvent('Copy');
-        this.showSnackbar({
-          duration: null,
+        this.createSnackbar({
+          autoDismiss: false,
           text: this.$tr('creatingCopies'),
+          announce: true,
           // TODO: determine how to cancel copying while it's in progress,
           // TODO: if that's something we want
           // actionText: this.$tr('cancel'),
@@ -965,11 +972,14 @@
               }
             }
             if (isAllCopySuccess) {
-              this.showSnackbar({
+              this.createSnackbar({
                 text: this.$tr('copiedItems'),
                 actionText: this.$tr('undo'),
+                autofocus: true,
                 actionCallback: () => changeTracker.revert(),
-              }).then(() => changeTracker.cleanUp());
+                hideCallback: () => changeTracker.cleanUp(),
+                announce: true,
+              });
             } else {
               this.clearSnackbar();
               changeTracker.cleanUp();

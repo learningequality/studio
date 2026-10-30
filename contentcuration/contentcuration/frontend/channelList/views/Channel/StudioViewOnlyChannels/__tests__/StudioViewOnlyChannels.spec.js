@@ -59,9 +59,7 @@ function createStore() {
         currentUser: { id: 'user-id' },
       },
     },
-    actions: {
-      showSnackbarSimple: jest.fn(),
-    },
+    actions: {},
     modules: {
       channel: {
         namespaced: true,

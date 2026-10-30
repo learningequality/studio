@@ -151,6 +151,7 @@
 <script>
 
   import { ref, set } from 'vue';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ChannelOrganization from './ChannelOrganization.vue';
   import ChannelThumbnail from './ChannelThumbnail';
@@ -179,7 +180,11 @@
     },
     mixins: [routerMixin],
     setup() {
-      return { migrationBlocked: ref(false) };
+      const { createSnackbar } = useKSnackbar();
+      return {
+        createSnackbar,
+        migrationBlocked: ref(false),
+      };
     },
     props: {
       channelId: {
@@ -364,7 +369,10 @@
 
               window.location.replace(window.Urls.channel(newChannelId));
             } else {
-              this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
+              this.createSnackbar({
+                text: this.$tr('changesSaved'),
+                announce: true,
+              });
               this.header = this.channel.name;
             }
             this.isDisable = false;

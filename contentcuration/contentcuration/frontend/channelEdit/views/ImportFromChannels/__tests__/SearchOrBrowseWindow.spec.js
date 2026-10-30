@@ -37,7 +37,6 @@ describe('SearchOrBrowseWindow', () => {
 
   beforeEach(() => {
     actions = {
-      showSnackbar: jest.fn(),
       'clipboard/copy': jest.fn().mockResolvedValue(),
       'contentNode/loadPublicContentNode': jest.fn().mockImplementation(({ id }) =>
         Promise.resolve({
@@ -128,9 +127,7 @@ describe('SearchOrBrowseWindow', () => {
           },
         },
       },
-      actions: {
-        showSnackbar: actions.showSnackbar,
-      },
+      actions: {},
       getters: {},
     });
 

@@ -1,30 +1,27 @@
 import { render, fireEvent, screen } from '@testing-library/vue';
 import VueRouter from 'vue-router';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import StudioCopyToken from '../index.vue';
 
 function makeWrapper(props = {}) {
-  const mockStore = {
-    dispatch: jest.fn(),
-  };
-
-  return {
-    ...render(StudioCopyToken, {
-      props: {
-        token: 'testtoken',
-        ...props,
-      },
-      routes: new VueRouter({}),
-      mocks: {
-        $store: mockStore,
-        $tr: key => key,
-      },
-    }),
-    mockStore,
-  };
+  return render(StudioCopyToken, {
+    props: {
+      token: 'testtoken',
+      ...props,
+    },
+    routes: new VueRouter({}),
+    mocks: {
+      $tr: key => key,
+    },
+  });
 }
 
 describe('StudioCopyToken', () => {
   let originalClipboard;
+
+  beforeEach(() => {
+    useKSnackbar().clearSnackbar();
+  });
 
   beforeAll(() => {
     originalClipboard = navigator.clipboard;
@@ -68,10 +65,10 @@ describe('StudioCopyToken', () => {
     Object.assign(navigator, {
       clipboard: { writeText },
     });
-    const { mockStore } = makeWrapper();
+    makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbar', { text: 'copiedTokenId' });
+    expect(useKSnackbar().snackbarOptions.value.text).toBe('copiedTokenId');
   });
 
   it('dispatches snackbar on failed copy', async () => {
@@ -79,10 +76,10 @@ describe('StudioCopyToken', () => {
     Object.assign(navigator, {
       clipboard: { writeText },
     });
-    const { mockStore } = makeWrapper();
+    makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbar', { text: 'copyFailed' });
+    expect(useKSnackbar().snackbarOptions.value.text).toBe('copyFailed');
   });
 
   it('renders the copy button', () => {

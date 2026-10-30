@@ -36,15 +36,15 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { InvitationShareModes } from '../../constants';
   import { getApiErrorMessage } from '../../utils';
   import { organizationStrings } from 'shared/strings/organizationStrings';
-  import useSnackbar from 'shared/composables/useSnackbar';
 
   export default {
     name: 'InviteOrganizationUserForm',
     setup() {
-      const { createSnackbar } = useSnackbar();
+      const { createSnackbar } = useKSnackbar();
       return { createSnackbar, organizationStrings };
     },
     props: {
@@ -93,10 +93,13 @@
           .then(() => {
             this.email = '';
             this.role = this.roleOptions[0];
-            this.createSnackbar(organizationStrings.invitationSent$());
+            this.createSnackbar({ text: organizationStrings.invitationSent$(), announce: true });
           })
           .catch(error => {
-            this.createSnackbar(getApiErrorMessage(error, organizationStrings.invitationError$()));
+            this.createSnackbar({
+              text: getApiErrorMessage(error, organizationStrings.invitationError$()),
+              announce: true,
+            });
           })
           .finally(() => {
             this.sending = false;

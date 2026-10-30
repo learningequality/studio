@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import Account from '../Account/index';
 
 function makeWrapper(currentUser = {}) {
@@ -32,6 +33,7 @@ function makeWrapper(currentUser = {}) {
 describe('account tab', () => {
   let wrapper;
   beforeEach(() => {
+    useKSnackbar().clearSnackbar();
     wrapper = makeWrapper();
   });
 
@@ -110,10 +112,10 @@ describe('account tab', () => {
       expect(notice.exists()).toBe(false);
     });
 
-    it(`should call 'showSnackbar' with a correct message`, () => {
-      expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith('showSnackbar', {
-        text: 'Unable to export data. Please try again.',
-      });
+    it(`should show snackbar with a correct message`, () => {
+      expect(useKSnackbar().snackbarOptions.value.text).toBe(
+        'Unable to export data. Please try again.',
+      );
     });
   });
 });

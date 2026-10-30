@@ -1,5 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { Store } from 'vuex';
+import flushPromises from 'flush-promises';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import EditAudienceModal from '../EditAudienceModal';
 import { ResourcesNeededTypes } from 'shared/constants';
 import { RolesNames } from 'shared/leUtils/Roles';
@@ -30,7 +32,7 @@ const isForBeginnersChecked = wrapper => {
 };
 
 const checkForBeginners = wrapper => {
-  wrapper.find('[data-test="for-beginners-checkbox"] input').setChecked(true);
+  wrapper.findComponent('[data-test="for-beginners-checkbox"]').vm.$emit('change', true);
 };
 
 const makeWrapper = nodeIds => {
@@ -45,6 +47,7 @@ const makeWrapper = nodeIds => {
 
 describe('EditAudienceModal', () => {
   beforeEach(() => {
+    useKSnackbar().clearSnackbar();
     nodes = {
       node1: { id: 'node1' },
       node2: { id: 'node2' },
@@ -52,9 +55,7 @@ describe('EditAudienceModal', () => {
     contentNodeActions = {
       updateContentNode: jest.fn(),
     };
-    generalActions = {
-      showSnackbarSimple: jest.fn(),
-    };
+    generalActions = {};
     store = new Store({
       actions: generalActions,
       modules: {
@@ -189,70 +190,65 @@ describe('EditAudienceModal', () => {
     expect(resourcesCounter.text()).toContain('2');
   });
 
-  test('should call updateContentNode with the right rol on success submit', () => {
+  test('should call updateContentNode with the right rol on success submit', async () => {
     const wrapper = makeWrapper(['node1']);
 
     selectRole(wrapper, RolesNames.COACH);
-    wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('submit');
+    wrapper.findComponent({ name: 'KModal' }).vm.$emit('submit');
+    await flushPromises();
 
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+    expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
         id: 'node1',
         role_visibility: RolesNames.COACH,
-      });
-      cancelAnimationFrame(animationFrameId);
-    });
+      }),
+    );
   });
 
-  test('should call updateContentNode with the need for beginners set on success submit', () => {
+  test('should call updateContentNode with the need for beginners set on success submit', async () => {
     const wrapper = makeWrapper(['node1']);
 
     checkForBeginners(wrapper);
-    wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('submit');
+    wrapper.findComponent({ name: 'KModal' }).vm.$emit('submit');
+    await flushPromises();
 
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+    expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
         id: 'node1',
         learner_needs: {
           [ResourcesNeededTypes.FOR_BEGINNERS]: true,
         },
-      });
-      cancelAnimationFrame(animationFrameId);
-    });
+      }),
+    );
   });
 
-  test('should emit close event on success submit', () => {
+  test('should emit close event on success submit', async () => {
     const wrapper = makeWrapper(['node1']);
 
     selectRole(wrapper, RolesNames.COACH);
-    wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('submit');
+    wrapper.findComponent({ name: 'KModal' }).vm.$emit('submit');
+    await flushPromises();
 
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(wrapper.emitted('close')).toBeTruthy();
-      cancelAnimationFrame(animationFrameId);
-    });
+    expect(wrapper.emitted('close')).toBeTruthy();
   });
 
   test('should emit close event on cancel', () => {
     const wrapper = makeWrapper(['node1']);
 
-    wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('cancel');
+    wrapper.findComponent({ name: 'KModal' }).vm.$emit('cancel');
 
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(wrapper.emitted('close')).toBeTruthy();
-      cancelAnimationFrame(animationFrameId);
-    });
+    expect(wrapper.emitted('close')).toBeTruthy();
   });
 
-  test('should show a confirmation snackbar on success submit', () => {
+  test('should show a confirmation snackbar on success submit', async () => {
     const wrapper = makeWrapper(['node1']);
 
     selectRole(wrapper, RolesNames.COACH);
-    wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('submit');
+    wrapper.findComponent({ name: 'KModal' }).vm.$emit('submit');
+    await flushPromises();
 
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
-      cancelAnimationFrame(animationFrameId);
-    });
+    expect(useKSnackbar().snackbarOptions.value.text).toBe('Changes saved');
   });
 });

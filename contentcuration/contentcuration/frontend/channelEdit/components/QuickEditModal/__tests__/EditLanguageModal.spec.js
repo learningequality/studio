@@ -1,3 +1,4 @@
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { mount } from '@vue/test-utils';
 import EditLanguageModal from '../EditLanguageModal';
 import { factory } from '../../../store';
@@ -33,15 +34,9 @@ function makeWrapper(nodeIds) {
   const updateContentNodeDescendants = jest.spyOn(wrapper.vm, 'updateContentNodeDescendants');
   updateContentNodeDescendants.mockResolvedValue(null);
 
-  const showSnackbarSimple = jest.spyOn(wrapper.vm, 'showSnackbarSimple');
-  showSnackbarSimple.mockResolvedValue(null);
-
   const handleSave = jest.spyOn(wrapper.vm, 'handleSave');
 
-  return [
-    wrapper,
-    { updateContentNode, updateContentNodeDescendants, showSnackbarSimple, handleSave },
-  ];
+  return [wrapper, { updateContentNode, updateContentNodeDescendants, handleSave }];
 }
 
 async function chooseLanguage(wrapper, language) {
@@ -52,6 +47,10 @@ async function chooseLanguage(wrapper, language) {
 
 describe('EditLanguageModal', () => {
   let wrapper, mocks;
+
+  beforeEach(() => {
+    useKSnackbar().clearSnackbar();
+  });
 
   afterEach(() => {
     if (wrapper) wrapper.destroy();
@@ -216,7 +215,7 @@ describe('EditLanguageModal', () => {
     await wrapper.vm.handleSave();
     await wrapper.vm.$nextTick();
 
-    expect(mocks.showSnackbarSimple).toHaveBeenCalledWith(expect.anything());
+    expect(useKSnackbar().snackbarOptions.value.text).toBe('Changes saved');
   });
 
   describe('topic nodes present', () => {

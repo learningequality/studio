@@ -219,6 +219,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import ClipboardChip from '../../components/ClipboardChip';
   import CommunityLibraryStatusButton from '../../components/CommunityLibraryStatusButton.vue';
   import { RouteNames } from '../../constants';
@@ -236,6 +237,10 @@
       CommunityLibraryStatusButton,
     },
     mixins: [fileSizeMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       value: {
         type: Array,
@@ -296,7 +301,10 @@
           id: this.channelId,
           demo_server_url: this.channel.demo_server_url,
         }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', 'Demo URL saved');
+          this.createSnackbar({
+            text: 'Demo URL saved',
+            announce: true,
+          });
         });
       },
       saveSourceUrl() {
@@ -304,7 +312,10 @@
           id: this.channelId,
           source_url: this.channel.source_url,
         }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', 'Source URL saved');
+          this.createSnackbar({
+            text: 'Source URL saved',
+            announce: true,
+          });
         });
       },
       onCommunityLibraryButtonClick() {

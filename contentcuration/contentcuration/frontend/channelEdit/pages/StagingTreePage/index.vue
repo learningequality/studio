@@ -347,6 +347,7 @@
 <script>
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
   import ResourceDrawer from '../../components/ResourceDrawer';
   import StudioTree from '../../components/StudioTree/StudioTree';
@@ -385,6 +386,10 @@
       OfflineText,
     },
     mixins: [fileSizeMixin, titleMixin, routerMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeId: {
         type: String,
@@ -553,7 +558,7 @@
       this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('deployChannel')));
     },
     methods: {
-      ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
+      ...mapActions(['addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('currentChannel', [
         'loadCurrentChannelStagingDiff',
         'deployCurrentChannel',
@@ -640,8 +645,9 @@
               nodeId: rootId,
             },
           });
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('channelDeployed'),
+            announce: true,
           });
         });
 
@@ -654,15 +660,16 @@
         this.publishStagingChannel()
           .then(() => {
             this.isPublishingDraft = false;
-            this.showSnackbar({
+            this.createSnackbar({
               text: this.$tr('draftPublished'),
+              announce: true,
             });
           })
           .catch(error => {
             this.isPublishingDraft = false;
-            this.showSnackbar({
+            this.createSnackbar({
               text: error.response?.data?.message || this.$tr('publishDraftError'),
-              color: 'error',
+              announce: true,
             });
           });
       },

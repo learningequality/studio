@@ -66,14 +66,14 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { getApiErrorMessage } from '../../utils';
   import { organizationStrings } from 'shared/strings/organizationStrings';
-  import useSnackbar from 'shared/composables/useSnackbar';
 
   export default {
     name: 'OrganizationDetailsTab',
     setup() {
-      const { createSnackbar } = useSnackbar();
+      const { createSnackbar } = useKSnackbar();
       return { createSnackbar, organizationStrings };
     },
     props: {
@@ -130,14 +130,20 @@
         })
           .then(organization => {
             if (this.isNew) {
-              this.createSnackbar(organizationStrings.organizationCreated$());
+              this.createSnackbar({
+                text: organizationStrings.organizationCreated$(),
+                announce: true,
+              });
               this.$emit('created', organization.id);
             } else {
-              this.createSnackbar(organizationStrings.changesSaved$());
+              this.createSnackbar({ text: organizationStrings.changesSaved$(), announce: true });
             }
           })
           .catch(error => {
-            this.createSnackbar(getApiErrorMessage(error, organizationStrings.saveError$()));
+            this.createSnackbar({
+              text: getApiErrorMessage(error, organizationStrings.saveError$()),
+              announce: true,
+            });
           })
           .finally(() => {
             this.saving = false;

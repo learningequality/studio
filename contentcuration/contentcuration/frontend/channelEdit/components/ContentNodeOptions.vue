@@ -41,6 +41,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { RouteNames, TabNames, QuickEditModals } from '../constants';
   import MoveModal from './move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
@@ -50,6 +51,10 @@
     name: 'ContentNodeOptions',
     components: {
       MoveModal,
+    },
+    setup() {
+      const { createSnackbar, clearSnackbar } = useKSnackbar();
+      return { createSnackbar, clearSnackbar };
     },
     props: {
       nodeId: {
@@ -230,7 +235,6 @@
       this.lastFocus && this.lastFocus.focus();
     },
     methods: {
-      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions('contentNode', [
         'createContentNode',
         'moveContentNodes',
@@ -323,11 +327,14 @@
         const redirect = this.getRemoveNodeRedirect();
         return this.moveContentNodes({ id__in, parent: this.trashId, inherit: false }).then(() => {
           redirect();
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('removedItems'),
             actionText: this.$tr('undo'),
+            autofocus: true,
             actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            hideCallback: () => changeTracker.cleanUp(),
+            announce: true,
+          });
         });
       }),
       copyToClipboard: withChangeTracker(function (changeTracker) {
@@ -335,20 +342,23 @@
 
         return this.copy({ node_id: this.node.node_id, channel_id: this.node.channel_id }).then(
           () => {
-            this.showSnackbar({
+            this.createSnackbar({
               text: this.$tr('copiedToClipboardSnackbar'),
               // TODO: implement revert functionality for clipboard
               // actionText: this.$tr('undo'),
               // actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+              hideCallback: () => changeTracker.cleanUp(),
+              announce: true,
+            });
           },
         );
       }),
       duplicateNode: withChangeTracker(async function (nodeId, changeTracker) {
         this.trackAction('Copy');
-        this.showSnackbar({
-          duration: null,
+        this.createSnackbar({
+          autoDismiss: false,
           text: this.$tr('creatingCopies'),
+          announce: true,
           // TODO: determine how to cancel copying while it's in progress,
           // TODO: if that's something we want
           // actionText: this.$tr('cancel'),
@@ -365,11 +375,14 @@
           startingRev: changeTracker._startingRev,
         })
           .then(() => {
-            this.showSnackbar({
+            this.createSnackbar({
               text: this.$tr('copiedSnackbar'),
               actionText: this.$tr('undo'),
+              autofocus: true,
               actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+              hideCallback: () => changeTracker.cleanUp(),
+              announce: true,
+            });
           })
           .catch(() => {
             this.clearSnackbar();

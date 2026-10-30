@@ -64,10 +64,10 @@
 <script>
 
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { OrganizationRoles, InvitationShareModes } from '../../constants';
   import { getApiErrorMessage } from '../../utils';
   import { organizationStrings } from 'shared/strings/organizationStrings';
-  import useSnackbar from 'shared/composables/useSnackbar';
 
   const roleLabels = {
     [OrganizationRoles.ADMIN]: 'adminRole',
@@ -91,7 +91,7 @@
     name: 'OrganizationUsersTable',
     setup() {
       const { show } = useKShow();
-      const { createSnackbar } = useSnackbar();
+      const { createSnackbar } = useKSnackbar();
       return { show, createSnackbar, organizationStrings };
     },
     props: {
@@ -184,7 +184,10 @@
           if (option.value === 'resend') {
             this.resendInvitation(target.id)
               .then(() => {
-                this.createSnackbar(organizationStrings.invitationResent$());
+                this.createSnackbar({
+                  text: organizationStrings.invitationResent$(),
+                  announce: true,
+                });
               })
               .catch(error => {
                 this.handleMembershipError(error);
@@ -207,7 +210,7 @@
         this.closeTarget = null;
         this.closeMemberRole(target.id)
           .then(() => {
-            this.createSnackbar(organizationStrings.roleClosed$());
+            this.createSnackbar({ text: organizationStrings.roleClosed$(), announce: true });
           })
           .catch(error => {
             this.handleMembershipError(error);
@@ -218,16 +221,17 @@
         this.revokeTarget = null;
         this.revokeInvitation(target.id)
           .then(() => {
-            this.createSnackbar(organizationStrings.invitationRevoked$());
+            this.createSnackbar({ text: organizationStrings.invitationRevoked$(), announce: true });
           })
           .catch(error => {
             this.handleMembershipError(error);
           });
       },
       handleMembershipError(error) {
-        this.createSnackbar(
-          getApiErrorMessage(error, organizationStrings.genericMembershipError$()),
-        );
+        this.createSnackbar({
+          text: getApiErrorMessage(error, organizationStrings.genericMembershipError$()),
+          announce: true,
+        });
       },
     },
   };
