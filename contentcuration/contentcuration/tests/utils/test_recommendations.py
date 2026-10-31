@@ -4,6 +4,7 @@ import uuid
 from automation.models import RecommendationsCache
 from automation.utils.appnexus import errors
 from automation.utils.appnexus.base import BackendResponse
+from automation.utils.appnexus.base import CompositeBackend
 from django.test import TestCase
 from kolibri_public.models import ContentNode as PublicContentNode
 from mock import MagicMock
@@ -550,6 +551,8 @@ class RecommendationsBackendFactoryTestCases(TestCase):
 
     @patch("contentcuration.utils.recommendations.settings")
     def test_create_backend_with_url_no_scheme(self, mock_settings):
+        mock_settings.SITE_ID = "production"
+        mock_settings.PRODUCTION_SITE_ID = "production"
         mock_settings.CURRICULUM_AUTOMATION_API_URL = "api.example.com"
         backend = self.factory.create_backend()
 
@@ -559,6 +562,8 @@ class RecommendationsBackendFactoryTestCases(TestCase):
 
     @patch("contentcuration.utils.recommendations.settings")
     def test_create_backend_with_url_with_scheme(self, mock_settings):
+        mock_settings.SITE_ID = "production"
+        mock_settings.PRODUCTION_SITE_ID = "production"
         mock_settings.CURRICULUM_AUTOMATION_API_URL = "https://api.example.com"
         backend = self.factory.create_backend()
 
@@ -568,6 +573,8 @@ class RecommendationsBackendFactoryTestCases(TestCase):
 
     @patch("contentcuration.utils.recommendations.settings")
     def test_create_backend_with_empty_url(self, mock_settings):
+        mock_settings.SITE_ID = "production"
+        mock_settings.PRODUCTION_SITE_ID = "production"
         mock_settings.CURRICULUM_AUTOMATION_API_URL = ""
         backend = self.factory.create_backend()
 
@@ -577,9 +584,21 @@ class RecommendationsBackendFactoryTestCases(TestCase):
 
     @patch("contentcuration.utils.recommendations.settings")
     def test_create_backend_with_no_url(self, mock_settings):
+        mock_settings.SITE_ID = "production"
+        mock_settings.PRODUCTION_SITE_ID = "production"
         mock_settings.CURRICULUM_AUTOMATION_API_URL = None
         backend = self.factory.create_backend()
 
         self.assertIsInstance(backend, Recommendations)
         self.assertEqual(backend.base_url, None)
         self.assertEqual(backend.connect_endpoint, "/connect")
+
+    @patch("contentcuration.utils.recommendations.settings")
+    def test_create_backend_to_unstable_url(self, mock_settings):
+        mock_settings.CURRICULUM_AUTOMATION_API_URL = "http://api.example.com:8080"
+        mock_settings.SITE_ID = "unstable"
+        mock_settings.PRODUCTION_SITE_ID = "production"
+
+        backend = self.factory.create_backend()
+        self.assertIsInstance(backend, CompositeBackend)
+        self.assertEqual(backend.prefixes, ["unstable", "stable"])
