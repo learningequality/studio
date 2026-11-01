@@ -190,7 +190,7 @@ describe('CategoryOptions', () => {
       });
     });
 
-    it('preserves a category only partially applied across the edited nodes', async () => {
+    it('does not carry over a category that is only partially applied across the edited nodes', async () => {
       const { emitted } = renderComponent({
         expanded: true,
         value: { [MUSIC]: [NODE_1] },
@@ -199,10 +199,7 @@ describe('CategoryOptions', () => {
 
       await userEvent.click(await screen.findByRole('option', { name: DANCE_LABEL }));
 
-      expect(lastInput(emitted)).toEqual({
-        [MUSIC]: [NODE_1],
-        [DANCE]: [NODE_1, NODE_2],
-      });
+      expect(lastInput(emitted)).toEqual({ [DANCE]: [NODE_1, NODE_2] });
     });
 
     it('removes a category when its chip close button is clicked', async () => {
@@ -233,7 +230,7 @@ describe('CategoryOptions', () => {
       expect(lastInput(emitted)).toEqual({});
     });
 
-    it('preserves an unrelated partial category when the last full chip is removed', async () => {
+    it('clears an unrelated partial category too when the last full chip is removed', async () => {
       const { emitted } = renderComponent({
         expanded: true,
         value: { [MUSIC]: [NODE_1, NODE_2], [DANCE]: [NODE_1] },
@@ -244,7 +241,7 @@ describe('CategoryOptions', () => {
         screen.getByRole('button', { name: removeCategory$({ label: MUSIC_PATH }) }),
       );
 
-      expect(lastInput(emitted)).toEqual({ [DANCE]: [NODE_1] });
+      expect(lastInput(emitted)).toEqual({});
     });
 
     it('emits an empty object when the selection is cleared', async () => {

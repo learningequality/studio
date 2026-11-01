@@ -9,7 +9,6 @@
       itemText="text"
       :label="translateMetadataString('category')"
       :autoPromoteParent="false"
-      :listMaxHeight="expanded ? '250px' : undefined"
       clearable
       :noResultsText="$tr('noCategoryFoundText')"
       :messages="messages"
@@ -105,35 +104,14 @@
         return createMultiSelectMessages({
           clearText: clearAllAction$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          // Clear-all and removing the last fully-applied chip both emit an empty
-          // array from KMultiSelect's `input` event, so the two can't be told apart
-          // there. `cleared` is the only callback KMultiSelect invokes specifically
-          // for Clear-all, so it's the one place this reset can live safely.
-          cleared: () => {
-            this.selected = {};
-            return this.$tr('allCategoriesCleared');
-          },
+          cleared: () => this.$tr('allCategoriesCleared'),
           partiallySelected: true,
         });
       },
     },
     methods: {
       onKMultiSelectInput(newValues) {
-        const newValueIds = new Set(newValues);
-        const removedIds = Object.keys(this.selected).filter(
-          key => this.selected[key].length === this.nodeIds.length && !newValueIds.has(key),
-        );
-        const partial = Object.fromEntries(
-          Object.entries(this.selected).filter(
-            ([key, selectedNodeIds]) =>
-              selectedNodeIds.length !== this.nodeIds.length &&
-              !removedIds.some(removedId => key.startsWith(removedId)),
-          ),
-        );
-        this.selected = {
-          ...partial,
-          ...Object.fromEntries(newValues.map(value => [value, this.nodeIds])),
-        };
+        this.selected = Object.fromEntries(newValues.map(value => [value, this.nodeIds]));
       },
       tooltipText(optionId) {
         const option = this.categoriesList.find(option => option.value === optionId);
