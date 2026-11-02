@@ -14,7 +14,6 @@
     :appearanceOverrides="{ maxWidth: fullWidth ? '100%' : '500px' }"
     :messages="messages"
     clearable
-    @blur="touched = true"
   />
 
 </template>
@@ -59,7 +58,7 @@
     },
     data() {
       return {
-        touched: false,
+        validated: false,
       };
     },
     computed: {
@@ -87,7 +86,7 @@
       },
       invalid() {
         const hasSelection = this.multiple ? this.locations.length > 0 : Boolean(this.locations);
-        return this.required && this.touched && !hasSelection;
+        return this.required && this.validated && !hasSelection;
       },
       messages() {
         const {
@@ -103,6 +102,15 @@
           cleared: ({ label, count }) =>
             this.multiple ? selectionsClearedLabel$({ count }) : optionRemovedLabel$({ label }),
         });
+      },
+    },
+    methods: {
+      /**
+       * @public
+       */
+      validate() {
+        this.validated = true;
+        return this.invalid ? this.$tr('locationRequiredMessage') : '';
       },
     },
     $trs: {
