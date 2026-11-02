@@ -41,7 +41,7 @@ describe('ForgotPassword', () => {
     expect(screen.getByText('Reset your password')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
-    expect(screen.queryByTestId('error-banner')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('should not submit form with empty email', async () => {
@@ -106,7 +106,7 @@ describe('ForgotPassword', () => {
     renderComponent();
     await fireEvent.update(screen.getByLabelText(/email/i), 'test@test.com');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(await screen.findByTestId('error-banner')).toHaveTextContent(
+    expect(await screen.findByRole('alert')).toHaveTextContent(
       ForgotPassword.$trs.forgotPasswordFailed,
     );
   });

@@ -11,9 +11,9 @@
     >
       <StudioBanner
         v-if="error"
+        role="alert"
         error
         class="banner"
-        data-testid="error-banner"
       >
         {{ $tr('forgotPasswordFailed') }}
       </StudioBanner>
