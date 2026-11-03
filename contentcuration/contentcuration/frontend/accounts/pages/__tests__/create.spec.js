@@ -3,6 +3,16 @@ import Vuex from 'vuex';
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import Create from '../Create';
+import CountryField from 'shared/views/form/CountryField';
+import { createTranslator } from 'shared/i18n';
+
+const { sourcePlaceholder$, websiteSourceOption$, registrationFailedOffline$ } = createTranslator(
+  'Create',
+  Create.$trs,
+);
+const { locationLabel$ } = createTranslator('CountryField', CountryField.$trs);
+
+const KENYA = 'Kenya';
 
 const routes = [
   { path: '/', name: 'Main' },
@@ -31,8 +41,19 @@ const makeStore = ({ offline = false } = {}) =>
         online: !offline,
       },
     },
-    actions: {
-      register: mockRegisterAction,
+    modules: {
+      account: {
+        namespaced: true,
+        actions: {
+          register: mockRegisterAction,
+        },
+      },
+      policies: {
+        namespaced: true,
+        getters: {
+          getPolicyAcceptedData: () => () => ({}),
+        },
+      },
     },
   });
 
@@ -102,20 +123,7 @@ describe('Create account page', () => {
     });
   });
 
-  // NOTE:
-  // Full form submission tests are intentionally skipped here.
-  //
-  // The "locations" field uses CountryField, which internally uses VAutocomplete
-  // (a Vuetify component). VAutocomplete does not reliably update its v-model
-  // state when interacted with via Vue Testing Library's userEvent APIs, which
-  // prevents a fully user-centric submission flow from being exercised.
-  //
-  // The "source" field has been migrated to KSelect (KDS) and no longer has
-  // this limitation, but "locations" remains the blocker.
-  //
-  // These tests will be re-enabled once CountryField is migrated away from
-  // VAutocomplete as part of the ongoing Vuetify removal effort.
-  it.skip('creates an account when the user submits valid information', async () => {
+  it('creates an account when the user submits valid information', async () => {
     await renderComponent();
 
     await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
@@ -125,6 +133,12 @@ describe('Create account page', () => {
     await userEvent.type(screen.getByLabelText(/confirm password/i), 'tester123');
 
     await userEvent.click(screen.getByLabelText(/tagging content sources/i));
+
+    await userEvent.type(screen.getByRole('combobox', { name: locationLabel$() }), KENYA);
+    await userEvent.click(await screen.findByRole('option', { name: KENYA }));
+
+    await userEvent.click(screen.getByText(sourcePlaceholder$()));
+    await userEvent.click(await screen.findByText(websiteSourceOption$()));
 
     await userEvent.click(screen.getByLabelText(/i have read and agree to terms of service/i));
 
@@ -137,27 +151,17 @@ describe('Create account page', () => {
     await userEvent.click(finishButton);
 
     await waitFor(() => {
-      expect(mockRegisterAction).toHaveBeenCalled();
+      expect(mockRegisterAction).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ locations: KENYA }),
+      );
     });
   });
 
-  // Skipped for the same reason as above — CountryField (VAutocomplete) blocker
-  it.skip('shows an offline error when the user is offline', async () => {
+  it('shows an offline error and disables Finish when the user is offline', async () => {
     await renderComponent({ offline: true });
 
-    await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
-    await userEvent.type(screen.getByLabelText(/last name/i), 'User');
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'tester123');
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'tester123');
-
-    await userEvent.click(screen.getByLabelText(/tagging content sources/i));
-
-    await userEvent.click(screen.getByLabelText(/i have read and agree to terms of service/i));
-
-    const finishButton = screen.getByRole('button', { name: /finish/i });
-    await userEvent.click(finishButton);
-
-    expect(await screen.findByText(/offline/i)).toBeInTheDocument();
+    expect(screen.getByTestId('studio-banner')).toHaveTextContent(registrationFailedOffline$());
+    expect(screen.getByRole('button', { name: /finish/i })).toBeDisabled();
   });
 });

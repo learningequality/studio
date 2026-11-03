@@ -102,8 +102,12 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: '{count, plural, one {# language selected} other {# languages selected}}',
     context: 'Announced with the number of languages currently selected in a language picker',
   },
-  languageSelectionsClearedLabel: {
+  countryItemsSelectedLabel: {
+    message: '{count, plural, one {# country selected} other {# countries selected}}',
+    context: 'Announced with the number of countries currently selected in a country picker',
+  },
+  selectionsClearedLabel: {
     message: '{count, plural, one {Cleared # selection} other {Cleared # selections}}',
-    context: 'Announced when all selected languages are cleared from a language picker',
+    context: 'Announced when all selected options are cleared from a multiple selection dropdown',
   },
 });
