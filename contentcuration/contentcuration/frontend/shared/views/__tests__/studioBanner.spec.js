@@ -5,7 +5,7 @@ import StudioBanner from '../StudioBanner.vue';
 const sampleErrorMessage = 'This is an error message';
 
 describe('StudioBanner', () => {
-  test('render with defaults values', () => {
+  it('render with defaults values', () => {
     render(StudioBanner, {
       props: {
         error: false,
@@ -19,7 +19,7 @@ describe('StudioBanner', () => {
     expect(banner).toBeInTheDocument();
   });
 
-  test('render with error true', () => {
+  it('render with error true', () => {
     render(StudioBanner, {
       props: {
         error: true,

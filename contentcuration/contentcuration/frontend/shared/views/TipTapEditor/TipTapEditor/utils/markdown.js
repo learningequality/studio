@@ -1,5 +1,4 @@
 // Contains utilities for handling Markdown content bidirectional conversion in TipTap editor.
-// eslint-disable-next-line import/namespace
 import { marked } from 'marked';
 import { storageUrl } from '../../../../vuex/file/utils';
 

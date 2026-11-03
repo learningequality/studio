@@ -191,8 +191,8 @@
   import { mapGetters } from 'vuex';
 
   import { TabNames } from '../../constants';
-  import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
-  import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
+  import AssessmentTab from '../AssessmentTab/AssessmentTab';
+  import RelatedResourcesTab from '../RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ToolBar from 'shared/views/ToolBar';

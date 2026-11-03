@@ -119,14 +119,14 @@ describe('EditBooleanMapModal', () => {
     });
   });
 
-  test('smoke test', () => {
+  it('smoke test', () => {
     const wrapper = makeWrapper({ nodeIds: ['node1'] });
     expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected options on first render', () => {
     describe('Options checkboxes', () => {
-      test('no option should be selected if a single node does not have options set', () => {
+      it('no option should be selected if a single node does not have options set', () => {
         const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
         const optionsValues = getOptionsValues(wrapper);
@@ -135,7 +135,7 @@ describe('EditBooleanMapModal', () => {
         ).toBeTruthy();
       });
 
-      test('no option should be selected if multiple nodes dont have options set', () => {
+      it('no option should be selected if multiple nodes dont have options set', () => {
         const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
 
         const optionsValues = getOptionsValues(wrapper);
@@ -144,7 +144,7 @@ describe('EditBooleanMapModal', () => {
         ).toBeTruthy();
       });
 
-      test('checkbox options should be selected depending on the options set for a single node - categories', () => {
+      it('checkbox options should be selected depending on the options set for a single node - categories', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
           [Categories.FOUNDATIONS]: true,
@@ -165,7 +165,7 @@ describe('EditBooleanMapModal', () => {
         expect(foundationsValue).toBe(CheckboxValue.CHECKED);
       });
 
-      test('checkbox option should be checked if all nodes have the same option set', () => {
+      it('checkbox option should be checked if all nodes have the same option set', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
           [Categories.FOUNDATIONS]: true,
@@ -188,7 +188,7 @@ describe('EditBooleanMapModal', () => {
     });
   });
 
-  test('should render the message of the number of resources selected', () => {
+  it('should render the message of the number of resources selected', () => {
     const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
 
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
@@ -196,7 +196,7 @@ describe('EditBooleanMapModal', () => {
     expect(resourcesCounter.text()).toContain('2');
   });
 
-  test('should render the message of the number of resources selected - 2', () => {
+  it('should render the message of the number of resources selected - 2', () => {
     const wrapper = makeWrapper({ nodeIds: ['node1', 'node2', 'node3', 'node4'] });
 
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
@@ -205,7 +205,7 @@ describe('EditBooleanMapModal', () => {
   });
 
   describe('Submit', () => {
-    test('should call updateContentNode with the selected options on an empty boolean map when success submit', async () => {
+    it('should call updateContentNode with the selected options on an empty boolean map when success submit', async () => {
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
 
       const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
@@ -230,14 +230,14 @@ describe('EditBooleanMapModal', () => {
       });
     });
 
-    test('should emit close event on success submit', async () => {
+    it('should emit close event on success submit', async () => {
       const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
       await wrapper.vm.handleSave();
       expect(wrapper.emitted('close')).toBeTruthy();
     });
 
-    test('should show a confirmation snackbar on success submit', async () => {
+    it('should show a confirmation snackbar on success submit', async () => {
       const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
       await wrapper.vm.handleSave();
@@ -245,7 +245,7 @@ describe('EditBooleanMapModal', () => {
     });
   });
 
-  test('should emit close event on cancel', () => {
+  it('should emit close event on cancel', () => {
     const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
     wrapper.vm.close();
@@ -253,7 +253,7 @@ describe('EditBooleanMapModal', () => {
   });
 
   describe('topic nodes present', () => {
-    test('should display the checkbox to apply change to descendants if a topic is present and is descendants updatable', () => {
+    it('should display the checkbox to apply change to descendants if a topic is present and is descendants updatable', () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], isDescendantsUpdatable: true });
@@ -261,13 +261,13 @@ describe('EditBooleanMapModal', () => {
       expect(wrapper.find('[data-test="update-descendants-checkbox"]').exists()).toBeTruthy();
     });
 
-    test('should not display the checkbox to apply change to descendants if a topic is not present even though its descendants updatable', () => {
+    it('should not display the checkbox to apply change to descendants if a topic is not present even though its descendants updatable', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], isDescendantsUpdatable: true });
 
       expect(wrapper.find('[data-test="update-descendants-checkbox"]').exists()).toBeFalsy();
     });
 
-    test('should not display the checkbox to apply change to descendants if is not descendants updatable', () => {
+    it('should not display the checkbox to apply change to descendants if is not descendants updatable', () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], isDescendantsUpdatable: false });
@@ -275,7 +275,7 @@ describe('EditBooleanMapModal', () => {
       expect(wrapper.find('[data-test="update-descendants-checkbox"]').exists()).toBeFalsy();
     });
 
-    test('should call updateContentNode on success submit if the user uncheck the update descendants checkbox', async () => {
+    it('should call updateContentNode on success submit if the user uncheck the update descendants checkbox', async () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1'], isDescendantsUpdatable: true });
@@ -288,7 +288,7 @@ describe('EditBooleanMapModal', () => {
       });
     });
 
-    test('should call updateContentNodeDescendants on success submit if the user does not uncheck the update descendants checkbox', async () => {
+    it('should call updateContentNodeDescendants on success submit if the user does not uncheck the update descendants checkbox', async () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1'], isDescendantsUpdatable: true });
@@ -306,13 +306,13 @@ describe('EditBooleanMapModal', () => {
 
   describe('mixed options that are not selected across all nodes', () => {
     describe('render mixed options message', () => {
-      test('should not render mixed options message if there are not mixed options across selected nodes', () => {
+      it('should not render mixed options message if there are not mixed options across selected nodes', () => {
         const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
 
         expect(wrapper.find('[data-test="mixed-categories-message"]').exists()).toBeFalsy();
       });
 
-      test('should not render mixed options message if there are not mixed options across selected nodes - 2', () => {
+      it('should not render mixed options message if there are not mixed options across selected nodes - 2', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
           [Categories.FOUNDATIONS]: true,
@@ -326,7 +326,7 @@ describe('EditBooleanMapModal', () => {
         expect(wrapper.find('[data-test="mixed-categories-message"]').exists()).toBeFalsy();
       });
 
-      test('should render mixed options message if there are mixed options across selected nodes', () => {
+      it('should render mixed options message if there are mixed options across selected nodes', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
         };
@@ -336,7 +336,7 @@ describe('EditBooleanMapModal', () => {
         expect(wrapper.find('[data-test="mixed-categories-message"]').exists()).toBeTruthy();
       });
 
-      test('should render mixed options message if there are mixed options across selected nodes - 2', () => {
+      it('should render mixed options message if there are mixed options across selected nodes - 2', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
         };
@@ -350,7 +350,7 @@ describe('EditBooleanMapModal', () => {
       });
     });
     describe('on submit', () => {
-      test('should add new selected options on submit even if there are not common selected options', () => {
+      it('should add new selected options on submit even if there are not common selected options', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
         };
@@ -382,7 +382,7 @@ describe('EditBooleanMapModal', () => {
         });
       });
 
-      test('should add new selected options on submit even if there are common selected options', () => {
+      it('should add new selected options on submit even if there are common selected options', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
           [Categories.FOUNDATIONS]: true,
@@ -416,7 +416,7 @@ describe('EditBooleanMapModal', () => {
         });
       });
 
-      test('should not remove common selected options even if they are unchecked', () => {
+      it('should not remove common selected options even if they are unchecked', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
           [Categories.FOUNDATIONS]: true,
@@ -453,7 +453,7 @@ describe('EditBooleanMapModal', () => {
         });
       });
 
-      test('should not remove common selected options even if they are unchecked and no new options are checked', () => {
+      it('should not remove common selected options even if they are unchecked and no new options are checked', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
           [Categories.FOUNDATIONS]: true,
@@ -490,7 +490,7 @@ describe('EditBooleanMapModal', () => {
       });
     });
     describe('can save method', () => {
-      test('should not can save if there are mixed categories and no options selected', () => {
+      it('should not can save if there are mixed categories and no options selected', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
         };
@@ -503,7 +503,7 @@ describe('EditBooleanMapModal', () => {
         expect(wrapper.vm.canSave).toBeFalsy();
       });
 
-      test('should can save if there are mixed categories but new options are selected', () => {
+      it('should can save if there are mixed categories but new options are selected', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
         };
@@ -519,7 +519,7 @@ describe('EditBooleanMapModal', () => {
         expect(wrapper.vm.canSave).toBeTruthy();
       });
 
-      test('should can save if there are mixed categories but at least one common option across all nodes', () => {
+      it('should can save if there are mixed categories but at least one common option across all nodes', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
           [Categories.FOUNDATIONS]: true,

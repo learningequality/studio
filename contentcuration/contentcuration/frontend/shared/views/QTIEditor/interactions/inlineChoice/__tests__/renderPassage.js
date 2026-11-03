@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* global expect */
 import { ref } from 'vue';
 import { render, waitFor } from '@testing-library/vue';
 import VueRouter from 'vue-router';

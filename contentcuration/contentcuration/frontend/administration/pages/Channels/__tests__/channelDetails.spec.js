@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import router from '../../../router';
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
-import ChannelDetails from './../ChannelDetails';
+import ChannelDetails from '../ChannelDetails';
 
 const store = factory();
 

@@ -3,6 +3,7 @@ import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 
+import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 import TreeViewBase from '../TreeViewBase';
 import { RouteNames } from '../../../constants';
 import storeFactory from 'shared/vuex/baseStore';
@@ -14,9 +15,6 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
-
-const useKResponsiveWindow =
-  require('kolibri-design-system/lib/composables/useKResponsiveWindow').default;
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
