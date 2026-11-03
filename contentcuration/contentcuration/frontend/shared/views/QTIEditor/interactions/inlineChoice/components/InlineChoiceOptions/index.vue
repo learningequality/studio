@@ -12,20 +12,23 @@
       role="dialog"
       aria-modal="true"
       :aria-label="inlineChoiceOptionsDialogLabel$({ number })"
-      :aria-describedby="problems.length ? problems.map((_, i) => problemId(i)).join(' ') : null"
+      :aria-describedby="
+        panelMessages.length ? panelMessages.map((_, i) => panelMessageId(i)).join(' ') : null
+      "
       class="options-panel"
       @focusout="onFocusout"
       @keydown="onHistoryKeydown"
       @keydown.esc.stop="$emit('close')"
     >
-      <!-- The dropdown's chip shows the first of these -->
+      <!-- The dropdown's chip shows the first problem -->
       <ValidationMessage
-        v-for="(problem, i) in problems"
-        :id="problemId(i)"
-        :key="problem"
-        :alert="false"
+        v-for="(message, i) in panelMessages"
+        :id="panelMessageId(i)"
+        :key="message.text"
+        :warning="message.warning"
+        :announce="false"
       >
-        {{ problem }}
+        {{ message.text }}
       </ValidationMessage>
       <div class="options-header">
         <h4
@@ -131,7 +134,7 @@
                 <ValidationMessage
                   v-if="isEmpty(option.id)"
                   :id="errorId(option.id, 'empty')"
-                  :alert="false"
+                  :announce="false"
                   class="option-validation-message"
                 >
                   {{ errorEmptyChoiceContent$() }}
@@ -139,7 +142,7 @@
                 <ValidationMessage
                   v-if="isDuplicate(option.id)"
                   :id="errorId(option.id, 'duplicate')"
-                  :alert="false"
+                  :announce="false"
                   class="option-validation-message"
                 >
                   {{ errorDuplicateChoiceContent$() }}
@@ -167,7 +170,7 @@
   import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../../../qtiEditorStrings';
-  import { ValidationError } from '../../../../constants';
+  import { RECOMMENDED_MAX_OPTIONS, ValidationError } from '../../../../constants';
   import { generateRandomSlug } from '../../../../utils/generateRandomSlug';
   import ValidationMessage from '../../../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../../../components/AddListItemButton/index.vue';
@@ -207,6 +210,7 @@
         deleteInlineChoiceOptionBtn$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
+        warningTooManyInlineChoiceOptions$,
       } = qtiEditorStrings;
 
       const palette = themePalette();
@@ -220,8 +224,17 @@
       const isEmpty = id => emptyIds.value.has(id);
       const isDuplicate = id => duplicateIds.value.has(id);
       const hasError = id => isEmpty(id) || isDuplicate(id);
-      const problems = computed(() => dropdownProblems(props.dropdown));
-      const problemId = index => `${headerId}-problem-${index}`;
+      const tooManyOptionsWarning = warningTooManyInlineChoiceOptions$({
+        count: RECOMMENDED_MAX_OPTIONS,
+      });
+      const panelMessages = computed(() => {
+        const shown = dropdownProblems(props.dropdown).map(text => ({ text, warning: false }));
+        if (props.dropdown.options.length > RECOMMENDED_MAX_OPTIONS) {
+          shown.push({ text: tooManyOptionsWarning, warning: true });
+        }
+        return shown;
+      });
+      const panelMessageId = index => `${headerId}-message-${index}`;
 
       const isOnlyOption = computed(() => props.dropdown.options.length <= 1);
 
@@ -240,14 +253,14 @@
        * dialog's description and each field's. A message that appears while it is open is
        * announced here, through KDS's live region, once. Not the errors of an option Add option
        * just made: it takes focus, and its field reads them, which an announcement would cut off.
-       * What appears on a press that moves focus, as Remove does, is announced politely, after the
-       * newly focused field is read.
+       * What appears on a press that moves focus, as Add option, Remove, undo and redo do, is
+       * announced politely, after the newly focused field is read.
        */
       const { sendAssertiveMessage, sendPoliteMessage } = useKLiveRegion();
       let addedOptionId = null;
       let isMovingFocus = false;
       const messages = computed(() => {
-        const shown = new Map(problems.value.map(problem => [problem, problem]));
+        const shown = new Map(panelMessages.value.map(({ text }) => [text, text]));
         for (const { id } of props.dropdown.options) {
           if (isEmpty(id)) shown.set(errorId(id, 'empty'), errorEmptyChoiceContent$());
           if (isDuplicate(id)) shown.set(errorId(id, 'duplicate'), errorDuplicateChoiceContent$());
@@ -266,6 +279,13 @@
         const send = isMovingFocus ? sendPoliteMessage : sendAssertiveMessage;
         send([...new Set(appeared)].join(' '));
       });
+
+      async function emitMovingFocus(...args) {
+        isMovingFocus = true;
+        emit(...args);
+        await nextTick();
+        isMovingFocus = false;
+      }
 
       function optionStyle(id) {
         const isCorrect = id === props.dropdown.correctId;
@@ -306,10 +326,7 @@
         const index = props.dropdown.options.findIndex(o =>
           inputRefs[o.id]?.closest('li').contains(control),
         );
-        isMovingFocus = true;
-        emit(direction);
-        await nextTick();
-        isMovingFocus = false;
+        await emitMovingFocus(direction);
         if (panel.value && !panel.value.contains(document.activeElement)) focusOptionAt(index);
       }
 
@@ -335,8 +352,7 @@
       async function addOption() {
         const option = { id: generateRandomSlug('choice'), text: '' };
         addedOptionId = option.id;
-        emit('update', { options: [...props.dropdown.options, option] });
-        await nextTick();
+        await emitMovingFocus('update', { options: [...props.dropdown.options, option] });
         addedOptionId = null;
         inputRefs[option.id]?.focus();
       }
@@ -346,10 +362,9 @@
       async function removeOption(id) {
         if (isOnlyOption.value) return;
         const index = props.dropdown.options.findIndex(o => o.id === id);
-        isMovingFocus = true;
-        emit('update', { options: props.dropdown.options.filter(o => o.id !== id) });
-        await nextTick();
-        isMovingFocus = false;
+        await emitMovingFocus('update', {
+          options: props.dropdown.options.filter(o => o.id !== id),
+        });
         focusOptionAt(index);
       }
 
@@ -401,8 +416,8 @@
         hasError,
         errorId,
         errorIdsOf,
-        problems,
-        problemId,
+        panelMessages,
+        panelMessageId,
         isOnlyOption,
         optionStyle,
         setInputRef,

@@ -134,6 +134,8 @@ export const ValidationError = Object.freeze({
   DUPLICATE_MATCH_CONTENT: 'DUPLICATE_MATCH_CONTENT',
 });
 
+export const RECOMMENDED_MAX_OPTIONS = 5;
+
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
 
 export const SENTINEL_MARKER = 'data-studio-sentinel';
