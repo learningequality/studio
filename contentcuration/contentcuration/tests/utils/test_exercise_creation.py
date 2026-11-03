@@ -943,7 +943,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
             answerless_input_ids(self.exercise_node), {image_only.assessment_id}
         )
 
-    def test_unit_keeps_answerless_input_question(self):
+    def test_unit_leaves_out_answerless_input_question(self):
         self.exercise_node.kind_id = content_kinds.TOPIC
         self.exercise_node.save()
         perseus_item, _ = self._create_perseus_item()
@@ -955,10 +955,9 @@ class TestPerseusExerciseCreation(StudioTestCase):
         self._create_perseus_zip(_exercise_data([perseus_item, answerless]))
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
         zip_file, exercise_data = self._validate_perseus_zip(exercise_file)
-        self.assertIn(f"{answerless.assessment_id}.json", zip_file.namelist())
+        self.assertNotIn(f"{answerless.assessment_id}.json", zip_file.namelist())
         self.assertEqual(
-            exercise_data["all_assessment_items"],
-            [perseus_item.assessment_id, answerless.assessment_id],
+            exercise_data["all_assessment_items"], [perseus_item.assessment_id]
         )
 
     def test_numeric_input_answers_are_read(self):

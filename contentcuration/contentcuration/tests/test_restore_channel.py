@@ -317,7 +317,7 @@ class QTIRestoreTestCase(StudioTestCase):
         image.save()
         return item
 
-    def _publish(self, generator_class):
+    def _publish(self, generator_class, **options):
         items = self.source.assessment_items.order_by("order")
         generator_class(
             self.source,
@@ -332,6 +332,7 @@ class QTIRestoreTestCase(StudioTestCase):
             self.channel.id,
             "en-US",
             user_id=self.user.id,
+            **options,
         ).create_exercise_archive()
 
     def _restore(self, *presets, package=None, download_url="http://studio"):
@@ -464,7 +465,7 @@ class QTIRestoreTestCase(StudioTestCase):
         self._add_legacy_item(1)
         self._add_editor_item_with_encoded_id(2)
         self._publish(QTIExerciseGenerator)
-        self._publish(PerseusExerciseGenerator)
+        self._publish(PerseusExerciseGenerator, qti_item_ids=True)
 
         items = self._restore(format_presets.QTI_ZIP, format_presets.EXERCISE)
 
@@ -548,7 +549,7 @@ class QTIRestoreTestCase(StudioTestCase):
         # The dual node's exercise archive holds QTI ids, which cannot republish.
         self._add_editor_item(0)
         self._publish(QTIExerciseGenerator)
-        self._publish(PerseusExerciseGenerator)
+        self._publish(PerseusExerciseGenerator, qti_item_ids=True)
 
         empty_package = BytesIO()
         with zipfile.ZipFile(empty_package, "w") as zf:
@@ -635,8 +636,7 @@ class QTIRestoreTestCase(StudioTestCase):
         os.remove(create_content_database(self.channel, True, self.user.id, False))
         return set(node.files.values_list("preset_id", flat=True))
 
-    def test_restored_legacy_only_node_also_publishes_derived_exercise_archive(self):
-        # Legacy items restore as QTI, which publish can also derive Perseus from.
+    def test_restored_legacy_only_node_publishes_both_archives(self):
         self._add_legacy_item(0)
         self._add_item(
             exercises.MULTIPLE_SELECTION,
@@ -649,11 +649,9 @@ class QTIRestoreTestCase(StudioTestCase):
                 ]
             ),
         )
-        self.assertEqual(self._published_presets(self.source), {format_presets.QTI_ZIP})
+        both_archives = {format_presets.QTI_ZIP, format_presets.EXERCISE}
+        self.assertEqual(self._published_presets(self.source), both_archives)
 
         self._restore(format_presets.QTI_ZIP)
 
-        self.assertEqual(
-            self._published_presets(self.restored),
-            {format_presets.QTI_ZIP, format_presets.EXERCISE},
-        )
+        self.assertEqual(self._published_presets(self.restored), both_archives)

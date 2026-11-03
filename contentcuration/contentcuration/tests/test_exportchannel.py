@@ -40,6 +40,8 @@ from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from .testdata import tree
 from .utils.qti.test_perseus_derive import _text_item
+from .utils.qti.test_perseus_derive import MATCH_CORRECT_PROCESSING
+from .utils.qti.test_perseus_derive import TOLERANCE_PROCESSING
 from .utils.qti.test_validation import _item_xml
 from .utils.qti.test_validation import ENTITY_CHOICE_ITEM
 from .utils.qti.test_validation import VALID_CHOICE_ITEM
@@ -47,6 +49,9 @@ from .utils.restricted_filesystemstorage import RestrictedFileSystemStorage
 from contentcuration import models as cc
 from contentcuration.models import CustomTaskMetadata
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
+from contentcuration.utils.assessment.qti.imsmanifest import (
+    get_assessment_ids_from_manifest,
+)
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.utils.celery.tasks import generate_task_signature
@@ -54,7 +59,6 @@ from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_draft_channel_version
-from contentcuration.utils.publish import create_kolibri_assessment_metadata
 from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
@@ -106,6 +110,30 @@ READABLE_PERSEUS_INPUT_ANSWERS = [
     ([ZERO_SIZE_IMAGE, "4"], [4]),
 ]
 
+# Native float answers Kolibri's Number() does not read.
+UNREADABLE_NATIVE_FLOAT_ANSWERS = ["1_000", "1_0E3", "٥", "５", "1/2", "1,000", "50%"]
+
+
+QTI_EXTRA_FIELDS = {
+    "options": {
+        "completion_criteria": {
+            "model": "mastery",
+            "threshold": {"m": 1, "n": 2, "mastery_model": exercises.M_OF_N},
+        }
+    }
+}
+
+NATIVE_LEAD = (exercises.QTI, VALID_CHOICE_ITEM)
+PERSEUS_LEAD = (exercises.PERSEUS_QUESTION, "{}")
+READABLE_INPUTS = [
+    (exercises.INPUT_QUESTION, answers) for answers, _ in READABLE_PERSEUS_INPUT_ANSWERS
+]
+
+# Schema-invalid, yet Perseus can still express it.
+SCHEMA_INVALID_CHOICE_ITEM = VALID_CHOICE_ITEM.replace(
+    'max-choices="1"', 'max-choices="abc"', 1
+)
+
 
 # Larger than the signed 32-bit maximum (2_147_483_647); ~3 GB.
 LARGE_FILE_SIZE = 3 * 1024 ** 3
@@ -120,18 +148,174 @@ COMMENTED_CHOICE_ITEM = VALID_CHOICE_ITEM.replace(
 )
 
 
-class ExportChannelTestCase(StudioTestCase):
+class ExportChannelTestBase(StudioTestCase):
     @classmethod
     def setUpClass(cls):
-        super(ExportChannelTestCase, cls).setUpClass()
+        super().setUpClass()
         cls.patch_copy_db = patch("contentcuration.utils.publish.save_export_database")
         cls.patch_copy_db.start()
 
     @classmethod
     def tearDownClass(cls):
-        super(ExportChannelTestCase, cls).tearDownClass()
+        super().tearDownClass()
         cls.patch_copy_db.stop()
 
+    def _create_native_qti_exercise(self, title, raw_items, parent):
+        exercise = create_node(
+            {"kind_id": "exercise", "title": title, "extra_fields": QTI_EXTRA_FIELDS},
+            parent=parent,
+        )
+        for item_order, raw_data in enumerate(raw_items, start=1):
+            cc.AssessmentItem.objects.create(
+                contentnode=exercise,
+                assessment_id=uuid.uuid4().hex,
+                type=exercises.QTI,
+                question="",
+                answers="[]",
+                hints="[]",
+                raw_data=raw_data,
+                order=item_order,
+                randomize=False,
+            )
+
+    def _create_mixed_exercise(self, title, lead, items, parent):
+        lead_type, lead_raw_data = lead
+        mixed_exercise = create_node(
+            {"kind_id": "exercise", "title": title, "extra_fields": QTI_EXTRA_FIELDS},
+            parent=parent,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=mixed_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=lead_type,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=lead_raw_data,
+            order=1,
+            randomize=False,
+        )
+        for item_order, (item_type, answers) in enumerate(items, start=2):
+            cc.AssessmentItem.objects.create(
+                contentnode=mixed_exercise,
+                assessment_id=uuid.uuid4().hex,
+                type=item_type,
+                question="What is the answer?",
+                answers=json.dumps(
+                    [
+                        {"answer": answer, "correct": True, "order": order}
+                        for order, answer in enumerate(answers, start=1)
+                    ]
+                ),
+                hints="[]",
+                raw_data="{}",
+                order=item_order,
+                randomize=False,
+            )
+
+    def tearDown(self):
+        # Clean up datbase connection after the test
+        cleanup_content_database_connection(self.tempdb)
+        super().tearDown()
+        set_active_content_database(None)
+        if os.path.exists(self.tempdb):
+            os.remove(self.tempdb)
+
+    def _read_qti_manifest_ids(self, node):
+        qti_file = node.files.get(preset_id=format_presets.QTI_ZIP)
+        with qti_file.file_on_disk.open("rb") as file_handle:
+            return get_assessment_ids_from_manifest(file_handle)
+
+    def _read_perseus_archive(self, node):
+        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+        with exercise_file.file_on_disk.open("rb") as file_handle, zipfile.ZipFile(
+            file_handle
+        ) as archive:
+            item_stems = {
+                name[: -len(".json")]
+                for name in archive.namelist()
+                if name.endswith(".json") and name != "exercise.json"
+            }
+            return item_stems, json.loads(archive.read("exercise.json"))
+
+    def _numeric_input_answers(self, node):
+        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+        with exercise_file.file_on_disk.open("rb") as file_handle, zipfile.ZipFile(
+            file_handle
+        ) as archive:
+            for name in archive.namelist():
+                if not name.endswith(".json") or name == "exercise.json":
+                    continue
+                item = json.loads(archive.read(name))
+                widgets = item.get("question", {}).get("widgets", {})
+                for widget in widgets.values():
+                    if widget["type"] == "numeric-input":
+                        yield name, [
+                            answer["value"] for answer in widget["options"]["answers"]
+                        ]
+
+    def _assert_archive_ids_match_assessment_metadata(self, title, item_count):
+        node = cc.ContentNode.objects.get(title=title)
+        manifest_ids = self._read_qti_manifest_ids(node)
+        item_stems, exercise_data = self._read_perseus_archive(node)
+
+        assessment_item_ids = (
+            kolibri_models.ContentNode.objects.get(title=title)
+            .assessmentmetadata.first()
+            .assessment_item_ids
+        )
+
+        self.assertEqual(len(assessment_item_ids), item_count)
+        self.assertEqual(manifest_ids, assessment_item_ids)
+        self.assertEqual(item_stems, set(assessment_item_ids))
+        self.assertEqual(exercise_data["all_assessment_items"], assessment_item_ids)
+        self.assertEqual(
+            set(exercise_data["assessment_mapping"]), set(assessment_item_ids)
+        )
+
+    def _store_archive(self, node, preset, item_ids):
+        archive_bytes = io.BytesIO()
+        with zipfile.ZipFile(archive_bytes, "w") as archive:
+            if preset == format_presets.QTI_ZIP:
+                resources = "".join(
+                    f'<resource identifier="{item_id}" type="imsqti_item_xmlv3p0"/>'
+                    for item_id in item_ids
+                )
+                archive.writestr(
+                    "imsmanifest.xml",
+                    '<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1">'
+                    f"<resources>{resources}</resources></manifest>",
+                )
+            else:
+                archive.writestr(
+                    "exercise.json", json.dumps({"all_assessment_items": item_ids})
+                )
+                for item_id in item_ids:
+                    archive.writestr(f"{item_id}.json", "{}")
+        self._attach_file(node, preset, archive_bytes.getvalue())
+
+    def _attach_file(self, node, preset, content):
+        node.files.filter(preset_id=preset).delete()
+        db_file = create_studio_file(
+            content,
+            preset=preset,
+            ext="zip" if preset == format_presets.QTI_ZIP else "perseus",
+        )["db_file"]
+        db_file.contentnode = node
+        db_file.save()
+        return db_file
+
+    def _republish_unchanged(self, node):
+        cc.ContentNode.objects.filter(pk=node.pk).update(changed=False)
+        cleanup_content_database_connection(self.tempdb)
+        os.remove(self.tempdb)
+        self.tempdb = create_content_database(
+            self.content_channel, True, self.admin_user.id, False
+        )
+        set_active_content_database(self.tempdb)
+
+
+class ExportChannelTestCase(ExportChannelTestBase):
     def setUp(self):
         super(ExportChannelTestCase, self).setUp()
         self.content_channel = channel()
@@ -277,23 +461,11 @@ class ExportChannelTestCase(StudioTestCase):
             ai.save()
 
         # Add an exercise with free response question to test QTI generation
-        qti_extra_fields = {
-            "options": {
-                "completion_criteria": {
-                    "model": "mastery",
-                    "threshold": {
-                        "m": 1,
-                        "n": 2,
-                        "mastery_model": exercises.M_OF_N,
-                    },
-                }
-            }
-        }
         qti_exercise = create_node(
             {
                 "kind_id": "exercise",
                 "title": "QTI Free Response Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         qti_exercise.complete = True
@@ -323,7 +495,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Native QTI Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         native_qti_exercise.complete = True
@@ -345,7 +517,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Native QTI Commented Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         native_qti_commented_exercise.complete = True
@@ -368,7 +540,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Native QTI Unsupported Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         native_qti_unsupported_exercise.complete = True
@@ -390,7 +562,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Native QTI Entity Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         native_qti_entity_exercise.complete = True
@@ -412,7 +584,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Native QTI String Entry Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         native_qti_string_entry_exercise.complete = True
@@ -430,35 +602,52 @@ class ExportChannelTestCase(StudioTestCase):
             randomize=False,
         )
 
-        # Only legacy structured-field items, no perseus_question -> must now route to QTI (was Perseus)
         legacy_no_perseus_exercise = create_node(
             {
                 "kind_id": "exercise",
                 "title": "Legacy No Perseus Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         legacy_no_perseus_exercise.complete = True
         legacy_no_perseus_exercise.parent = current_exercise.parent
         legacy_no_perseus_exercise.save()
-        cc.AssessmentItem.objects.create(
-            contentnode=legacy_no_perseus_exercise,
-            assessment_id=uuid.uuid4().hex,
-            type=exercises.SINGLE_SELECTION,
-            question="What is 2+2?",
-            answers=json.dumps([{"answer": "4", "correct": True, "order": 1}]),
-            hints=json.dumps([]),
-            raw_data="{}",
-            order=1,
-            randomize=False,
-        )
+        legacy_items = [
+            (exercises.SINGLE_SELECTION, [{"answer": "4", "correct": True}]),
+            (
+                exercises.MULTIPLE_SELECTION,
+                [{"answer": "4", "correct": True}, {"answer": "2*2", "correct": True}],
+            ),
+            (
+                "true_false",
+                [{"answer": "True", "correct": True}, {"answer": "False"}],
+            ),
+            (exercises.INPUT_QUESTION, [{"answer": "4", "correct": True}]),
+        ]
+        for item_order, (item_type, answers) in enumerate(legacy_items, start=1):
+            cc.AssessmentItem.objects.create(
+                contentnode=legacy_no_perseus_exercise,
+                assessment_id=uuid.uuid4().hex,
+                type=item_type,
+                question="What is 2+2?",
+                answers=json.dumps(
+                    [
+                        {"correct": False, **answer, "order": order}
+                        for order, answer in enumerate(answers, start=1)
+                    ]
+                ),
+                hints=json.dumps([]),
+                raw_data="{}",
+                order=item_order,
+                randomize=False,
+            )
 
         # A perseus_question item present -> must still route to Perseus packaging
         perseus_only_exercise = create_node(
             {
                 "kind_id": "exercise",
                 "title": "Perseus Only Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         perseus_only_exercise.complete = True
@@ -481,7 +670,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Perseus Answerless Input Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         perseus_answerless_input_exercise.complete = True
@@ -515,7 +704,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Native QTI Answerless Input Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         native_qti_answerless_input_exercise.complete = True
@@ -568,14 +757,11 @@ class ExportChannelTestCase(StudioTestCase):
             randomize=False,
         )
 
-        # A node mixing a native QTI item with a raw perseus_question item ->
-        # must route to a single QTI package (Perseus embedded as custom
-        # interactions), not a separate Perseus archive.
         mixed_perseus_qti_exercise = create_node(
             {
                 "kind_id": "exercise",
                 "title": "Perseus + Native QTI Mixed Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         mixed_perseus_qti_exercise.complete = True
@@ -609,7 +795,7 @@ class ExportChannelTestCase(StudioTestCase):
             {
                 "kind_id": "exercise",
                 "title": "Native QTI + Legacy Mixed Exercise",
-                "extra_fields": qti_extra_fields,
+                "extra_fields": QTI_EXTRA_FIELDS,
             }
         )
         native_qti_legacy_mixed_exercise.complete = True
@@ -640,52 +826,19 @@ class ExportChannelTestCase(StudioTestCase):
 
         # Mixed nodes with legacy input questions -> QTI only if Perseus can't
         # read an answer, so each unreadable answer needs a node of its own
-        mixed_input_answers = {
-            f"Native QTI + Input {answer!r} Mixed Exercise": [[answer]]
-            for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS
-        }
-        mixed_input_answers["Native QTI + Readable Inputs Mixed Exercise"] = [
-            answers for answers, _ in READABLE_PERSEUS_INPUT_ANSWERS
-        ]
-        for title, input_answers in mixed_input_answers.items():
-            mixed_exercise = create_node(
-                {
-                    "kind_id": "exercise",
-                    "title": title,
-                    "extra_fields": qti_extra_fields,
-                }
+        for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS:
+            self._create_mixed_exercise(
+                f"Native QTI + Input {answer!r} Mixed Exercise",
+                NATIVE_LEAD,
+                [(exercises.INPUT_QUESTION, [answer])],
+                current_exercise.parent,
             )
-            mixed_exercise.complete = True
-            mixed_exercise.parent = current_exercise.parent
-            mixed_exercise.save()
-            cc.AssessmentItem.objects.create(
-                contentnode=mixed_exercise,
-                assessment_id=uuid.uuid4().hex,
-                type=exercises.QTI,
-                question="",
-                answers="[]",
-                hints="[]",
-                raw_data=VALID_CHOICE_ITEM,
-                order=1,
-                randomize=False,
-            )
-            for item_order, answers in enumerate(input_answers, start=2):
-                cc.AssessmentItem.objects.create(
-                    contentnode=mixed_exercise,
-                    assessment_id=uuid.uuid4().hex,
-                    type=exercises.INPUT_QUESTION,
-                    question="What is the answer?",
-                    answers=json.dumps(
-                        [
-                            {"answer": answer, "correct": True, "order": order}
-                            for order, answer in enumerate(answers, start=1)
-                        ]
-                    ),
-                    hints="[]",
-                    raw_data="{}",
-                    order=item_order,
-                    randomize=False,
-                )
+        self._create_mixed_exercise(
+            "Native QTI + Readable Inputs Mixed Exercise",
+            NATIVE_LEAD,
+            READABLE_INPUTS,
+            current_exercise.parent,
+        )
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
 
@@ -741,6 +894,9 @@ class ExportChannelTestCase(StudioTestCase):
         # Add a UNIT topic with directly attached assessment items
         unit_assessment_id_1 = uuid.uuid4().hex
         unit_assessment_id_2 = uuid.uuid4().hex
+        unit_native_id = uuid.uuid4().hex
+        unit_answerless_id = uuid.uuid4().hex
+        unit_lo_id = uuid.uuid4().hex
 
         unit_topic = create_node(
             {"kind_id": "topic", "title": "Test Unit Topic", "children": []},
@@ -757,11 +913,26 @@ class ExportChannelTestCase(StudioTestCase):
                             "assessment_item_ids": [
                                 unit_assessment_id_1,
                                 unit_assessment_id_2,
+                                unit_native_id,
+                                unit_answerless_id,
                             ],
-                            "version_a_item_ids": [unit_assessment_id_1],
-                            "version_b_item_ids": [unit_assessment_id_2],
+                            "version_a_item_ids": [
+                                unit_assessment_id_1,
+                                unit_native_id,
+                            ],
+                            "version_b_item_ids": [
+                                unit_assessment_id_2,
+                                unit_answerless_id,
+                            ],
                         },
                     },
+                },
+                "learning_objectives": [{"id": unit_lo_id, "text": "Add"}],
+                "assessment_objectives": {
+                    unit_assessment_id_1: [unit_lo_id],
+                    unit_assessment_id_2: [unit_lo_id],
+                    unit_native_id: [unit_lo_id],
+                    unit_answerless_id: [unit_lo_id],
                 },
             }
         }
@@ -798,6 +969,30 @@ class ExportChannelTestCase(StudioTestCase):
             hints=json.dumps([]),
             raw_data="{}",
             order=2,
+            randomize=False,
+        )
+
+        cc.AssessmentItem.objects.create(
+            contentnode=unit_topic,
+            assessment_id=unit_native_id,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=VALID_CHOICE_ITEM,
+            order=3,
+            randomize=False,
+        )
+
+        cc.AssessmentItem.objects.create(
+            contentnode=unit_topic,
+            assessment_id=unit_answerless_id,
+            type=exercises.INPUT_QUESTION,
+            question="What is 4+4?",
+            answers=json.dumps([{"answer": "", "correct": True, "order": 1}]),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=4,
             randomize=False,
         )
 
@@ -851,14 +1046,6 @@ class ExportChannelTestCase(StudioTestCase):
         )
 
         set_active_content_database(self.tempdb)
-
-    def tearDown(self):
-        # Clean up datbase connection after the test
-        cleanup_content_database_connection(self.tempdb)
-        super(ExportChannelTestCase, self).tearDown()
-        set_active_content_database(None)
-        if os.path.exists(self.tempdb):
-            os.remove(self.tempdb)
 
     def test_channel_rootnode_data(self):
         channel = kolibri_models.ChannelMetadata.objects.first()
@@ -1230,6 +1417,9 @@ class ExportChannelTestCase(StudioTestCase):
             qti_file.original_filename.endswith(".zip"),
             "QTI file should be a zip archive",
         )
+        self.assertFalse(
+            qti_exercise.files.filter(preset_id=format_presets.EXERCISE).exists()
+        )
 
     def test_native_qti_choice_item_publishes_both_archives(self):
         node = cc.ContentNode.objects.get(title="Native QTI Exercise")
@@ -1266,18 +1456,6 @@ class ExportChannelTestCase(StudioTestCase):
         self.assertTrue(commented)
         self.assertEqual(commented, item_contents("Native QTI Exercise"))
 
-    def _read_perseus_archive(self, node):
-        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
-        with exercise_file.file_on_disk.open("rb") as file_handle, zipfile.ZipFile(
-            file_handle
-        ) as archive:
-            item_stems = {
-                name[: -len(".json")]
-                for name in archive.namelist()
-                if name.endswith(".json") and name != "exercise.json"
-            }
-            return item_stems, json.loads(archive.read("exercise.json"))
-
     def test_native_qti_perseus_ids_match_assessment_metadata(self):
         """The derived Perseus item JSON filenames must equal the ids recorded
         in the published node's ``AssessmentMetaData.assessment_item_ids`` (the
@@ -1297,52 +1475,27 @@ class ExportChannelTestCase(StudioTestCase):
 
     def test_mixed_native_legacy_perseus_ids_match_assessment_metadata(self):
         """Older Kolibri looks up legacy items by the QTI manifest id too."""
-        title = "Native QTI + Legacy Mixed Exercise"
-        node = cc.ContentNode.objects.get(title=title)
-        item_stems, exercise_data = self._read_perseus_archive(node)
-
-        assessment_item_ids = (
-            kolibri_models.ContentNode.objects.get(title=title)
-            .assessmentmetadata.first()
-            .assessment_item_ids
+        self._assert_archive_ids_match_assessment_metadata(
+            "Native QTI + Legacy Mixed Exercise", 2
         )
 
-        self.assertEqual(len(assessment_item_ids), 2)
-        self.assertEqual(item_stems, set(assessment_item_ids))
-        self.assertEqual(exercise_data["all_assessment_items"], assessment_item_ids)
-        self.assertEqual(
-            set(exercise_data["assessment_mapping"]), set(assessment_item_ids)
+    def test_published_numeric_inputs_have_answers(self):
+        perseus_published = cc.ContentNode.objects.filter(
+            files__preset_id=format_presets.EXERCISE
         )
-
-    def test_dual_published_numeric_inputs_have_answers(self):
-        dual_published = cc.ContentNode.objects.filter(
-            files__preset_id=format_presets.QTI_ZIP
-        ).filter(files__preset_id=format_presets.EXERCISE)
         mixed_answers = {}
-        for node in dual_published:
-            exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
-            with exercise_file.file_on_disk.open("rb") as file_handle, zipfile.ZipFile(
-                file_handle
-            ) as archive:
-                for name in archive.namelist():
-                    if not name.endswith(".json") or name == "exercise.json":
-                        continue
-                    widgets = json.loads(archive.read(name))["question"]["widgets"]
-                    for widget in widgets.values():
-                        if widget["type"] != "numeric-input":
-                            continue
-                        answers = [
-                            answer["value"] for answer in widget["options"]["answers"]
-                        ]
-                        with self.subTest(node=node.title, item=name):
-                            self.assertTrue(answers)
-                        mixed_answers.setdefault(node.title, []).append(answers)
+        for node in perseus_published:
+            for name, answers in self._numeric_input_answers(node):
+                with self.subTest(node=node.title, item=name):
+                    self.assertTrue(answers)
+                mixed_answers.setdefault(node.title, []).append(answers)
 
         expected = {
             "Native QTI + Legacy Mixed Exercise": [[4]],
             "Native QTI + Readable Inputs Mixed Exercise": [
                 values for _, values in READABLE_PERSEUS_INPUT_ANSWERS
             ],
+            "Legacy No Perseus Exercise": [[4]],
         }
         for title, answers in expected.items():
             with self.subTest(node=title):
@@ -1403,10 +1556,10 @@ class ExportChannelTestCase(StudioTestCase):
                     node.files.filter(preset_id=format_presets.EXERCISE).exists()
                 )
 
-    def test_legacy_items_without_perseus_question_route_to_qti_packaging(self):
-        node = cc.ContentNode.objects.get(title="Legacy No Perseus Exercise")
-        self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
-        self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+    def test_legacy_items_without_perseus_question_publish_both_archives(self):
+        self._assert_archive_ids_match_assessment_metadata(
+            "Legacy No Perseus Exercise", 4
+        )
 
     def test_perseus_question_item_routes_to_perseus_packaging(self):
         node = cc.ContentNode.objects.get(title="Perseus Only Exercise")
@@ -1442,28 +1595,40 @@ class ExportChannelTestCase(StudioTestCase):
         perseus_id = node.assessment_items.get(
             type=exercises.PERSEUS_QUESTION
         ).assessment_id
-        stale_archive = io.BytesIO()
-        with zipfile.ZipFile(stale_archive, "w") as archive:
-            archive.writestr(
-                "exercise.json", json.dumps({"all_assessment_items": all_ids})
-            )
-            for assessment_id in all_ids:
-                archive.writestr(f"{assessment_id}.json", "{}")
-        node.files.filter(preset_id=format_presets.EXERCISE).delete()
-        stale_file = create_studio_file(
-            stale_archive.getvalue(), preset=format_presets.EXERCISE, ext="perseus"
-        )["db_file"]
-        stale_file.contentnode = node
-        stale_file.save()
-        published_node = kolibri_models.ContentNode.objects.get(title=title)
-        published_node.assessmentmetadata.all().delete()
+        self._store_archive(node, format_presets.EXERCISE, all_ids)
 
-        create_kolibri_assessment_metadata(node, published_node)
+        self._republish_unchanged(node)
 
         self.assertEqual(
-            published_node.assessmentmetadata.get().assessment_item_ids,
+            kolibri_models.ContentNode.objects.get(title=title)
+            .assessmentmetadata.get()
+            .assessment_item_ids,
             [perseus_id],
         )
+
+    def test_unchanged_republish_rebuilds_hex_id_perseus_archive(self):
+        title = "Legacy No Perseus Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        hex_ids = list(
+            node.assessment_items.order_by("order").values_list(
+                "assessment_id", flat=True
+            )
+        )
+        node.files.all().delete()
+        self._store_archive(node, format_presets.EXERCISE, hex_ids)
+
+        self._republish_unchanged(node)
+
+        self._assert_archive_ids_match_assessment_metadata(title, 4)
+
+    def test_unchanged_republish_does_not_read_stored_perseus_archive(self):
+        title = "Perseus Answerless Input Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        db_file = self._attach_file(node, format_presets.EXERCISE, b"not a zip")
+
+        self._republish_unchanged(node)
+
+        self.assertEqual(list(node.files.values_list("id", flat=True)), [db_file.id])
 
     def test_answerless_input_left_out_of_dual_published_archives(self):
         title = "Native QTI Answerless Input Exercise"
@@ -1483,10 +1648,10 @@ class ExportChannelTestCase(StudioTestCase):
             item_stems,
         )
 
-    def test_mixed_perseus_and_native_qti_routes_to_qti(self):
-        node = cc.ContentNode.objects.get(title="Perseus + Native QTI Mixed Exercise")
-        self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
-        self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+    def test_mixed_perseus_and_native_qti_publishes_both_archives(self):
+        self._assert_archive_ids_match_assessment_metadata(
+            "Perseus + Native QTI Mixed Exercise", 2
+        )
 
     def test_qti_archive_contains_manifest_and_assessment_ids(self):
 
@@ -1512,9 +1677,6 @@ class ExportChannelTestCase(StudioTestCase):
         attached assessment items compiled into a zip file during publishing."""
         unit_topic = cc.ContentNode.objects.get(title="Test Unit Topic")
 
-        # Assert UNIT topic has a QTI archive file in Studio. Its assessment
-        # items are legacy structured-field (SINGLE_SELECTION) with no
-        # perseus_question item, so they route to QTI packaging.
         unit_files = cc.File.objects.filter(
             contentnode=unit_topic,
             preset_id=format_presets.QTI_ZIP,
@@ -1532,6 +1694,409 @@ class ExportChannelTestCase(StudioTestCase):
             published_unit.assessmentmetadata.exists(),
             "UNIT topic should NOT have assessment metadata",
         )
+
+    def test_unit_pre_post_test_lists_package_ids(self):
+        unit_topic = cc.ContentNode.objects.get(title="Test Unit Topic")
+        first, second = (
+            hex_to_qti_id(item.assessment_id)
+            for item in unit_topic.assessment_items.filter(
+                type=exercises.SINGLE_SELECTION
+            ).order_by("order")
+        )
+        published = kolibri_models.ContentNode.objects.get(title="Test Unit Topic")
+        pre_post_test = published.options["completion_criteria"]["threshold"][
+            "pre_post_test"
+        ]
+        item_stems, _ = self._read_perseus_archive(unit_topic)
+        for key, expected in (
+            ("assessment_item_ids", [first, second, "item_1"]),
+            ("version_a_item_ids", [first, "item_1"]),
+            ("version_b_item_ids", [second]),
+        ):
+            with self.subTest(key=key):
+                self.assertEqual(pre_post_test[key], expected)
+                self.assertLessEqual(set(expected), item_stems)
+        self.assertEqual(
+            pre_post_test["assessment_item_ids"],
+            self._read_qti_manifest_ids(unit_topic),
+        )
+        self.assertEqual(
+            set(published.options["assessment_objectives"]),
+            set(pre_post_test["assessment_item_ids"]),
+        )
+
+
+class ExerciseArchiveRoutingTestCase(ExportChannelTestBase):
+    def setUp(self):
+        super().setUp()
+        self.content_channel = channel()
+        parent = self.content_channel.main_tree
+
+        for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS:
+            self._create_mixed_exercise(
+                f"Perseus + Input {answer!r} Exercise",
+                PERSEUS_LEAD,
+                [(exercises.INPUT_QUESTION, [answer])],
+                parent,
+            )
+        self._create_mixed_exercise(
+            "Perseus + Readable Inputs Exercise", PERSEUS_LEAD, READABLE_INPUTS, parent
+        )
+        self._create_mixed_exercise(
+            "Perseus + Free Response Exercise",
+            PERSEUS_LEAD,
+            [(exercises.FREE_RESPONSE, ["Paris"])],
+            parent,
+        )
+        self._create_native_qti_exercise(
+            "Native QTI Schema Invalid Exercise",
+            [VALID_CHOICE_ITEM, SCHEMA_INVALID_CHOICE_ITEM],
+            parent,
+        )
+        self._create_native_qti_exercise(
+            "Native QTI Unreadable Floats Exercise",
+            [
+                VALID_CHOICE_ITEM,
+                _text_item("single", ["42", "1/2"], identifier="item_text_mixed"),
+            ]
+            + [
+                _text_item("single", [answer], identifier=f"item_text_{index}")
+                for index, answer in enumerate(UNREADABLE_NATIVE_FLOAT_ANSWERS)
+            ],
+            parent,
+        )
+        self._create_native_qti_exercise(
+            "Native QTI Unreadable Tolerance Exercise",
+            [
+                VALID_CHOICE_ITEM,
+                _text_item("single", ["1/2"]).replace(
+                    MATCH_CORRECT_PROCESSING, TOLERANCE_PROCESSING
+                ),
+            ],
+            parent,
+        )
+
+        shared_identifier_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI Shared Identifier Exercise",
+                "extra_fields": QTI_EXTRA_FIELDS,
+            },
+            parent=parent,
+        )
+        for item_order, (item_type, question, answers, raw_data) in enumerate(
+            [
+                (exercises.QTI, "", [], _text_item("single", [])),
+                (
+                    exercises.INPUT_QUESTION,
+                    "What is 2+2?",
+                    [{"answer": 4, "correct": True, "order": 1}],
+                    "{}",
+                ),
+                (exercises.QTI, "", [], _text_item("single", ["3"])),
+            ],
+            start=1,
+        ):
+            cc.AssessmentItem.objects.create(
+                contentnode=shared_identifier_exercise,
+                assessment_id=uuid.uuid4().hex,
+                type=item_type,
+                question=question,
+                answers=json.dumps(answers),
+                hints="[]",
+                raw_data=raw_data,
+                order=item_order,
+                randomize=False,
+            )
+
+        entity_unit_legacy_id = uuid.uuid4().hex
+        entity_unit_entity_id = uuid.uuid4().hex
+        entity_unit_ids = [entity_unit_legacy_id, entity_unit_entity_id]
+        entity_unit_topic = create_node(
+            {
+                "kind_id": "topic",
+                "title": "Entity Unit Topic",
+                "children": [
+                    {"kind_id": "video", "title": "Entity Unit Video", "children": []},
+                ],
+            },
+            parent=self.content_channel.main_tree,
+        )
+        entity_unit_topic.extra_fields = {
+            "options": {
+                "modality": modalities.UNIT,
+                "completion_criteria": {
+                    "model": "mastery",
+                    "threshold": {
+                        "mastery_model": exercises.PRE_POST_TEST,
+                        "pre_post_test": {
+                            "assessment_item_ids": entity_unit_ids,
+                            "version_a_item_ids": entity_unit_ids,
+                            "version_b_item_ids": entity_unit_ids,
+                        },
+                    },
+                },
+            }
+        }
+        entity_unit_topic.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=entity_unit_topic,
+            assessment_id=entity_unit_legacy_id,
+            type=exercises.SINGLE_SELECTION,
+            question="What is 5+5?",
+            answers=json.dumps(
+                [
+                    {"answer": "10", "correct": True, "order": 1},
+                    {"answer": "9", "correct": False, "order": 2},
+                ]
+            ),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=1,
+            randomize=False,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=entity_unit_topic,
+            assessment_id=entity_unit_entity_id,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=ENTITY_CHOICE_ITEM,
+            order=2,
+            randomize=False,
+        )
+
+        self._create_shared_identifier_unit()
+
+        set_channel_icon_encoding(self.content_channel)
+        self.tempdb = create_content_database(
+            self.content_channel, True, self.admin_user.id, True
+        )
+        set_active_content_database(self.tempdb)
+
+    def _create_shared_identifier_unit(self):
+        shared_unit_ids = [uuid.uuid4().hex for _ in range(3)]
+        shared_unit_topic = create_node(
+            {
+                "kind_id": "topic",
+                "title": "Shared Identifier Unit Topic",
+                "children": [
+                    {
+                        "kind_id": "video",
+                        "title": "Shared Identifier Unit Video",
+                        "children": [],
+                    },
+                ],
+            },
+            parent=self.content_channel.main_tree,
+        )
+        shared_unit_topic.extra_fields = {
+            "options": {
+                "modality": modalities.UNIT,
+                "completion_criteria": {
+                    "model": "mastery",
+                    "threshold": {
+                        "mastery_model": exercises.PRE_POST_TEST,
+                        "pre_post_test": {
+                            "assessment_item_ids": shared_unit_ids,
+                            "version_a_item_ids": shared_unit_ids[1:],
+                            "version_b_item_ids": [
+                                shared_unit_ids[0],
+                                shared_unit_ids[2],
+                            ],
+                        },
+                    },
+                },
+            }
+        }
+        shared_unit_topic.save()
+        for item_order, (assessment_id, raw_data) in enumerate(
+            zip(
+                shared_unit_ids[:2],
+                [_text_item("single", []), _text_item("single", ["3"])],
+            ),
+            start=1,
+        ):
+            cc.AssessmentItem.objects.create(
+                contentnode=shared_unit_topic,
+                assessment_id=assessment_id,
+                type=exercises.QTI,
+                question="",
+                answers="[]",
+                hints="[]",
+                raw_data=raw_data,
+                order=item_order,
+                randomize=False,
+            )
+        cc.AssessmentItem.objects.create(
+            contentnode=shared_unit_topic,
+            assessment_id=shared_unit_ids[2],
+            type=exercises.SINGLE_SELECTION,
+            question="What is 7+7?",
+            answers=json.dumps(
+                [
+                    {"answer": "14", "correct": True, "order": 1},
+                    {"answer": "13", "correct": False, "order": 2},
+                ]
+            ),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=3,
+            randomize=False,
+        )
+
+    def test_native_unreadable_float_entry_left_out_of_both_archives(self):
+        title = "Native QTI Unreadable Floats Exercise"
+        self._assert_archive_ids_match_assessment_metadata(title, 1)
+        node = cc.ContentNode.objects.get(title=title)
+        self.assertEqual(self._read_qti_manifest_ids(node), ["item_1"])
+        for item in node.assessment_items.all():
+            self.assertTrue(validate_qti_item(item.raw_data).is_valid)
+
+    def test_native_unreadable_tolerance_entry_left_out_of_qti_package(self):
+        title = "Native QTI Unreadable Tolerance Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        self.assertTrue(
+            validate_qti_item(node.assessment_items.get(order=2).raw_data).is_valid
+        )
+        self.assertEqual(self._read_qti_manifest_ids(node), ["item_1"])
+        self.assertEqual(
+            kolibri_models.ContentNode.objects.get(title=title)
+            .assessmentmetadata.first()
+            .assessment_item_ids,
+            ["item_1"],
+        )
+
+    def test_skipped_item_sharing_an_identifier_is_not_listed(self):
+        self._assert_archive_ids_match_assessment_metadata(
+            "Native QTI Shared Identifier Exercise", 2
+        )
+
+    def test_perseus_with_unreadable_input_publishes_qti_only(self):
+        qti_bit = 2 ** RENDERABLE_PRESETS_ORDER.index(format_presets.QTI_ZIP)
+        exercise_bit = 2 ** RENDERABLE_PRESETS_ORDER.index(format_presets.EXERCISE)
+        for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS:
+            title = f"Perseus + Input {answer!r} Exercise"
+            with self.subTest(answer=answer):
+                node = cc.ContentNode.objects.get(title=title)
+                self.assertFalse(
+                    node.files.filter(preset_id=format_presets.EXERCISE).exists()
+                )
+                manifest_ids = self._read_qti_manifest_ids(node)
+                self.assertEqual(
+                    manifest_ids,
+                    [
+                        hex_to_qti_id(assessment_id)
+                        for assessment_id in node.assessment_items.order_by(
+                            "order"
+                        ).values_list("assessment_id", flat=True)
+                    ],
+                )
+                published_qti_file = kolibri_models.File.objects.get(
+                    contentnode__title=title, preset=format_presets.QTI_ZIP
+                )
+                self.assertEqual(
+                    published_qti_file.included_presets, qti_bit | exercise_bit
+                )
+
+    def test_perseus_with_readable_inputs_publishes_perseus_only(self):
+        node = cc.ContentNode.objects.get(title="Perseus + Readable Inputs Exercise")
+        self.assertFalse(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        self.assertCountEqual(
+            [answers for _, answers in self._numeric_input_answers(node)],
+            [values for _, values in READABLE_PERSEUS_INPUT_ANSWERS],
+        )
+
+    def test_perseus_with_free_response_publishes_qti_only(self):
+        node = cc.ContentNode.objects.get(title="Perseus + Free Response Exercise")
+        self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+
+    def test_unchanged_republish_rebuilds_perseus_archive_when_qti_dropped(self):
+        title = "Perseus + Readable Inputs Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        hex_ids = list(
+            node.assessment_items.order_by("order").values_list(
+                "assessment_id", flat=True
+            )
+        )
+        qti_ids = [hex_to_qti_id(assessment_id) for assessment_id in hex_ids]
+        self._store_archive(node, format_presets.EXERCISE, qti_ids)
+        self._store_archive(node, format_presets.QTI_ZIP, qti_ids)
+
+        self._republish_unchanged(node)
+
+        self.assertFalse(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        item_stems, exercise_data = self._read_perseus_archive(node)
+        self.assertEqual(item_stems, set(hex_ids))
+        self.assertEqual(exercise_data["all_assessment_items"], hex_ids)
+        self.assertEqual(
+            kolibri_models.ContentNode.objects.get(title=title)
+            .assessmentmetadata.first()
+            .assessment_item_ids,
+            hex_ids,
+        )
+
+    def test_unchanged_republish_rebuilds_archive_holding_skipped_native_items(self):
+        title = "Native QTI Unreadable Floats Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        stored_ids = [
+            parse_qti_xml(item.raw_data).getroot().get("identifier")
+            for item in node.assessment_items.order_by("order")
+        ]
+        self._store_archive(node, format_presets.QTI_ZIP, stored_ids)
+
+        self._republish_unchanged(node)
+
+        self._assert_archive_ids_match_assessment_metadata(title, 1)
+
+    def test_unchanged_republish_keeps_archives_with_schema_invalid_item(self):
+        title = "Native QTI Schema Invalid Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        self._assert_archive_ids_match_assessment_metadata(title, 1)
+        file_ids = set(node.files.values_list("id", flat=True))
+
+        self._republish_unchanged(node)
+
+        self.assertEqual(set(node.files.values_list("id", flat=True)), file_ids)
+
+    def test_unit_pre_post_test_leaves_out_unparseable_item(self):
+        unit_topic = cc.ContentNode.objects.get(title="Entity Unit Topic")
+        legacy_item = unit_topic.assessment_items.get(type=exercises.SINGLE_SELECTION)
+        published = kolibri_models.ContentNode.objects.get(title="Entity Unit Topic")
+        pre_post_test = published.options["completion_criteria"]["threshold"][
+            "pre_post_test"
+        ]
+        for key, ids in pre_post_test.items():
+            with self.subTest(key=key):
+                self.assertEqual(ids, [hex_to_qti_id(legacy_item.assessment_id)])
+
+    def test_unit_pre_post_test_skipped_item_sharing_an_identifier_is_not_listed(
+        self,
+    ):
+        unit_topic = cc.ContentNode.objects.get(title="Shared Identifier Unit Topic")
+        legacy_id = hex_to_qti_id(
+            unit_topic.assessment_items.get(
+                type=exercises.SINGLE_SELECTION
+            ).assessment_id
+        )
+        published = kolibri_models.ContentNode.objects.get(
+            title="Shared Identifier Unit Topic"
+        )
+        pre_post_test = published.options["completion_criteria"]["threshold"][
+            "pre_post_test"
+        ]
+        self.assertEqual(
+            self._read_qti_manifest_ids(unit_topic), ["item_text", legacy_id]
+        )
+        for key, expected in (
+            ("assessment_item_ids", ["item_text", legacy_id]),
+            ("version_a_item_ids", ["item_text", legacy_id]),
+            ("version_b_item_ids", [legacy_id]),
+        ):
+            with self.subTest(key=key):
+                self.assertEqual(pre_post_test[key], expected)
 
 
 class EmptyChannelTestCase(StudioTestCase):
