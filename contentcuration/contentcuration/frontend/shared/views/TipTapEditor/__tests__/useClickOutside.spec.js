@@ -36,10 +36,13 @@ function renderHarness({ editing = true } = {}) {
         dialogOpen: { type: Boolean, default: false },
       },
       template: `<div>
-        <div ref="container">
-          <button>Inside</button>
-          <button aria-haspopup="menu" :aria-expanded="String(menuOpen)">Menu</button>
-          <p><button aria-haspopup="dialog" :aria-expanded="String(dialogOpen)">Chip</button></p>
+        <div data-editor-scope>
+          <div ref="container">
+            <button>Inside</button>
+            <button aria-haspopup="menu" :aria-expanded="String(menuOpen)">Menu</button>
+            <p><button aria-haspopup="dialog" :aria-expanded="String(dialogOpen)">Chip</button></p>
+          </div>
+          <button>Beside</button>
         </div>
         <button>Outside</button>
         <div @click.stop><button>Stopped</button></div>
@@ -80,11 +83,11 @@ describe('useClickOutside', () => {
       expect(close).toHaveBeenCalledTimes(1);
     });
 
-    it('stays open on a click inside', async () => {
+    it.each(['Inside', 'Beside'])('stays open on a click on %s', async name => {
       const user = userEvent.setup();
       const { close } = renderHarness();
 
-      await user.click(button('Inside'));
+      await user.click(button(name));
 
       expect(close).not.toHaveBeenCalled();
     });
@@ -141,19 +144,22 @@ describe('useClickOutside', () => {
       expect(syncContent).toHaveBeenCalledTimes(1);
     });
 
-    it('holds the sync of a blur during a press until its click', async () => {
-      const user = userEvent.setup();
-      const { syncContent, close, blur } = renderHarness();
+    it.each(['Inside', 'Beside'])(
+      'holds the sync of a blur during a press on %s until its click',
+      async name => {
+        const user = userEvent.setup();
+        const { syncContent, close, blur } = renderHarness();
 
-      await user.pointer({ keys: '[MouseLeft>]', target: button('Inside') });
-      await blur();
-      expect(syncContent).not.toHaveBeenCalled();
+        await user.pointer({ keys: '[MouseLeft>]', target: button(name) });
+        await blur();
+        expect(syncContent).not.toHaveBeenCalled();
 
-      await user.pointer({ keys: '[/MouseLeft]', target: button('Inside') });
+        await user.pointer({ keys: '[/MouseLeft]', target: button(name) });
 
-      expect(syncContent).toHaveBeenCalledTimes(1);
-      expect(close).not.toHaveBeenCalled();
-    });
+        expect(syncContent).toHaveBeenCalledTimes(1);
+        expect(close).not.toHaveBeenCalled();
+      },
+    );
 
     it('drops the held sync when the click closes, as closing syncs', async () => {
       const user = userEvent.setup();

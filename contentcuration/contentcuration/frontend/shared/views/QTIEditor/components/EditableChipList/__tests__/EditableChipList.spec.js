@@ -13,6 +13,7 @@ const {
   deleteDistractorBtn$,
   errorEmptyChoiceContent$,
   saveChipBtn$,
+  closeChipEditorBtn$,
 } = qtiEditorStrings;
 
 const CHIPS = [
@@ -74,6 +75,12 @@ const button = name => screen.getByRole('button', { name });
 const queryButton = name => screen.queryByRole('button', { name });
 const openTextarea = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
 const closeFromElsewhere = user => user.click(button('Elsewhere'));
+const addSelfRemovingEditorButton = () => {
+  const control = document.createElement('button');
+  control.addEventListener('click', () => control.remove());
+  openTextarea().parentElement.append(control);
+  return control;
+};
 
 describe('EditableChipList', () => {
   describe('button mode', () => {
@@ -123,6 +130,82 @@ describe('EditableChipList', () => {
       await user.click(within(chipItems()[1]).getByRole('button', { name: saveChipBtn$() }));
       expect(openTextarea()).toBeUndefined();
       expect(chipTexts()).toEqual(['Antonio', 'Prospero!', 'Capulet']);
+    });
+
+    it('closes an open chip, keeping its edits, on a click on the list beside it', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.type(openTextarea(), '!');
+      await user.click(list());
+      expect(openTextarea()).toBeUndefined();
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero!', 'Capulet']);
+    });
+
+    it('closes an open chip, keeping its edits, on a click beside the add button', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.type(openTextarea(), '!');
+      await user.click(button(addDistractorBtn$()).parentElement);
+      expect(openTextarea()).toBeUndefined();
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero!', 'Capulet']);
+    });
+
+    it('adds the written chip on a click on the blank part of its row', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(addDistractorBtn$()));
+      await user.type(openTextarea(), 'Montague');
+      await user.click(button(deleteDistractorBtn$({ number: 4 })).parentElement);
+      expect(openTextarea()).toBeUndefined();
+      expect(chipTexts().at(-1)).toBe('Montague');
+    });
+
+    it('closes an open chip, keeping its edits, on a click beside its save button', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.type(openTextarea(), '!');
+      await user.click(button(saveChipBtn$()).parentElement);
+      expect(openTextarea()).toBeUndefined();
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero!', 'Capulet']);
+    });
+
+    it('adds the written chip on a click beside its save button', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(addDistractorBtn$()));
+      await user.type(openTextarea(), 'Montague');
+      await user.click(button(saveChipBtn$()).parentElement);
+      expect(openTextarea()).toBeUndefined();
+      expect(chipTexts().at(-1)).toBe('Montague');
+    });
+
+    it('keeps the new chip open on a click inside its editor', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(addDistractorBtn$()));
+      await user.type(openTextarea(), 'Montague');
+      await user.click(openTextarea());
+      expect(openTextarea()).toHaveValue('Montague');
+    });
+
+    it('keeps an open chip open on a click on an editor control that removes itself', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.click(addSelfRemovingEditorButton());
+      expect(openTextarea()).toHaveValue('Prospero');
+    });
+
+    it('keeps the new chip open on a click on an editor control that removes itself', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(addDistractorBtn$()));
+      await user.type(openTextarea(), 'Montague');
+      await user.click(addSelfRemovingEditorButton());
+      expect(openTextarea()).toHaveValue('Montague');
     });
 
     it('adds the written chip when its editor is closed without saving', async () => {
@@ -182,6 +265,14 @@ describe('EditableChipList', () => {
       expect(within(chipItems()[1]).getByRole('textbox')).toHaveValue('Prospero');
     });
 
+    it('removes only an open blank chip when its own delete button is pressed', async () => {
+      const user = userEvent.setup();
+      renderHost({ initialChips: [CHIPS[0], { id: 'choice_d', content: '' }, CHIPS[1]] });
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.click(button(deleteDistractorBtn$({ number: 2 })));
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero']);
+    });
+
     it('shows each error message under its own chip only', () => {
       renderList({ errorMessages: [null, errorEmptyChoiceContent$(), null] });
       const [first, second, third] = chipItems();
@@ -232,6 +323,17 @@ describe('EditableChipList', () => {
       await user.click(button(deleteDistractorBtn$({ number: 1 })));
       expect(chipTexts()).toEqual(['Prospero']);
       expect(button(addDistractorBtn$())).toHaveFocus();
+    });
+
+    it('closes an open chip at the minimum, keeping it, when its close button is pressed', async () => {
+      const user = userEvent.setup();
+      renderHost({ initialChips: [CHIPS[0]], minChips: 1 });
+      await user.click(button(editDistractorLabel$({ number: 1 })));
+      await user.type(openTextarea(), 's');
+      await user.click(button(closeChipEditorBtn$()));
+      expect(openTextarea()).toBeUndefined();
+      expect(chipTexts()).toEqual(['Antonios']);
+      expect(button(editDistractorLabel$({ number: 1 }))).toHaveFocus();
     });
   });
 
@@ -293,6 +395,35 @@ describe('EditableChipList', () => {
       await user.click(button(editDistractorLabel$({ number: 2 })));
       await user.click(button(saveChipBtn$()));
       expect(button(editDistractorLabel$({ number: 2 }))).toHaveFocus();
+    });
+
+    it('focuses a chip closed from its editor’s minimize button, keeping its edits', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.type(openTextarea(), '!');
+      await user.click(button('Minimize'));
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero!', 'Capulet']);
+      expect(button(editDistractorLabel$({ number: 2 }))).toHaveFocus();
+    });
+
+    it('adds a new chip closed from its editor’s minimize button, and focuses the add button', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(addDistractorBtn$()));
+      await user.type(openTextarea(), 'Montague');
+      await user.click(button('Minimize'));
+      expect(chipTexts().at(-1)).toBe('Montague');
+      expect(button(addDistractorBtn$())).toHaveFocus();
+    });
+
+    it('leaves focus where a click elsewhere put it', async () => {
+      const user = userEvent.setup();
+      renderHost();
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await closeFromElsewhere(user);
+      expect(openTextarea()).toBeUndefined();
+      expect(button('Elsewhere')).toHaveFocus();
     });
   });
 
@@ -371,13 +502,24 @@ describe('EditableChipList', () => {
       expect(openTextarea()).toBeUndefined();
     });
 
-    it('turns the region off while one of its editors is open', async () => {
+    it('turns the region off while one of its editors is open, closing the editor instead', async () => {
       const user = userEvent.setup();
-      renderList({ addMode: 'region' });
+      const { emitted } = renderList({ addMode: 'region' });
       await user.click(list());
       expect(queryRegion()).not.toBeInTheDocument();
       await user.click(list());
-      expect(openTextarea()).toHaveValue('');
+      expect(openTextarea()).toBeUndefined();
+      expect(emitted().open).toHaveLength(1);
+    });
+
+    it('closes an open chip on a click on the box around its content', async () => {
+      const user = userEvent.setup();
+      renderHost({ addMode: 'region' });
+      await user.click(button(editDistractorLabel$({ number: 2 })));
+      await user.type(openTextarea(), '!');
+      await user.click(list().closest('[data-editor-scope]'));
+      expect(openTextarea()).toBeUndefined();
+      expect(chipTexts()).toEqual(['Antonio', 'Prospero!', 'Capulet']);
     });
 
     it('opens no new chip on a click inside an open chip', async () => {

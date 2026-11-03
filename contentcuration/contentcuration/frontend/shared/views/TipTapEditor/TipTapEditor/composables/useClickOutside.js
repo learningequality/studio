@@ -53,7 +53,11 @@ export function useClickOutside({ container, isFocused, isEditing, syncContent, 
   // still count, and so this runs before the click's own handlers.
   const handleClick = event => {
     const root = container.value;
-    const isOutside = isEditing() && root && !root.contains(event.target) && !hasOpenPopup(root);
+    const isOutside =
+      isEditing() &&
+      root &&
+      !(root.closest('[data-editor-scope]') ?? root).contains(event.target) &&
+      !hasOpenPopup(root);
     if (isOutside) {
       // `close` syncs the content itself.
       hasHeldSync = false;
