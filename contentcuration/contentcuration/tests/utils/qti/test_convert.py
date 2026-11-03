@@ -213,6 +213,7 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
             _normalize_xml(_load_fixture("math_content_choice_interaction.xml")),
             _normalize_xml(result.xml),
         )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
 
 class TextEntryInteractionConversionTests(unittest.TestCase):
@@ -347,6 +348,7 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
             _normalize_xml(_load_fixture("free_response_with_maths.xml")),
             _normalize_xml(result.xml),
         )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
 
 class MarkdownContentConversionTests(unittest.TestCase):
@@ -483,13 +485,11 @@ class MarkdownContentConversionTests(unittest.TestCase):
         # inline all the same, so the gap before it is a gap the reader sees.
         result = self._convert("It is ~~wrong~~ $$x$$ here.")
 
-        # No validity assertion here: inline math does not validate against the item
-        # XSD on unstable either, because the <math> is serialized into the QTI
-        # namespace rather than the MathML one. That is its own bug, not this gap.
         self.assertIn(
             '<p>It is <span style="text-decoration: line-through;">wrong</span> <math',
             result.xml,
         )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_a_space_before_an_inline_image_survives(self):
         result = self._convert("It is ~~wrong~~ ![i](x.png) here.")
@@ -569,21 +569,39 @@ class MarkdownContentConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_maths_in_a_list_item(self):
-        # Validity is not asserted here or below: rendered MathML carries no
-        # namespace, the same gap test_free_response_with_maths lives with.
         result = self._convert("- $$x^2$$\n- two")
 
-        self.assertIn('<li><math display="block">', result.xml)
+        self.assertIn(
+            '<li><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">',
+            result.xml,
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_maths_in_a_table_cell(self):
         result = self._convert("| a |\n|---|\n| $$x^2$$ |")
 
-        self.assertIn('<td><math display="inline">', result.xml)
+        self.assertIn(
+            '<td><math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">',
+            result.xml,
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_maths_latex2mathml_rejects_converts_to_a_valid_item(self):
+        for markdown in ("It is $$x_$$ here.", "$${$$", "- $$a<b_$$\n- two"):
+            with self.subTest(markdown=markdown):
+                result = self._convert(markdown)
+
+                self.assertNotIn("<math", result.xml)
+                self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_maths_in_an_answer(self):
         result = self._convert(answers=[{"answer": "$$x^2$$", "correct": True}])
 
-        self.assertIn('><math display="block">', result.xml)
+        self.assertIn(
+            '><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">',
+            result.xml,
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
 
 class CustomInteractionTests(unittest.TestCase):

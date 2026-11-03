@@ -447,6 +447,22 @@ class QTIRestoreTestCase(StudioTestCase):
         self.assertIn("Legacy question", items[1].raw_data)
         self._assert_republishes_source_package(QTIExerciseGenerator)
 
+    def test_editor_item_formula_restores_as_published_mathml(self):
+        item = self._add_editor_item(0)
+        item.raw_data = item.raw_data.replace(
+            "Pick one.", 'Pick <span data-latex="x^2"></span> one.'
+        )
+        item.save()
+        self._publish(QTIExerciseGenerator)
+
+        items = self._restore(format_presets.QTI_ZIP)
+
+        self.assertIn(
+            '<annotation encoding="application/x-tex">x^2</annotation>',
+            items[0].raw_data,
+        )
+        self._assert_republishes_source_package(QTIExerciseGenerator)
+
     def test_editor_item_with_non_canonical_id_gets_a_new_assessment_id(self):
         # Matches hex_to_qti_id's shape but sets its padding bits.
         identifier = "K" + "A" * 21 + "B"

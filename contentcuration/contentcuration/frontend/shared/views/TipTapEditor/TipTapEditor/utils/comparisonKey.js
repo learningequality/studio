@@ -4,6 +4,7 @@ import { getSchema } from '@tiptap/core';
 // eslint-disable-next-line import/no-unresolved
 import { DOMParser as PMDOMParser } from '@tiptap/pm/model';
 import { editorExtensions } from '../extensions';
+import { mathmlLatex } from '../extensions/Math';
 
 // The full schema, so inline and block content of the same text read the same.
 const schema = getSchema(editorExtensions());
@@ -60,7 +61,7 @@ export function hasRichTextContent(content) {
  *
  * Its text, however marked up except its sub/superscripts, and each formula, image,
  * SVG, MathML and line break where it stands. Read as TipTap saves it, so its
- * re-render keys the same, unless it has SVG or MathML, which TipTap drops.
+ * re-render keys the same, unless it has SVG or MathML without its LaTeX, which TipTap drops.
  *
  * @param {string} html - HTML fragment from a TipTap editor
  * @returns {string} '' for a fragment without rich text content
@@ -72,6 +73,7 @@ export function richTextComparisonKey(html) {
   // into U+FFFD, so no stored formula has this LaTeX.
   const unparsed = new Map();
   for (const element of document.body.querySelectorAll(UNPARSED_MEDIA)) {
+    if (element.localName === 'math' && mathmlLatex(element)) continue;
     const latex = `\0${unparsed.size}`;
     unparsed.set(latex, ['html', element.outerHTML.replace(/\s+/g, ' ').replace(/>\s+</g, '><')]);
     const placeholder = document.createElement('span');

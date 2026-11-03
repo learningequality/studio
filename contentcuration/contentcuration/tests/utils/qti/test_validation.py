@@ -47,6 +47,13 @@ VALID_CHOICE_ITEM = _item_xml(
     "</qti-choice-interaction>",
 )
 
+SINGLE_HINT_CATALOG = (
+    '<qti-catalog-info><qti-catalog id="kolibri-hints">'
+    '<qti-card support="ext:kolibri-hint">'
+    "<qti-html-content><p>{hint}</p></qti-html-content>"
+    "</qti-card></qti-catalog></qti-catalog-info>"
+)
+
 _XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>'
 
 _ENTITY_DOCTYPE = '<!DOCTYPE qti-assessment-item [<!ENTITY e "hi">]>'

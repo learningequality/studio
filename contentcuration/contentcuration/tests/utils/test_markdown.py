@@ -19,7 +19,7 @@ class TexMathTestMixin:
         )
         expected = (
             "<p>What is the answer to this <em>question</em>? "
-            '<math display="inline">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">'
             "<semantics><mrow><mi>x</mi><mi>·</mi><mi>y</mi><mo>=</mo><msup><mi>z</mi><mn>2</mn></msup></mrow>"
             '<annotation encoding="application/x-tex">x\cdot y=z^2</annotation></semantics>'  # noqa W605
             "</math></p>\n"
@@ -35,7 +35,7 @@ class TexMathTestMixin:
         )
         expected = (
             "<p>Here's an equation:</p>\n"
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow>"
             '<annotation encoding="application/x-tex">E = mc^2</annotation></semantics>'
             "</math>"
@@ -59,7 +59,7 @@ class TexMathTestMixin:
             "$$"
         )
         expected = (
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><mrow><mi>a</mi><mo>=</mo><mi>b</mi><mo>+</mo><mi>c</mi>"
             '<mspace linebreak="newline" /><mi>$</mi><mn>5</mn><mo>=</mo><mi>d</mi><mo>+</mo><mi>e</mi></mrow></mrow>'
             '<annotation encoding="application/x-tex">\n\\begin{aligned}\na = b + c \\\\\n$5 = d + e\n\\end{aligned}\n</annotation></semantics>'
@@ -77,10 +77,25 @@ class TexMathTestMixin:
         markdown_text = "Test this $$\\text{Cost = 1.00 $USD$}$$"
         expected = (
             "<p>Test this "
-            '<math display="inline">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">'
             "<semantics><mrow><mtext>Cost = 1.00 $USD$</mtext></mrow>"
             '<annotation encoding="application/x-tex">\\text{Cost = 1.00 $USD$}</annotation></semantics>'
             "</math></p>\n"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
+    def test_text_with_markup_characters(self):
+        markdown_text = "$$\\text{a<b}+\\text{c&d}+\\text{e &lt; f}$$"
+        expected = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
+            "<semantics><mrow><mtext>a&lt;b</mtext><mo>+</mo>"
+            "<mtext>c&amp;d</mtext><mo>+</mo>"
+            "<mtext>e &amp;lt; f</mtext></mrow>"
+            '<annotation encoding="application/x-tex">'
+            "\\text{a&lt;b}+\\text{c&amp;d}+\\text{e &amp;lt; f}"
+            "</annotation></semantics>"
+            "</math>"
         )
 
         self._assert_conversion(markdown_text, expected)
@@ -91,13 +106,13 @@ class TexMathTestMixin:
         markdown_text = "First: $$a + b$$, then $$c \\times d$$, finally $$e^f$$."
         expected = (
             "<p>First: "
-            '<math display="inline"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow>'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow>'
             '<annotation encoding="application/x-tex">a + b</annotation></semantics></math>'
             ", then "
-            '<math display="inline"><semantics><mrow><mi>c</mi><mi>×</mi><mi>d</mi></mrow>'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>c</mi><mi>×</mi><mi>d</mi></mrow>'
             '<annotation encoding="application/x-tex">c \\times d</annotation></semantics></math>'
             ", finally "
-            '<math display="inline"><semantics><mrow><msup><mi>e</mi><mi>f</mi></msup></mrow>'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><msup><mi>e</mi><mi>f</mi></msup></mrow>'
             '<annotation encoding="application/x-tex">e^f</annotation></semantics></math>'
             ".</p>\n"
         )
@@ -115,17 +130,17 @@ class TexMathTestMixin:
         )
         expected = (
             "<p>This is inline math: "
-            '<math display="inline"><semantics><mrow><mi>a</mi><mo>=</mo><mi>b</mi></mrow>'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>a</mi><mo>=</mo><mi>b</mi></mrow>'
             '<annotation encoding="application/x-tex">a = b</annotation></semantics></math>'
             "</p>\n"
             "<p>And this is block math:</p>\n"
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>"
             "<mi>n</mi></mrow></munderover><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mi>y</mi></mrow>"
             '<annotation encoding="application/x-tex">\sum_{i=1}^{n} x_i = y</annotation></semantics>'  # noqa W605
             "</math>"
             "<p>Back to text with more inline: "
-            '<math display="inline"><semantics><mrow><msup><mi>z</mi><mn>2</mn></msup></mrow>'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><msup><mi>z</mi><mn>2</mn></msup></mrow>'
             '<annotation encoding="application/x-tex">z^2</annotation></semantics></math>'
             "</p>\n"
         )
@@ -137,7 +152,7 @@ class TexMathTestMixin:
 
         markdown_text = "$$\\sum_{i=1}^{n} x_i$$"
         expected = (
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>"
             "<mi>n</mi></mrow></munderover><msub><mi>x</mi><mi>i</mi></msub></mrow>"
             '<annotation encoding="application/x-tex">\\sum_{i=1}^{n} x_i</annotation></semantics>'
@@ -152,7 +167,8 @@ class TexMathTestMixin:
         markdown_text = "The sum $$\\sum_{i=1}^{n} x_i$$ is finite."
         expected = (
             "<p>The sum "
-            '<math display="inline"><semantics><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">'
+            "<semantics><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>"
             "<mi>n</mi></mrow></msubsup><msub><mi>x</mi><mi>i</mi></msub></mrow>"
             '<annotation encoding="application/x-tex">\\sum_{i=1}^{n} x_i</annotation></semantics></math>'
             " is finite.</p>\n"
@@ -165,7 +181,7 @@ class TexMathTestMixin:
 
         markdown_text = "$$\\prod_{k=0}^{n} a_k$$"
         expected = (
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><munderover><mo>∏</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mrow>"
             "<mi>n</mi></mrow></munderover><msub><mi>a</mi><mi>k</mi></msub></mrow>"
             '<annotation encoding="application/x-tex">\\prod_{k=0}^{n} a_k</annotation></semantics>'
@@ -179,7 +195,7 @@ class TexMathTestMixin:
 
         markdown_text = "$$\\int_{a}^{b} f(x) dx$$"
         expected = (
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><msubsup><mo>∫</mo><mrow><mi>a</mi></mrow><mrow>"
             '<mi>b</mi></mrow></msubsup><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mi>d</mi><mi>x</mi></mrow>'
             '<annotation encoding="application/x-tex">\\int_{a}^{b} f(x) dx</annotation></semantics>'
@@ -202,7 +218,7 @@ class TexMathTestMixin:
         markdown_text = "The variable $$x$$ is unknown."
         expected = (
             "<p>The variable "
-            '<math display="inline"><semantics><mrow><mi>x</mi></mrow>'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>x</mi></mrow>'
             '<annotation encoding="application/x-tex">x</annotation></semantics></math>'
             " is unknown.</p>\n"
         )
@@ -214,10 +230,35 @@ class TexMathTestMixin:
 
         markdown_text = "$$y = mx + b$$"
         expected = (
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><mi>y</mi><mo>=</mo><mi>m</mi><mi>x</mi><mo>+</mo><mi>b</mi></mrow>"
             '<annotation encoding="application/x-tex">y = mx + b</annotation></semantics>'
             "</math>"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
+    def test_math_at_line_start_followed_by_text_is_inline(self):
+        markdown_text = "$$5$$ exactly"
+        expected = (
+            "<p>"
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mn>5</mn></mrow>'
+            '<annotation encoding="application/x-tex">5</annotation></semantics></math>'
+            " exactly</p>\n"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
+    def test_line_starting_and_ending_with_math_is_inline(self):
+        markdown_text = "$$a$$ and $$b$$"
+        expected = (
+            "<p>"
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>a</mi></mrow>'
+            '<annotation encoding="application/x-tex">a</annotation></semantics></math>'
+            " and "
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mi>b</mi></mrow>'
+            '<annotation encoding="application/x-tex">b</annotation></semantics></math>'
+            "</p>\n"
         )
 
         self._assert_conversion(markdown_text, expected)
@@ -227,7 +268,7 @@ class TexMathTestMixin:
 
         markdown_text = "$$a_b+\\overrightarrow{abc}+\\overleftarrow{abc}\\div\\surd\\overline{abc}$$"
         expected = (
-            '<math display="block">'
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">'
             "<semantics><mrow><msub><mi>a</mi><mi>b</mi></msub><mo>+</mo><mover><mrow><mi>a</mi><mi>b</mi><mi>c</mi></mrow><mo>→</mo></mover><mo>+</mo>"
             '<mover><mrow><mi>a</mi><mi>b</mi><mi>c</mi></mrow><mo>←</mo></mover><mi>÷</mi><mo stretchy="false">√</mo><mover><mrow><mi>a</mi><mi>b</mi>'
             '<mi>c</mi></mrow><mo accent="true">―</mo></mover></mrow>'
@@ -266,6 +307,34 @@ class TestTexMathPluginRoundtrip(TexMathTestMixin, unittest.TestCase):
         self.assertEqual(
             roundtrip_result.replace("\n", "").strip(),
             expected.replace("\n", "").strip(),
+        )
+
+
+class MalformedMathTests(unittest.TestCase):
+    def test_inline_math_latex2mathml_rejects_renders_as_its_source(self):
+        for latex in ("x_", "{", " "):
+            with self.subTest(latex=latex):
+                self.assertEqual(
+                    render_markdown(f"It is $${latex}$$ here."),
+                    f"<p>It is $${latex}$$ here.</p>\n",
+                )
+
+    def test_block_math_latex2mathml_rejects_renders_as_a_paragraph(self):
+        self.assertEqual(
+            render_markdown("Before\n\n$$x_$$\n\nAfter"),
+            "<p>Before</p>\n<p>$$x_$$</p>\n<p>After</p>\n",
+        )
+
+    def test_source_of_rejected_math_is_escaped(self):
+        self.assertEqual(
+            render_markdown("It is $$a<b&c_$$ here"),
+            "<p>It is $$a&lt;b&amp;c_$$ here</p>\n",
+        )
+
+    def test_stray_ampersand_renders_as_its_source(self):
+        self.assertEqual(
+            render_markdown("It is $$a & c$$ here"),
+            "<p>It is $$a &amp; c$$ here</p>\n",
         )
 
 
