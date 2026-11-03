@@ -115,4 +115,22 @@ describe('StudioDetailsPanel', () => {
       expect(placeholders.length).toBeGreaterThan(0);
     });
   });
+  describe('total resources', () => {
+    it('lists each content kind with its translated label and count', () => {
+      renderComponent({
+        details: {
+          ...fullChannel,
+          kind_count: [
+            { kind_id: 'video', count: 30 },
+            { kind_id: 'exercise', count: 12 },
+          ],
+        },
+        loading: false,
+      });
+      expect(screen.getByText('Video')).toBeInTheDocument();
+      expect(screen.getByText('30')).toBeInTheDocument();
+      expect(screen.getByText('Exercise')).toBeInTheDocument();
+      expect(screen.getByText('12')).toBeInTheDocument();
+    });
+  });
 });
