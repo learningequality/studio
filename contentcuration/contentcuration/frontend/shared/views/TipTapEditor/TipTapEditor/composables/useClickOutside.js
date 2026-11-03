@@ -8,6 +8,12 @@ import { onBeforeUnmount, watch } from 'vue';
 const hasOpenPopup = container =>
   Boolean(container.querySelector('[aria-haspopup][aria-expanded="true"]'));
 
+const editorBoundary = container => container.closest('[data-editor-boundary]') ?? container;
+
+const popupDismissals = new WeakSet();
+
+export const isPopupDismissal = event => popupDismissals.has(event);
+
 /**
  * Closes the editor on a click outside it, and syncs its content when it loses focus.
  *
@@ -16,7 +22,7 @@ const hasOpenPopup = container =>
  * @param {Ref<boolean>} options.isFocused whether the editor content has focus
  * @param {Function} options.isEditing whether the editor is open for editing
  * @param {Function} options.syncContent emits the content if it changed
- * @param {Function} options.close syncs the content and closes the editor
+ * @param {Function} options.close syncs the content and closes the editor; given the click
  */
 export function useClickOutside({ container, isFocused, isEditing, syncContent, close }) {
   // A blur caused by a press syncs once the press ends, so the re-render it may cause
@@ -53,13 +59,20 @@ export function useClickOutside({ container, isFocused, isEditing, syncContent, 
   // still count, and so this runs before the click's own handlers.
   const handleClick = event => {
     const root = container.value;
-    const isOutside = isEditing() && root && !root.contains(event.target) && !hasOpenPopup(root);
-    if (isOutside) {
-      // `close` syncs the content itself.
-      hasHeldSync = false;
-      close();
-    } else {
+    const isOutside = isEditing() && root && !root.contains(event.target);
+    const isDismissal = isOutside && hasOpenPopup(root);
+    if (isDismissal) {
+      popupDismissals.add(event);
+    }
+    if (!isOutside || isDismissal) {
       flushHeldSync();
+      return;
+    }
+    hasHeldSync = false;
+    if (editorBoundary(root).contains(event.target)) {
+      syncContent();
+    } else {
+      close(event);
     }
   };
 

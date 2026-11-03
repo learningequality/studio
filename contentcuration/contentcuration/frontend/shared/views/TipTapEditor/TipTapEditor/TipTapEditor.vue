@@ -245,12 +245,12 @@
         }
       });
 
-      const minimize = () => {
+      const minimize = clickOutside => {
         // Toolbar buttons suppress blur to keep the caret, so content written since
         // the last blur is still unsynced. Flush it first: a parent acting on the
         // close would otherwise read the content as it stood before that edit.
         emitContentUpdate();
-        emit('minimize');
+        emit('minimize', clickOutside);
       };
 
       // The content is emitted only when the editor loses focus (blur) or closes.

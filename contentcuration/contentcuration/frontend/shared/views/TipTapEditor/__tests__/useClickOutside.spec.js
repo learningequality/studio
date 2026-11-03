@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/vue';
+import { fireEvent, render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { defineComponent, nextTick, ref } from 'vue';
 import VueRouter from 'vue-router';
-import { useClickOutside } from '../TipTapEditor/composables/useClickOutside';
+import { isPopupDismissal, useClickOutside } from '../TipTapEditor/composables/useClickOutside';
 
 /**
  * Stands in for the editor: `isFocused` plays the editor content's focus, which the
@@ -36,12 +36,16 @@ function renderHarness({ editing = true } = {}) {
         dialogOpen: { type: Boolean, default: false },
       },
       template: `<div>
-        <div ref="container">
-          <button>Inside</button>
-          <button aria-haspopup="menu" :aria-expanded="String(menuOpen)">Menu</button>
-          <p><button aria-haspopup="dialog" :aria-expanded="String(dialogOpen)">Chip</button></p>
+        <div data-editor-boundary>
+          <div ref="container">
+            <button>Inside</button>
+            <button aria-haspopup="menu" :aria-expanded="String(menuOpen)">Menu</button>
+            <p><button aria-haspopup="dialog" :aria-expanded="String(dialogOpen)">Chip</button></p>
+          </div>
+          <button>Save</button>
         </div>
         <button>Outside</button>
+        <div data-editor-boundary><button>Other editor's save</button></div>
         <div @click.stop><button>Stopped</button></div>
       </div>`,
     }),
@@ -71,6 +75,17 @@ describe('useClickOutside', () => {
       expect(syncContent).not.toHaveBeenCalled();
     });
 
+    it('passes the click that closes it to close', async () => {
+      const user = userEvent.setup();
+      const { close } = renderHarness();
+      let clicked;
+      button('Outside').addEventListener('click', event => (clicked = event));
+
+      await user.click(button('Outside'));
+
+      expect(close).toHaveBeenCalledWith(clicked);
+    });
+
     it('closes on a click outside that is stopped before it reaches the document', async () => {
       const user = userEvent.setup();
       const { close } = renderHarness();
@@ -87,6 +102,24 @@ describe('useClickOutside', () => {
       await user.click(button('Inside'));
 
       expect(close).not.toHaveBeenCalled();
+    });
+
+    it('stays open on a click on a control within its boundary', async () => {
+      const user = userEvent.setup();
+      const { close } = renderHarness();
+
+      await user.click(button('Save'));
+
+      expect(close).not.toHaveBeenCalled();
+    });
+
+    it("closes on a click within another editor's boundary", async () => {
+      const user = userEvent.setup();
+      const { close } = renderHarness();
+
+      await user.click(button("Other editor's save"));
+
+      expect(close).toHaveBeenCalledTimes(1);
     });
 
     it('stays open on a click outside while one of its menus is open', async () => {
@@ -110,6 +143,24 @@ describe('useClickOutside', () => {
       await updateProps({ dialogOpen: false });
       await user.click(button('Outside'));
       expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    it('marks a click outside as a popup dismissal only while a popup is open', async () => {
+      const user = userEvent.setup();
+      const { updateProps } = renderHarness();
+      const dismissals = [];
+      const onClick = event => dismissals.push(isPopupDismissal(event));
+      document.addEventListener('click', onClick);
+      try {
+        await updateProps({ menuOpen: true });
+        await user.click(button('Save'));
+        await updateProps({ menuOpen: false });
+        await user.click(button('Save'));
+      } finally {
+        document.removeEventListener('click', onClick);
+      }
+
+      expect(dismissals).toEqual([true, false]);
     });
 
     it('does not listen while not open for editing', async () => {
@@ -153,6 +204,33 @@ describe('useClickOutside', () => {
 
       expect(syncContent).toHaveBeenCalledTimes(1);
       expect(close).not.toHaveBeenCalled();
+    });
+
+    it('syncs a held blur before a click on a control within its boundary', async () => {
+      const user = userEvent.setup();
+      const { syncContent, blur } = renderHarness();
+      let syncsAtClick;
+      button('Save').addEventListener('click', () => {
+        syncsAtClick = syncContent.mock.calls.length;
+      });
+
+      await user.pointer({ keys: '[MouseLeft>]', target: button('Save') });
+      await blur();
+      await user.pointer({ keys: '[/MouseLeft]', target: button('Save') });
+
+      expect(syncsAtClick).toBe(1);
+    });
+
+    it('syncs before a click on a control within its boundary that moves no focus', () => {
+      const { syncContent } = renderHarness();
+      let syncsAtClick;
+      button('Save').addEventListener('click', () => {
+        syncsAtClick = syncContent.mock.calls.length;
+      });
+
+      fireEvent.click(button('Save'));
+
+      expect(syncsAtClick).toBe(1);
     });
 
     it('drops the held sync when the click closes, as closing syncs', async () => {

@@ -103,6 +103,13 @@ The context is re-evaluated on every transaction; no listener is needed. The edi
 - The editor knows a popup is open from its trigger: any element inside the editor with `aria-haspopup` and `aria-expanded="true"`. KDS's `KDropdownMenu` sets both on its trigger.
 - A node view whose button opens a panel rendered beside the editor sets both on that button for as long as the panel is open, and the editor stays open while the panel is used. The inline choice chip does this for its options panel.
 
+### Controls beside the editor
+- Put the editor and the controls beside it that act on it, such as Save, in a common ancestor marked `data-editor-boundary`: a click anywhere inside the editor's closest such ancestor counts as inside.
+- A click inside the boundary but outside the editor syncs its content before the control's own handler runs.
+- A click outside the boundary closes the editor, and `minimize` carries that click: an ancestor's click handler skips it to avoid acting on a click that only closed the editor.
+- A control inside the boundary that closes the editor, such as Save or Discard, closes it in its own handler.
+- A handler that closes the editor on a click elsewhere in the boundary skips a click for which `isPopupDismissal(event)` from `composables/useClickOutside.js` is true: the trigger's `aria-expanded` is already `false` by the time the click bubbles.
+
 ### Node views reading consumer state
 - ProseMirror mounts node views outside the Vue render tree: no slots, no `$emit` listener.
 - tiptap mounts them with `parent: editor.contentComponent`, so `inject` reaches whatever an ancestor of `TipTapEditor` provides.
