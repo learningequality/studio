@@ -5,6 +5,7 @@ import {
   getContentHTML,
   getPromptHTML,
   isContentNode,
+  parseHTMLBody,
   parseXML,
   serializeAsHtml,
   wrapInlineRuns,
@@ -48,8 +49,43 @@ const SENTINEL_ID = 'studio_sentinel';
  * @property {string}      answer   - HTML of the gap's correct answer; '' when blank
  */
 
-function defaultState() {
+export function _defaultState() {
   return { responseIdentifier: RESPONSE_IDENTIFIER, prompt: '', passage: '', distractors: [] };
+}
+
+/**
+ * A new distractor, with a fresh identifier.
+ *
+ * @param {string} [content]
+ * @returns {GapMatchDistractor}
+ */
+export const newDistractor = (content = '') => ({ id: generateRandomSlug('choice'), content });
+
+/**
+ * @param {Element} el - A `<qti-gap>` as the passage holds it
+ * @returns {GapMatchGap}
+ */
+export function readGap(el) {
+  return {
+    id: el.getAttribute('identifier'),
+    answerId: el.getAttribute(CORRECT_ATTR),
+    answer: getContentHTML(el),
+  };
+}
+
+/**
+ * A new gap, with a fresh identifier, as the passage holds it: holding its answer, which the
+ * build writes out as its gap text. The reverse of readGap.
+ *
+ * @param {Document} doc - The document of the passage it goes in
+ * @param {string} answer - HTML of its correct answer; '' for a blank gap
+ * @returns {Element}
+ */
+export function writeGap(doc, answer) {
+  const gap = doc.createElement(GAP);
+  gap.setAttribute('identifier', generateRandomSlug('gap'));
+  gap.append(...parseHTMLBody(answer).childNodes);
+  return gap;
 }
 
 /**
@@ -60,11 +96,7 @@ function defaultState() {
  */
 export function getGaps(passage) {
   const doc = parseXML(passage || '', 'text/html');
-  return [...doc.querySelectorAll(GAP)].map(el => ({
-    id: el.getAttribute('identifier'),
-    answerId: el.getAttribute(CORRECT_ATTR),
-    answer: getContentHTML(el),
-  }));
+  return [...doc.querySelectorAll(GAP)].map(readGap);
 }
 
 /**
@@ -79,13 +111,13 @@ export function getGaps(passage) {
  * @returns {GapMatchState}
  */
 export function parseGapMatchInteraction(bodyXml, responseDeclarations) {
-  if (!bodyXml) return defaultState();
+  if (!bodyXml) return _defaultState();
 
   let root;
   try {
     root = parseXML(bodyXml).documentElement;
   } catch {
-    return defaultState();
+    return _defaultState();
   }
 
   const contentNodes = [...root.childNodes].filter(isContentNode);

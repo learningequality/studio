@@ -6,6 +6,7 @@ import { gapMatchInteractionDescriptor as descriptor } from '../Descriptor';
 import { getGaps } from '../parse';
 import { QuestionType, ValidationError } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
+import { renderFocused } from '../../__tests__/renderFocused';
 import { gap } from './renderPassage';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
@@ -75,6 +76,31 @@ describe('GapMatchEditor', () => {
     expect(screen.getByRole('heading', { name: tr.questionOptionalLabel$() })).toBeInTheDocument();
     expect(section(tr.passageEditorLabel$())).toHaveTextContent(tr.gapPassageEditorDescription$());
     expect(section(tr.distractorsLabel$())).toHaveTextContent(tr.distractorsDescription$());
+  });
+
+  it('opens on the question, focused, with the passage closed, when its card opens', async () => {
+    renderFocused(GapMatchEditor, {
+      props: { interaction: interactionOf(), questionType: QuestionType.GAP_MATCH, mode: 'edit' },
+      routes: new VueRouter(),
+    });
+    const editPassage = await screen.findByRole('button', { name: tr.editPassageLabel$() });
+    await waitFor(() =>
+      expect(screen.getByText('Fill in the seasons').closest('.ProseMirror')).toHaveFocus(),
+    );
+    expect(screen.queryByRole('button', { name: tr.insertGap$() })).not.toBeInTheDocument();
+    expect(editPassage).toBeInTheDocument();
+  });
+
+  it('leaves the question closed, and focus where it was, when it only mounts', async () => {
+    render(GapMatchEditor, {
+      props: { interaction: interactionOf(), questionType: QuestionType.GAP_MATCH, mode: 'edit' },
+      routes: new VueRouter(),
+    });
+    await screen.findByRole('button', { name: tr.editPassageLabel$() });
+    expect(
+      await screen.findByRole('button', { name: tr.editQuestionLabel$() }),
+    ).toBeInTheDocument();
+    expect(document.body).toHaveFocus();
   });
 
   it('shows each gap, named by its answer and position', async () => {

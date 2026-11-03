@@ -1,6 +1,7 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
 import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseMatchInteraction, buildMatchInteractionXML, hasTwoMatchSets } from './parse';
+import { exportMatchContent, getMatchConversionFormat, importMatchContent } from './convert';
 import { validateMatchInteraction } from './validation';
 
 /**
@@ -12,7 +13,6 @@ export class MatchInteractionDescriptor extends InteractionDescriptor {
       type: QtiInteraction.MATCH,
       questionTypes: [QuestionType.MATCH],
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {
@@ -79,6 +79,29 @@ export class MatchInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state) {
     return validateMatchInteraction(state);
+  }
+
+  /**
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat() {
+    return getMatchConversionFormat();
+  }
+
+  /**
+   * @param {object} state - MatchState
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state) {
+    return exportMatchContent(state);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @returns {object} MatchState
+   */
+  importContent(content) {
+    return importMatchContent(content);
   }
 }
 

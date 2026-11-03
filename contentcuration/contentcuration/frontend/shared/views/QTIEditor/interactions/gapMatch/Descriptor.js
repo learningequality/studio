@@ -3,6 +3,11 @@ import { contentChildrenOf } from '../../serialization/xml';
 import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseGapMatchInteraction, buildGapMatchInteractionXML } from './parse';
 import { validateGapMatchInteraction } from './validation';
+import {
+  exportGapMatchContent,
+  getGapMatchConversionFormat,
+  importGapMatchContent,
+} from './convert';
 
 class GapMatchInteractionDescriptor extends InteractionDescriptor {
   constructor() {
@@ -53,6 +58,29 @@ class GapMatchInteractionDescriptor extends InteractionDescriptor {
 
   validate(state) {
     return validateGapMatchInteraction(state);
+  }
+
+  /**
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat() {
+    return getGapMatchConversionFormat();
+  }
+
+  /**
+   * @param {import('./parse').GapMatchState} state
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state) {
+    return exportGapMatchContent(state);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @returns {import('./parse').GapMatchState}
+   */
+  importContent(content) {
+    return importGapMatchContent(content);
   }
 }
 

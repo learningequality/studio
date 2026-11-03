@@ -7,6 +7,7 @@ import { inlineChoiceInteractionDescriptor as descriptor } from '../Descriptor';
 import { getDropdowns } from '../parse';
 import { QuestionType } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
+import { renderFocused } from '../../__tests__/renderFocused';
 import { CHIP, chip } from './renderPassage';
 import { dragSortStrings as dragTr } from 'shared/views/dragSort/dragSortStrings';
 import { getTipTapEditorStrings } from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditorStrings';
@@ -142,8 +143,8 @@ describe('InlineChoiceEditor', () => {
     expect(passage).toHaveAccessibleDescription(tr.passageEditorDescription$());
   });
 
-  it('opens on the question, focused, with the passage closed', async () => {
-    render(InlineChoiceEditor, {
+  it('opens on the question, focused, with the passage closed, when its card opens', async () => {
+    renderFocused(InlineChoiceEditor, {
       props: {
         interaction: interactionOf(),
         questionType: QuestionType.INLINE_CHOICE,
@@ -161,6 +162,23 @@ describe('InlineChoiceEditor', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', CHIP)).not.toBeInTheDocument();
     expect(editPassage).toBeInTheDocument();
+  });
+
+  it('leaves the question closed, and focus where it was, when it only mounts', async () => {
+    render(InlineChoiceEditor, {
+      props: {
+        interaction: interactionOf(),
+        questionType: QuestionType.INLINE_CHOICE,
+        mode: 'edit',
+        teleportTargetId: 'settings-target',
+      },
+      routes: new VueRouter(),
+    });
+    await screen.findByRole('button', { name: tr.editPassageLabel$() });
+    expect(
+      await screen.findByRole('button', { name: tr.editQuestionLabel$() }),
+    ).toBeInTheDocument();
+    expect(document.body).toHaveFocus();
   });
 
   it('shows no options panel until a chip is opened', async () => {

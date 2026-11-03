@@ -1,9 +1,10 @@
-import { render, screen, fireEvent, within } from '@testing-library/vue';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import ChoiceInteractionEditor from '../Editor.vue';
+import { renderFocused } from '../../__tests__/renderFocused';
 
 import {
   CHOICE_SINGLE_SELECT_XML,
@@ -62,8 +63,9 @@ const choiceLabel = number => tr.$tr('choiceItemLabel', { number });
 const moveUpName = number => dragTr.$tr('moveItemUpLabel', { item: choiceLabel(number) });
 const moveDownName = number => dragTr.$tr('moveItemDownLabel', { item: choiceLabel(number) });
 
-const renderEditor = (props = {}) =>
-  render(ChoiceInteractionEditor, {
+// `focused` renders it as its card does when the card opens.
+const renderEditor = (props = {}, { focused = false } = {}) =>
+  (focused ? renderFocused : render)(ChoiceInteractionEditor, {
     props: { mode: 'edit', teleportTargetId: 'test-settings-target', ...props },
     routes: new VueRouter(),
   });
@@ -358,17 +360,29 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getAllByRole('radio')).toHaveLength(2);
     });
 
-    it('opens the question for editing when it is already written', () => {
-      renderEditor({
-        interaction: block(CHOICE_SINGLE_SELECT_XML),
-        questionType: QuestionType.SINGLE_SELECT,
-      });
+    it('opens the question for editing, and focuses it, when its card opens', async () => {
+      renderEditor(
+        { interaction: block(CHOICE_SINGLE_SELECT_XML), questionType: QuestionType.SINGLE_SELECT },
+        { focused: true },
+      );
+      await nextTick();
       expect(
         screen.queryByRole('button', { name: tr.$tr('editQuestionLabel') }),
       ).not.toBeInTheDocument();
       expect(
         screen.getByRole('button', { name: tr.$tr('editAnswerOptionLabel', { number: 1 }) }),
       ).toBeInTheDocument();
+      await waitFor(() => expect(document.activeElement.tagName).toBe('TEXTAREA'));
+    });
+
+    it('leaves the question closed, and focus where it was, when it only mounts', async () => {
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await nextTick();
+      expect(screen.getByRole('button', { name: tr.$tr('editQuestionLabel') })).toBeInTheDocument();
+      expect(document.body).toHaveFocus();
     });
 
     it('opens the prompt for editing via keyboard (Enter)', async () => {

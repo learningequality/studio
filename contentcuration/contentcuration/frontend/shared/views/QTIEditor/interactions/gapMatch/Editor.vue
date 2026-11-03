@@ -255,10 +255,7 @@
       watch(
         () => props.mode,
         newMode => {
-          if (newMode === 'edit') {
-            // Open the question, the first thing in the card, so the card opens at its start.
-            openPrompt();
-          } else {
+          if (newMode !== 'edit') {
             isPromptOpen.value = false;
             isPassageOpen.value = false;
           }
@@ -311,6 +308,9 @@
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });
 
       return {
+        // Public: opens the question for editing, which focuses it.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus: openPrompt,
         EditorImageProcessor,
         state,
         passage,

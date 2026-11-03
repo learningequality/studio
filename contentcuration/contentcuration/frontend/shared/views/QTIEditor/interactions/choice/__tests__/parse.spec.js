@@ -47,7 +47,7 @@ describe('parse()', () => {
       const xml = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="0">
         <qti-simple-choice identifier="a">A</qti-simple-choice>
       </qti-choice-interaction>`;
-      const state = parse(xml, []);
+      const state = parse(xml, [MULTI_DECL]);
       expect(state.showAnswerCount).toBe(false);
     });
 
@@ -146,8 +146,31 @@ describe('parse()', () => {
       const xml = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="0">
         <qti-simple-choice identifier="a">A</qti-simple-choice>
       </qti-choice-interaction>`;
-      const state = parse(xml, []);
+      const state = parse(xml, [MULTI_DECL]);
       expect(state.showAnswerCount).toBe(false);
+    });
+
+    // Showing the count saves max-choices="0" too while no choice is correct.
+    it('parses max-choices="0" with no correct choice as showAnswerCount = true', () => {
+      const xml = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="0">
+        <qti-simple-choice identifier="a">A</qti-simple-choice>
+      </qti-choice-interaction>`;
+      expect(parse(xml, []).showAnswerCount).toBe(true);
+    });
+
+    it('keeps showing the count once a new question is saved and its choices marked', () => {
+      const saved = buildXML(
+        { prompt: '', choices: [{ id: 'a', content: 'A', correct: false }], showAnswerCount: true },
+        QuestionType.MULTI_SELECT,
+      );
+      const state = parse(saved.bodyXml, saved.responseDeclarations);
+      expect(state.showAnswerCount).toBe(true);
+
+      const marked = buildXML(
+        { ...state, choices: [{ ...state.choices[0], correct: true }] },
+        QuestionType.MULTI_SELECT,
+      );
+      expect(parse(marked.bodyXml, marked.responseDeclarations).showAnswerCount).toBe(true);
     });
   });
 });

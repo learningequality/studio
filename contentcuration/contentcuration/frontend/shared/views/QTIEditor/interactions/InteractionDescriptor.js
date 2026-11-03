@@ -94,4 +94,41 @@ export class InteractionDescriptor {
   getTypeOptions() {
     return [];
   }
+
+  /**
+   * The facets a question type takes when a question is converted to it (see
+   * conversion/). Subclasses are passed the question type. The default takes
+   * none, so only the question carries over.
+   *
+   * @returns {import('../conversion').ConversionFormat}
+   */
+  getConversionFormat() {
+    return {};
+  }
+
+  /**
+   * The state as facets, for converting the question to another type. Subclasses are also
+   * passed the question type and `{ language }`, the exercise language, for content the
+   * author sees written in it. Everything the state holds beyond the question must be
+   * exported: what isn't would be lost without a warning.
+   *
+   * @param {object} state
+   * @returns {import('../conversion').ConvertibleContent}
+   */
+  exportContent(state) {
+    return { prompt: state.prompt ?? '' };
+  }
+
+  /**
+   * A state holding the facets this type takes (getConversionFormat), already carried into
+   * its format. Subclasses are also passed the question type and `{ language }`, the
+   * exercise language, which content the author saw written in it arrives in. The default
+   * is a new question with the question carried over.
+   *
+   * @param {import('../conversion').ConvertibleContent} content
+   * @returns {object}
+   */
+  importContent(content) {
+    return { ...this.parse('', []), prompt: content.prompt };
+  }
 }

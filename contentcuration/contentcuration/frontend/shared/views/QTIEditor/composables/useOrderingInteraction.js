@@ -1,6 +1,6 @@
 import { readonly } from 'vue';
-import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { orderingInteractionDescriptor } from '../interactions/ordering/Descriptor';
+import { newItem } from '../interactions/ordering/parse';
 import { useInteraction } from './useInteraction';
 
 /**
@@ -16,7 +16,7 @@ export function useOrderingInteraction(interactionBlock, questionType) {
   function addItem() {
     state.value = {
       ...state.value,
-      items: [...state.value.items, { id: generateRandomSlug('order'), content: '', fixed: false }],
+      items: [...state.value.items, newItem({ fixed: false })],
     };
   }
 

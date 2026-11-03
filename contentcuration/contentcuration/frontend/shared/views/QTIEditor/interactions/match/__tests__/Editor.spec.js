@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/vue';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
 import MatchEditor from '../Editor.vue';
+import { renderFocused } from '../../__tests__/renderFocused';
 
 import {
   MATCH_XML,
@@ -144,8 +145,9 @@ const rowAnswers = number =>
 const answerItems = number => within(rowAnswers(number)).queryAllByRole('listitem');
 const distractorList = () => screen.getByRole('list', { name: tr.$tr('distractorsLabel') });
 
-const renderEditor = (props = {}) =>
-  render(MatchEditor, {
+// `focused` renders it as its card does when the card opens.
+const renderEditor = (props = {}, { focused = false } = {}) =>
+  (focused ? renderFocused : render)(MatchEditor, {
     props: {
       mode: 'edit',
       questionType: QuestionType.MATCH,
@@ -194,10 +196,19 @@ describe('MatchEditor', () => {
       expect(screen.queryByText(tr.$tr('pairNumberLabel', { number: 1 }))).not.toBeInTheDocument();
     });
 
-    it('opens the question prompt for editing when it is already written', () => {
-      renderEditor();
+    it('opens the question prompt for editing, and focuses it, when its card opens', async () => {
+      renderEditor({}, { focused: true });
+      await nextTick();
       expect(queryButton(tr.$tr('editQuestionLabel'))).not.toBeInTheDocument();
       expect(button(editRow(1))).toBeInTheDocument();
+      await waitFor(() => expect(openTextarea()).toHaveFocus());
+    });
+
+    it('leaves the question prompt closed, and focus where it was, when it only mounts', async () => {
+      renderEditor();
+      await nextTick();
+      expect(button(tr.$tr('editQuestionLabel'))).toBeInTheDocument();
+      expect(document.body).toHaveFocus();
     });
 
     it('shows a placeholder in a blank row prompt until it opens', async () => {
@@ -209,8 +220,9 @@ describe('MatchEditor', () => {
       expect(within(rows()[0]).queryByText(placeholder)).not.toBeInTheDocument();
     });
 
-    it('opens the question prompt for editing when it is blank', () => {
-      renderEditor({ interaction: block('') });
+    it('opens the question prompt for editing when its card opens and it is blank', async () => {
+      renderEditor({ interaction: block('') }, { focused: true });
+      await nextTick();
       expect(queryButton(tr.$tr('editQuestionLabel'))).not.toBeInTheDocument();
       expect(button(editRow(1))).toBeInTheDocument();
     });
@@ -235,8 +247,8 @@ describe('MatchEditor', () => {
 
     it('writes the typed question prompt into the emitted XML', async () => {
       const user = userEvent.setup();
-      // The question prompt opens on mount.
       const { emitted } = renderEditor();
+      await user.click(button(tr.$tr('editQuestionLabel')));
       await user.type(openTextarea(), 'Which class?');
       expect(latestBodyXml(emitted)).toContain('Which class?');
     });

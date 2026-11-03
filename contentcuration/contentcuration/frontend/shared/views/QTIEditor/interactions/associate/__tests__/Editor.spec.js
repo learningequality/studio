@@ -1,8 +1,9 @@
-import { render, screen, within } from '@testing-library/vue';
+import { render, screen, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import AssociateEditor from '../Editor.vue';
+import { renderFocused } from '../../__tests__/renderFocused';
 
 import {
   ASSOCIATE_XML,
@@ -100,8 +101,9 @@ const queryButton = name => screen.queryByRole('button', { name });
 
 const editPairItem = (number, position) => tr.$tr('editPairItemLabel', { number, position });
 
-const renderEditor = (props = {}) =>
-  render(AssociateEditor, {
+// `focused` renders it as its card does when the card opens.
+const renderEditor = (props = {}, { focused = false } = {}) =>
+  (focused ? renderFocused : render)(AssociateEditor, {
     props: {
       mode: 'edit',
       questionType: QuestionType.ASSOCIATE,
@@ -153,15 +155,25 @@ describe('AssociateEditor', () => {
       expect(button(tr.$tr('addDistractorBtn'))).toBeInTheDocument();
     });
 
-    it('opens the prompt for editing when the prompt is already written', () => {
-      renderEditor();
+    it('opens the prompt for editing, and focuses it, when its card opens', async () => {
+      renderEditor({}, { focused: true });
+      await nextTick();
       expect(queryButton(tr.$tr('editQuestionLabel'))).not.toBeInTheDocument();
       expect(button(editPairItem(1, 1))).toBeInTheDocument();
+      await waitFor(() => expect(openTextarea()).toHaveFocus());
     });
 
-    it('opens the prompt for editing when there is no prompt yet', () => {
-      renderEditor({ interaction: block('') });
+    it('opens the prompt for editing when its card opens and there is no prompt yet', async () => {
+      renderEditor({ interaction: block('') }, { focused: true });
+      await nextTick();
       expect(queryButton(tr.$tr('editQuestionLabel'))).not.toBeInTheDocument();
+    });
+
+    it('leaves the prompt closed, and focus where it was, when it only mounts', async () => {
+      renderEditor();
+      await nextTick();
+      expect(button(tr.$tr('editQuestionLabel'))).toBeInTheDocument();
+      expect(document.body).toHaveFocus();
     });
   });
 
@@ -184,8 +196,8 @@ describe('AssociateEditor', () => {
 
     it('writes the typed prompt into the emitted XML', async () => {
       const user = userEvent.setup();
-      // The prompt opens on mount.
       const { emitted } = renderEditor();
+      await user.click(button(tr.$tr('editQuestionLabel')));
       await user.type(openTextarea(), 'Who rivals whom?');
       expect(latestBodyXml(emitted)).toContain('Who rivals whom?');
     });

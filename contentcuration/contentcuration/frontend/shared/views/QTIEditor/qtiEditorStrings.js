@@ -704,4 +704,73 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Accessible name of a gap in a preview of a gap match question that hides the answers. {number} is its position in the passage',
   },
+  changeQuestionTypeTitle: {
+    message: 'Change question type?',
+    context:
+      'Title of the dialog asking an author to confirm a change of question type that would remove or change some of the question',
+  },
+  changeQuestionTypeIntro: {
+    message: 'Switching to {type} will change this question:',
+    context:
+      "Opens the list of what changing the question's type would remove or change. {type} is the new question type, e.g. 'Numeric input'",
+  },
+  changeQuestionTypeAction: {
+    message: 'Change',
+    context: 'Button that confirms changing the question type',
+  },
+  cancelAction: {
+    message: 'Cancel',
+    context: 'Button that closes a dialog without doing anything',
+  },
+  answersRemovedLoss: {
+    message: 'All answers will be removed.',
+    context:
+      'Listed when changing the question type: the new type has no place for the answers the question has',
+  },
+  incorrectAnswersRemovedLoss: {
+    message: 'Answers not marked as correct will be removed.',
+    context:
+      'Listed when changing a choice question to a type whose answers are all correct, such as numeric input or text entry',
+  },
+  anyCorrectAnswerAcceptedLoss: {
+    message: 'Learners will only need to give one of the correct answers.',
+    context:
+      'Listed when changing a choice question with several correct answers to numeric input or text entry, where any one accepted answer is enough',
+  },
+  correctAnswersReducedLoss: {
+    message: 'Only the first correct answer will stay marked as correct.',
+    context:
+      'Listed when changing a question with several correct answers to single choice, which can only have one',
+  },
+  correctAnswersNotKeptLoss: {
+    message: 'Answers will no longer be marked as correct.',
+    context:
+      'Listed when changing a choice question to ordering, where an answer is not correct or incorrect by itself',
+  },
+  orderBecomesAnswerLoss: {
+    message: 'The current order will become the correct order.',
+    context: 'Listed when changing a question to ordering: the answers keep their current order',
+  },
+  orderNotKeptLoss: {
+    message: "The correct order won't be kept.",
+    context:
+      'Listed when changing an ordering question to a choice question, which has no correct order',
+  },
+  formattingRemovedLoss: {
+    message:
+      'Formatting, images and formulas in answers will be removed. Answers with only an image or formula will be removed entirely.',
+    context:
+      'Listed when changing the question type to one whose answers can only hold text, such as text entry',
+  },
+  passageAddedToQuestionLoss: {
+    message:
+      'The passage will be added to the question, with each blank shown as "{blank}". Its answers will be removed.',
+    context:
+      'Listed when changing an inline choice question to a type with no passage. {blank} is what each blank becomes, a row of underscores',
+  },
+  settingsRemovedLoss: {
+    message: 'Settings specific to this question type will be lost.',
+    context:
+      'Listed when changing the question type removes settings the author changed that the new type does not have, such as shuffling the answers or case-sensitive answers',
+  },
 });
