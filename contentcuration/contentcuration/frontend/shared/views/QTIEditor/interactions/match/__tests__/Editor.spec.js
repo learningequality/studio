@@ -10,6 +10,7 @@ import {
   MATCH_DECL_XML,
   mockInteractionBlock as block,
   mockInteractionBlockWithDecl as blockWithDecl,
+  updates,
 } from '../../../utils/testingFixtures';
 import { QuestionType, ValidationError } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
@@ -162,7 +163,6 @@ const writeAnswer = async (user, rowNumber, text) => {
   await user.click(button(tr.$tr('editQuestionLabel')));
 };
 
-const updates = emitted => emitted()['update:interaction'] || [];
 const latestBodyXml = emitted => updates(emitted).at(-1)[0].bodyXml;
 const latestErrorCodes = emitted =>
   emitted()
@@ -954,6 +954,13 @@ describe('MatchEditor', () => {
     it('does not emit update:interaction on mount in edit mode', () => {
       const { emitted } = renderEditor();
       expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('emits update:interaction for an edit made as the card closes', async () => {
+      const { emitted, updateProps } = renderEditor();
+      fireEvent.click(button(tr.$tr('addRowBtn')));
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(1);
     });
 
     it('does not emit update:interaction when moving between editors changes nothing', async () => {

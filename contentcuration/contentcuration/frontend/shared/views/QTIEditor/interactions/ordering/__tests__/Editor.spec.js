@@ -10,6 +10,7 @@ import {
   ORDERING_DECL_XML,
   mockInteractionBlock as block,
   mockInteractionBlockWithDecl as blockWithDecl,
+  updates,
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
@@ -294,15 +295,42 @@ describe('OrderingEditor', () => {
   });
 
   describe('emits', () => {
-    it('emits update:interaction on initial mount in edit mode', () => {
+    it('emits update:interaction for an edit made as the card closes', async () => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      fireEvent.click(screen.getByRole('button', { name: tr.$tr('addItemBtn') }));
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(1);
+    });
+
+    it('does not emit update:interaction on mount in edit mode', () => {
       const { emitted } = renderEditor({
         interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
         questionType: QuestionType.ORDERING,
       });
-      expect(emitted()['update:interaction']).toBeTruthy();
-      const payload = emitted()['update:interaction'][0][0];
-      expect(typeof payload.bodyXml).toBe('string');
-      expect(Array.isArray(payload.responseDeclarations)).toBe(true);
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction when the mode changes', async () => {
+      const { emitted, updateProps } = renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+        mode: 'view',
+      });
+      await updateProps({ mode: 'edit' });
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(0);
+    });
+
+    it('does not emit update:interaction when the question is retyped unchanged', async () => {
+      const { emitted } = renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      await fireEvent.update(openTextarea(), openTextarea().value);
+      expect(updates(emitted)).toHaveLength(0);
     });
 
     it('emits update:interaction after adding an item', async () => {
@@ -310,9 +338,9 @@ describe('OrderingEditor', () => {
         interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
         questionType: QuestionType.ORDERING,
       });
-      const before = emitted()['update:interaction'].length;
       await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addItemBtn') }));
-      expect(emitted()['update:interaction'].length).toBeGreaterThan(before);
+      const { bodyXml } = updates(emitted).at(-1)[0];
+      expect(bodyXml.match(/<qti-simple-choice/g)).toHaveLength(4);
     });
 
     it('does not emit update:interaction in view mode', async () => {
@@ -322,8 +350,7 @@ describe('OrderingEditor', () => {
         mode: 'view',
         showAnswers: true,
       });
-      // Clear mount-time emissions — none should fire in view mode
-      expect(emitted()['update:interaction']).toBeFalsy();
+      expect(updates(emitted)).toHaveLength(0);
     });
   });
 

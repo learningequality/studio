@@ -10,6 +10,7 @@ import {
   TEXT_ENTRY_FREE_DECL_XML as FREE_DECL,
   mockInteractionBlock as block,
   mockInteractionBlockWithDecl as blockWithDecl,
+  updates,
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
@@ -279,15 +280,54 @@ describe('TextEntryEditor — freeResponse', () => {
 });
 
 describe('TextEntryEditor — emits', () => {
-  it('emits update:interaction on mount with bodyXml and responseDeclarations', () => {
+  it('emits update:interaction for an edit made as the card closes', async () => {
+    const { emitted, updateProps } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+      questionType: QuestionType.NUMERIC,
+    });
+    fireEvent.input(answerInputs()[0], { target: { value: '7' } });
+    await updateProps({ mode: 'view' });
+    expect(updates(emitted)).toHaveLength(1);
+  });
+
+  it('does not emit update:interaction on mount in edit mode', () => {
     const { emitted } = renderEditor({
       interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
       questionType: QuestionType.NUMERIC,
     });
-    expect(emitted()['update:interaction']).toBeTruthy();
-    const payload = emitted()['update:interaction'][0][0];
-    expect(typeof payload.bodyXml).toBe('string');
-    expect(Array.isArray(payload.responseDeclarations)).toBe(true);
+    expect(updates(emitted)).toHaveLength(0);
+  });
+
+  it('does not emit update:interaction when the mode changes', async () => {
+    const { emitted, updateProps } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+      questionType: QuestionType.NUMERIC,
+      mode: 'view',
+    });
+    await updateProps({ mode: 'edit' });
+    await updateProps({ mode: 'view' });
+    expect(updates(emitted)).toHaveLength(0);
+  });
+
+  it('does not emit update:interaction when the question is retyped unchanged', async () => {
+    const { emitted } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+      questionType: QuestionType.NUMERIC,
+    });
+    await fireEvent.update(openTextarea(), openTextarea().value);
+    expect(updates(emitted)).toHaveLength(0);
+  });
+
+  it('emits a stored answer that is not canonical once on opening', async () => {
+    const { emitted, updateProps } = renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', '1.50')),
+      questionType: QuestionType.NUMERIC,
+      language: 'en',
+      mode: 'view',
+    });
+    await updateProps({ mode: 'edit' });
+    expect(updates(emitted)).toHaveLength(1);
+    expect(updates(emitted)[0][0].responseDeclarations[0]).toContain('<qti-value>1.5</qti-value>');
   });
 
   it('stores a numeric answer typed in the exercise language as xsd:double', async () => {
@@ -309,15 +349,14 @@ describe('TextEntryEditor — emits', () => {
     ['fr', '1234.5'],
     ['hi', '1e+21'],
     ['ar-EG', '-0.5'],
-  ])('emits a stored numeric answer unchanged when opened in %s (%s)', (language, stored) => {
+  ])('does not emit a canonical stored numeric answer opened in %s (%s)', (language, stored) => {
     const { emitted } = renderEditor({
       interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL.replace('42', stored)),
       questionType: QuestionType.NUMERIC,
       language,
     });
 
-    const [latest] = emitted()['update:interaction'].at(-1);
-    expect(latest.responseDeclarations[0]).toContain(`<qti-value>${stored}</qti-value>`);
+    expect(updates(emitted)).toHaveLength(0);
   });
 
   it.each(
@@ -604,12 +643,12 @@ describe('TextEntryEditor — emits', () => {
       questionType: QuestionType.NUMERIC,
       language: 'fr',
     });
-    const before = emitted()['update:interaction'].length;
+    const before = updates(emitted).length;
     const [input] = answerInputs();
     await fireEvent.focus(input);
     await fireEvent.blur(input);
 
-    expect(emitted()['update:interaction']).toHaveLength(before);
+    expect(updates(emitted)).toHaveLength(before);
   });
 
   it.each(['edit', 'view'])(
@@ -628,14 +667,15 @@ describe('TextEntryEditor — emits', () => {
     },
   );
 
-  it('emits update:interaction after adding an answer row', async () => {
+  it('emits update:interaction after typing into an added answer row', async () => {
     const { emitted } = renderEditor({
       interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
       questionType: QuestionType.NUMERIC,
     });
-    const before = emitted()['update:interaction'].length;
     await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addAnswerBtn') }));
-    expect(emitted()['update:interaction'].length).toBeGreaterThan(before);
+    await fireEvent.input(answerInputs()[1], { target: { value: '7' } });
+    const [latest] = updates(emitted).at(-1);
+    expect(latest.responseDeclarations[0]).toContain('map-key="7"');
   });
 
   it('keeps typed whitespace in the input but emits the answer trimmed', async () => {
@@ -648,8 +688,7 @@ describe('TextEntryEditor — emits', () => {
     await nextTick();
 
     expect(input).toHaveValue('Paris ');
-    const updates = emitted()['update:interaction'];
-    const [decl] = updates[updates.length - 1][0].responseDeclarations;
+    const [decl] = updates(emitted).at(-1)[0].responseDeclarations;
     expect(decl).toContain('<qti-value>Paris</qti-value>');
   });
 });
