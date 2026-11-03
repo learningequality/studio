@@ -933,9 +933,9 @@
   }
 
   // The prompt card sits on the tinted row, so it carries the surface colour
-  // itself, and stretches to its answers' height. As a grid, it stretches the
-  // slot wrapper inside it to that height too. Its one track may shrink below a
-  // long formula, leaving the editor to clip it.
+  // itself, and stretches to its answers cell's height, message included. As a
+  // grid, it stretches the slot wrapper inside it to that height too. Its one
+  // track may shrink below a long formula, leaving the editor to clip it.
   .row-prompt {
     display: grid;
     grid-area: prompt;
@@ -970,12 +970,10 @@
     padding: 8px;
   }
 
-  // Like the prompt card, the answer box sits on the tinted row.
   .row-answers {
     grid-area: answers;
     align-self: stretch;
     min-width: 0;
-    background-color: v-bind('$themeTokens.surface');
   }
 
   .row-actions {

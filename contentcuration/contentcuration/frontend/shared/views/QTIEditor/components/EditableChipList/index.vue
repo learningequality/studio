@@ -1,180 +1,188 @@
 <template>
 
-  <ClickableRegion
-    ref="rootEl"
-    :class="['pool-box', { 'is-region': addMode === 'region' }]"
-    :style="{ borderColor: $themeTokens.fineLine }"
-    :suppressed="!isRegionActive"
-    :pointerOnly="firstBlankIndex !== -1"
-    :ariaLabel="addLabel"
-    textCursor
-    @click="onRegionClick"
-  >
-    <div class="pool-content">
-      <ul
-        class="chip-list"
-        :aria-label="listLabel"
-      >
-        <li
-          v-for="(chip, index) in chips"
-          :key="`${chip.id}-${index}`"
-          class="chip-item"
-          :class="{ 'is-editing': isChipOpen(index) }"
+  <div class="chip-list-field">
+    <ClickableRegion
+      ref="poolBox"
+      :class="['pool-box', { 'is-region': addMode === 'region' }]"
+      :style="{ borderColor: $themeTokens.fineLine }"
+      :suppressed="!isRegionActive"
+      :pointerOnly="firstBlankIndex !== -1"
+      :ariaLabel="addLabel"
+      textCursor
+      @click="onRegionClick"
+    >
+      <div class="pool-content">
+        <ul
+          class="chip-list"
+          :aria-label="listLabel"
         >
-          <ClickableRegion
-            ref="chipRegions"
-            :class="{ chip: !isChipOpen(index) }"
-            :style="chipStyles[index]"
-            :suppressed="isChipOpen(index)"
-            :aria-label="chipLabel(index + 1)"
-            @click="openChip(index)"
+          <li
+            v-for="(chip, index) in chips"
+            :key="`${chip.id}-${index}`"
+            class="chip-item"
+            :class="{ 'is-editing': isChipOpen(index) }"
           >
-            <div class="chip-body">
-              <div class="chip-content">
-                <span
-                  v-if="showsPlaceholder(index)"
-                  :style="{ color: $themeTokens.annotation }"
-                >
-                  {{ placeholder }}
-                </span>
-                <TipTapEditor
-                  v-else
-                  :value="chip.content"
-                  :mode="isChipOpen(index) ? 'edit' : 'view'"
-                  format="html"
-                  :padding="isChipOpen(index) ? 'default' : 'none'"
-                  :minHeight="'48px'"
-                  :autofocus="isChipOpen(index)"
-                  :imageProcessor="EditorImageProcessor"
-                  :inlineOnly="inlineOnly"
-                  :tabindex="-1"
-                  class="editor"
-                  @update="html => onChipUpdate(index, html)"
-                  @minimize="close"
+            <ClickableRegion
+              ref="chipRegions"
+              :class="{ chip: !isChipOpen(index) }"
+              :style="chipStyles[index]"
+              :suppressed="isChipOpen(index)"
+              :aria-label="chipLabel(index + 1)"
+              :ariaDescribedby="messageIds[index]"
+              @click="openChip(index)"
+            >
+              <div class="chip-body">
+                <KIcon
+                  v-if="errorMessages[index] && !isChipOpen(index)"
+                  icon="error"
+                  class="error-icon"
+                  data-testid="chipErrorIcon"
+                  :color="$themeTokens.error"
                 />
+                <div class="chip-content">
+                  <span
+                    v-if="showsPlaceholder(index)"
+                    :style="{ color: $themeTokens.annotation }"
+                  >
+                    {{ placeholder }}
+                  </span>
+                  <TipTapEditor
+                    v-else
+                    :value="chip.content"
+                    :mode="isChipOpen(index) ? 'edit' : 'view'"
+                    format="html"
+                    :padding="isChipOpen(index) ? 'default' : 'none'"
+                    :minHeight="'48px'"
+                    :autofocus="isChipOpen(index)"
+                    :imageProcessor="EditorImageProcessor"
+                    :inlineOnly="inlineOnly"
+                    :tabindex="-1"
+                    class="editor"
+                    @update="html => onChipUpdate(index, html)"
+                    @minimize="close"
+                  />
+                  <div
+                    v-if="isChipOpen(index)"
+                    class="save-row"
+                  >
+                    <KButton
+                      :text="saveChipBtn$()"
+                      appearance="raised-button"
+                      :primary="true"
+                      @click="onSave"
+                    />
+                  </div>
+                </div>
+
+                <!-- `@click.stop` so removing the chip does not also open it -->
                 <div
-                  v-if="isChipOpen(index)"
-                  class="save-row"
+                  class="chip-actions"
+                  @click.stop
                 >
-                  <KButton
-                    :text="saveChipBtn$()"
-                    appearance="raised-button"
-                    :primary="true"
-                    @click="onSave"
+                  <KIconButton
+                    ref="deleteButtons"
+                    icon="close"
+                    size="small"
+                    :disabled="!canRemove"
+                    :ariaLabel="deleteLabel(index + 1)"
+                    :tooltip="deleteLabel(index + 1)"
+                    :color="canRemove ? $themePalette.grey.v_700 : $themeTokens.textDisabled"
+                    @click="event => onRemove(index, event)"
                   />
                 </div>
               </div>
+            </ClickableRegion>
+          </li>
+        </ul>
 
-              <!-- `@click.stop` so removing the chip does not also open it -->
-              <div
-                class="chip-actions"
-                @click.stop
-              >
-                <KIconButton
-                  ref="deleteButtons"
-                  icon="close"
-                  size="small"
-                  :disabled="!canRemove"
-                  :ariaLabel="deleteLabel(index + 1)"
-                  :tooltip="deleteLabel(index + 1)"
-                  :color="canRemove ? $themePalette.grey.v_700 : $themeTokens.textDisabled"
-                  @click="event => onRemove(index, event)"
-                />
-              </div>
-            </div>
-          </ClickableRegion>
-          <!-- An open chip keeps a line for its message, so one that arrives on
-               the blur at mousedown does not move the click target below. -->
-          <ValidationMessage
-            v-if="errorMessages[index] || isChipOpen(index)"
-            :class="{ 'is-reserved': !errorMessages[index] }"
-            :aria-hidden="errorMessages[index] ? null : 'true'"
-          >
-            {{ errorMessages[index] || NO_BREAK_SPACE }}
-          </ValidationMessage>
-        </li>
-      </ul>
-
-      <!--
-        A new chip is written below the list and joins it when saved or when its
-        editor closes, so the list never holds a half-written chip. Clicks stop
-        here for the same reason they stop on the add button.
-      -->
-      <div
-        v-if="isDraftOpen"
-        class="draft-row"
-        @click.stop
-      >
-        <div class="draft-editor">
-          <TipTapEditor
-            :key="draftKey"
-            :value="open.content"
-            mode="edit"
-            format="html"
-            :minHeight="'48px'"
-            autofocus
-            :imageProcessor="EditorImageProcessor"
-            :inlineOnly="inlineOnly"
-            :tabindex="-1"
-            class="editor"
-            @update="onDraftUpdate"
-            @minimize="close"
-          />
-          <div class="save-row">
-            <KButton
-              :text="saveChipBtn$()"
-              appearance="raised-button"
-              :primary="true"
-              @click="onSave"
+        <!--
+          A new chip is written below the list and joins it when saved or when its
+          editor closes, so the list never holds a half-written chip. Clicks stop
+          here for the same reason they stop on the add button.
+        -->
+        <div
+          v-if="isDraftOpen"
+          class="draft-row"
+          @click.stop
+        >
+          <div class="draft-editor">
+            <TipTapEditor
+              :key="draftKey"
+              :value="open.content"
+              mode="edit"
+              format="html"
+              :minHeight="'48px'"
+              autofocus
+              :imageProcessor="EditorImageProcessor"
+              :inlineOnly="inlineOnly"
+              :tabindex="-1"
+              class="editor"
+              @update="onDraftUpdate"
+              @minimize="close"
             />
+            <div class="save-row">
+              <KButton
+                :text="saveChipBtn$()"
+                appearance="raised-button"
+                :primary="true"
+                @click="onSave"
+              />
+            </div>
           </div>
+          <!-- Numbered for the place it would take, so it reads as this row's
+               remove button while doubling as the way to abandon the draft. -->
+          <KIconButton
+            icon="close"
+            size="small"
+            :ariaLabel="deleteLabel(chips.length + 1)"
+            :tooltip="deleteLabel(chips.length + 1)"
+            :color="$themePalette.grey.v_700"
+            @click="onDiscard"
+          />
         </div>
-        <!-- Numbered for the place it would take, so it reads as this row's
-             remove button while doubling as the way to abandon the draft. -->
-        <KIconButton
-          icon="close"
-          size="small"
-          :ariaLabel="deleteLabel(chips.length + 1)"
-          :tooltip="deleteLabel(chips.length + 1)"
-          :color="$themePalette.grey.v_700"
-          @click="onDiscard"
-        />
-      </div>
 
-      <!--
-        The editor this opens mounts before the click finishes bubbling, and
-        TipTap closes on any click outside itself — so the click stops here.
-      -->
-      <div
-        v-if="addMode === 'button'"
-        @click.stop
-      >
-        <AddListItemButton
-          ref="addButton"
-          :label="addLabel"
-          @click="openDraft"
-        />
+        <!--
+          The editor this opens mounts before the click finishes bubbling, and
+          TipTap closes on any click outside itself — so the click stops here.
+        -->
+        <div
+          v-if="addMode === 'button'"
+          @click.stop
+        >
+          <AddListItemButton
+            ref="addButton"
+            :label="addLabel"
+            @click="openDraft"
+          />
+        </div>
       </div>
-    </div>
-  </ClickableRegion>
+    </ClickableRegion>
+    <ValidationMessage
+      v-for="message in messages"
+      :id="message.id"
+      :key="message.text"
+      :alert="false"
+    >
+      {{ message.text }}
+    </ValidationMessage>
+  </div>
 
 </template>
 
 
 <script>
 
-  import { computed, nextTick, ref } from 'vue';
+  import { computed, nextTick, ref, watch } from 'vue';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
+  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
   import AddListItemButton from '../AddListItemButton/index.vue';
   import ClickableRegion from '../ClickableRegion/index.vue';
   import ValidationMessage from '../ValidationMessage/index.vue';
+  import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
-
-  // Holds a message line open without text
-  const NO_BREAK_SPACE = '\u00a0';
 
   export default {
     name: 'EditableChipList',
@@ -190,7 +198,7 @@
       const tokens = themeTokens();
       const { saveChipBtn$ } = qtiEditorStrings;
 
-      const rootEl = ref(null);
+      const poolBox = ref(null);
       const addButton = ref(null);
       const deleteButtons = ref([]);
       const chipRegions = ref([]);
@@ -220,6 +228,38 @@
         return Boolean(props.placeholder) && !isChipOpen(index) && blankChips.value[index];
       }
 
+      const messageIdPrefix = generateRandomSlug('chip-list-error');
+
+      const messages = computed(() =>
+        [...new Set(props.errorMessages.filter(Boolean))].map((text, i) => ({
+          text,
+          id: `${messageIdPrefix}-${i}`,
+        })),
+      );
+
+      const messageIds = computed(() => {
+        const idByText = new Map(messages.value.map(({ text, id }) => [text, id]));
+        return props.chips.map((_, index) => idByText.get(props.errorMessages[index]) ?? null);
+      });
+
+      const { sendAssertiveMessage } = useKLiveRegion();
+      const messageByChipKey = computed(() => {
+        const occurrences = new Map();
+        return new Map(
+          props.chips.map(({ id }, index) => {
+            const occurrence = occurrences.get(id) || 0;
+            occurrences.set(id, occurrence + 1);
+            return [`${id}#${occurrence}`, props.errorMessages[index]];
+          }),
+        );
+      });
+      watch(messageByChipKey, (current, before) => {
+        const gained = [...current]
+          .filter(([id, text]) => text && text !== before.get(id))
+          .map(([, text]) => text);
+        if (gained.length) sendAssertiveMessage([...new Set(gained)].join(' '));
+      });
+
       const chipStyles = computed(() =>
         props.chips.map((_, index) => ({
           borderColor: props.errorMessages[index] ? tokens.error : tokens.fineLine,
@@ -234,7 +274,7 @@
       function getAddControl() {
         if (props.addMode === 'button') return addButton.value.$el;
         return firstBlankIndex.value === -1
-          ? rootEl.value
+          ? poolBox.value
           : chipRegions.value[firstBlankIndex.value];
       }
 
@@ -346,8 +386,7 @@
 
       return {
         EditorImageProcessor,
-        NO_BREAK_SPACE,
-        rootEl,
+        poolBox,
         addButton,
         deleteButtons,
         chipRegions,
@@ -360,6 +399,8 @@
         isChipOpen,
         showsPlaceholder,
         chipStyles,
+        messages,
+        messageIds,
         // eslint-disable-next-line vue/no-unused-properties
         close,
         openChip,
@@ -436,8 +477,15 @@
 
 <style lang="scss" scoped>
 
+  .chip-list-field {
+    display: flex;
+    flex-direction: column;
+  }
+
   .pool-box {
+    flex: 1;
     padding: 12px;
+    background-color: v-bind('$themeTokens.surface');
     border: 1px solid;
     border-radius: 4px;
 
@@ -486,6 +534,11 @@
     min-width: 0;
   }
 
+  .error-icon {
+    top: 0;
+    flex-shrink: 0;
+  }
+
   .draft-row {
     display: flex;
     gap: 8px;
@@ -496,15 +549,9 @@
   .draft-editor {
     flex: 1;
     min-width: 0;
-    background-color: v-bind('$themeTokens.surface');
   }
 
-  // Stacks the chip over the validation message that belongs to it, so a
-  // flagged chip pushes the chips after it along rather than down.
   .chip-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
     max-width: 100%;
 
     &.is-editing {
@@ -515,10 +562,6 @@
         align-items: flex-start;
       }
     }
-  }
-
-  .is-reserved {
-    visibility: hidden;
   }
 
   // A blank choice renders nothing, so without a floor the chip collapses to a

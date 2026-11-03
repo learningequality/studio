@@ -15,6 +15,7 @@
       type="button"
       class="overlay-button"
       :aria-label="ariaLabel"
+      :aria-describedby="ariaDescribedby"
       @click.stop="onClick"
     ></button>
     <div class="content-wrapper">
@@ -53,6 +54,10 @@
       ariaLabel: {
         type: String,
         required: true,
+      },
+      ariaDescribedby: {
+        type: String,
+        default: null,
       },
       suppressed: {
         type: Boolean,

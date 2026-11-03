@@ -185,10 +185,14 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Answers within a pair cannot be the same',
     context: 'Validation error when both items of a pair have identical content',
   },
+  errorRepeatedPair: {
+    message: 'Pairs cannot repeat another pair',
+    context: 'Validation error when a pair has the same two items as another pair, in either order',
+  },
   errorDuplicateDistractorContent: {
-    message: 'Distractors cannot repeat another item',
+    message: 'Distractors cannot match an existing item or distractor',
     context:
-      'Validation error when a distractor has the same content as another distractor or as an item in a pair',
+      'Validation error when a distractor has the same content as another distractor, as an item in a pair (Associate questions), as an answer (Match questions), or as a gap answer (Gap match questions)',
   },
   matchingRowsLabel: {
     message: 'Prompts and responses',

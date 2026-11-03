@@ -298,6 +298,7 @@
         editDistractorLabel$,
         errorTooFewPairs$,
         errorDuplicatePairContent$,
+        errorRepeatedPair$,
         errorDuplicateDistractorContent$,
         errorEmptyChoiceContent$,
       } = qtiEditorStrings;
@@ -470,20 +471,23 @@
         return duplicatedTexts.value.has(richTextComparisonKey(choice.content));
       }
 
-      const duplicatePairIndexes = computed(
-        () =>
-          new Set(
-            errors.value
-              .filter(e => e.code === ValidationError.DUPLICATE_PAIR_CONTENT)
-              .map(e => e.index),
-          ),
+      const pairMessages = {
+        [ValidationError.DUPLICATE_PAIR_CONTENT]: errorDuplicatePairContent$,
+        [ValidationError.REPEATED_PAIR]: errorRepeatedPair$,
+      };
+
+      const pairFaultMessages = computed(() =>
+        state.value.pairs.map((_, index) =>
+          errors.value
+            .filter(e => pairMessages[e.code] && e.index === index)
+            .map(e => pairMessages[e.code]()),
+        ),
       );
 
       // Every fault that reddens a card in the row is also named under the row.
       const pairErrorMessages = computed(() =>
         state.value.pairs.map((pair, index) => {
-          const messages = [];
-          if (duplicatePairIndexes.value.has(index)) messages.push(errorDuplicatePairContent$());
+          const messages = [...pairFaultMessages.value[index]];
           if (pair.some(isBlank)) messages.push(errorEmptyChoiceContent$());
           if (pair.some(isDuplicated)) messages.push(errorDuplicateDistractorContent$());
           return messages;
@@ -513,7 +517,7 @@
           pair.map((choice, choiceIndex) =>
             isPairItemOpen(index, choiceIndex)
               ? {}
-              : borderStyle(duplicatePairIndexes.value.has(index) || choiceHasError(choice)),
+              : borderStyle(pairFaultMessages.value[index].length > 0 || choiceHasError(choice)),
           ),
         ),
       );

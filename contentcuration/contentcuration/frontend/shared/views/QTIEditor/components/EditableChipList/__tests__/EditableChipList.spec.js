@@ -73,6 +73,7 @@ const chipTexts = () => chipItems().map(item => item.textContent.trim());
 const button = name => screen.getByRole('button', { name });
 const queryButton = name => screen.queryByRole('button', { name });
 const openTextarea = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
+const assertiveRegion = () => document.querySelector('#k-live-region [aria-live="assertive"]');
 const closeFromElsewhere = user => user.click(button('Elsewhere'));
 
 describe('EditableChipList', () => {
@@ -182,15 +183,81 @@ describe('EditableChipList', () => {
       expect(within(chipItems()[1]).getByRole('textbox')).toHaveValue('Prospero');
     });
 
-    it('shows each error message under its own chip only', () => {
-      renderList({ errorMessages: [null, errorEmptyChoiceContent$(), null] });
-      const [first, second, third] = chipItems();
-      expect(within(second).getByText(errorEmptyChoiceContent$())).toBeInTheDocument();
-      expect(within(first).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
-      expect(within(third).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
+    it('shows a message shared by two chips once, describing only those chips', () => {
+      renderList({ errorMessages: [errorEmptyChoiceContent$(), null, errorEmptyChoiceContent$()] });
+      expect(screen.getAllByText(errorEmptyChoiceContent$())).toHaveLength(1);
+      expect(within(list()).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
+      expect(button(editDistractorLabel$({ number: 1 }))).toHaveAccessibleDescription(
+        errorEmptyChoiceContent$(),
+      );
+      expect(button(editDistractorLabel$({ number: 2 }))).not.toHaveAccessibleDescription();
+      expect(button(editDistractorLabel$({ number: 3 }))).toHaveAccessibleDescription(
+        errorEmptyChoiceContent$(),
+      );
     });
 
-    it('shows an open chip’s error under its editor', async () => {
+    it('describes each chip by its own message when the messages differ', () => {
+      const otherFault = 'Other fault';
+      renderList({ errorMessages: [errorEmptyChoiceContent$(), otherFault] });
+      expect(screen.getAllByText(errorEmptyChoiceContent$())).toHaveLength(1);
+      expect(screen.getAllByText(otherFault)).toHaveLength(1);
+      expect(button(editDistractorLabel$({ number: 1 }))).toHaveAccessibleDescription(
+        errorEmptyChoiceContent$(),
+      );
+      expect(button(editDistractorLabel$({ number: 2 }))).toHaveAccessibleDescription(otherFault);
+    });
+
+    describe('announcements', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+        assertiveRegion().textContent = '';
+      });
+
+      afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+      });
+
+      it('announces a message as a chip gains it, once however many chips gain it', async () => {
+        const message = errorEmptyChoiceContent$();
+        const { updateProps } = renderList({ errorMessages: [message, message, null] });
+        expect(assertiveRegion()).toHaveTextContent('');
+
+        await updateProps({ errorMessages: [message, message, message] });
+        expect(assertiveRegion()).toHaveTextContent(new RegExp(`^${message}$`));
+
+        assertiveRegion().textContent = '';
+        await updateProps({ errorMessages: [null, null, null] });
+        expect(assertiveRegion()).toHaveTextContent('');
+        await updateProps({ errorMessages: [message, message, null] });
+        expect(assertiveRegion()).toHaveTextContent(new RegExp(`^${message}$`));
+      });
+
+      it('announces a message gained by a chip sharing its id with a later chip', async () => {
+        const { updateProps } = renderList({
+          chips: [
+            { id: 'choice_a', content: '' },
+            { id: 'choice_a', content: 'Juliet' },
+          ],
+        });
+
+        await updateProps({ errorMessages: [errorEmptyChoiceContent$(), null] });
+        expect(assertiveRegion()).toHaveTextContent(errorEmptyChoiceContent$());
+      });
+    });
+
+    it('marks only a flagged, closed chip with the error icon', async () => {
+      const user = userEvent.setup();
+      renderHost({ errorMessages: [errorEmptyChoiceContent$(), null] });
+      const [flagged, unflagged] = chipItems();
+      expect(within(flagged).getByTestId('chipErrorIcon')).toBeInTheDocument();
+      expect(within(unflagged).queryByTestId('chipErrorIcon')).not.toBeInTheDocument();
+
+      await user.click(button(editDistractorLabel$({ number: 1 })));
+      expect(screen.queryByTestId('chipErrorIcon')).not.toBeInTheDocument();
+    });
+
+    it('shows an open chip’s message once, below the list', async () => {
       const user = userEvent.setup();
       renderHost({
         initialChips: [{ id: 'choice_d', content: '' }],
@@ -198,7 +265,8 @@ describe('EditableChipList', () => {
         errorMessages: [errorEmptyChoiceContent$()],
       });
       await user.click(button(editDistractorLabel$({ number: 1 })));
-      expect(within(chipItems()[0]).getByText(errorEmptyChoiceContent$())).toBeInTheDocument();
+      expect(screen.getAllByText(errorEmptyChoiceContent$())).toHaveLength(1);
+      expect(within(list()).queryByText(errorEmptyChoiceContent$())).not.toBeInTheDocument();
     });
 
     it('shows the placeholder in a blank chip only', () => {
