@@ -47,23 +47,38 @@ const TEST_CASES = {
   },
 };
 
-function getMD5(data) {
-  return createHash('md5').update(Buffer.from(data)).digest('hex');
+function readBytes(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result));
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
+async function getMD5(blob) {
+  return createHash('md5')
+    .update(await readBytes(blob))
+    .digest('hex');
+}
+
+function zipFiles(files, paths = Object.keys(files)) {
+  return createPredictableZip(paths, async path => files[path]);
 }
 
 describe('createPredictableZip', () => {
   for (const [name, testCase] of Object.entries(TEST_CASES)) {
     it(`creates expected zip for ${name} case`, async () => {
-      const zipData = await createPredictableZip(testCase.files, testCase.options);
-      expect(getMD5(zipData)).toBe(testCase.expectedMD5);
+      const zipData = await zipFiles(testCase.files);
+      expect(await getMD5(zipData)).toBe(testCase.expectedMD5);
     });
   }
 
   it('creates consistent hashes regardless of input order', async () => {
-    const reversed = { ...TEST_CASES.reversed.files };
-    const zipData1 = await createPredictableZip(TEST_CASES.reversed.files);
-    const zipData2 = await createPredictableZip(reversed);
-    expect(getMD5(zipData1)).toBe(getMD5(zipData2));
+    const files = TEST_CASES.reversed.files;
+    const zipData1 = await zipFiles(files);
+    const zipData2 = await zipFiles(files, Object.keys(files).reverse());
+    expect(await getMD5(zipData1)).toBe(await getMD5(zipData2));
   });
 });
 
