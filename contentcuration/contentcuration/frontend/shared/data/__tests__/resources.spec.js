@@ -1,7 +1,7 @@
 import { UpdatedDescendantsChange } from '../changes';
-import { ViewerM2M, ChannelUser, Channel, ContentNode } from '../resources';
+import { ViewerM2M, ChannelUser, Channel, ContentNode, TreeResource } from '../resources';
 import db from 'shared/data/db';
-import { CHANGE_TYPES, TABLE_NAMES } from 'shared/data/constants';
+import { CHANGE_TYPES, PAGINATION_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 import client from 'shared/client';
@@ -172,6 +172,111 @@ describe('Resources', () => {
         expect(change.mods).toEqual(changes);
       });
     });
+    describe('Paginated where', () => {
+      const maxResults = 3;
+
+      // A full page of children for parent, plus the more obj the server would send with it
+      const makePage = parent => {
+        const results = [1, 2, 3].map(lft => ({
+          id: `${parent}-child-${lft}`,
+          parent,
+          lft,
+          title: `test-child-${lft}`,
+          kind: ContentKindsNames.TOPIC,
+        }));
+        return {
+          results,
+          more: { parent, max_results: maxResults, ordering: 'lft', lft__gt: maxResults },
+        };
+      };
+
+      const mockPage = (parent, { hasMore = true } = {}) => {
+        const page = makePage(parent);
+        const more = hasMore ? page.more : null;
+        jest
+          .spyOn(client, 'get')
+          .mockResolvedValue({ data: { results: page.results, more, count: 10 } });
+        return { ...page, more };
+      };
+
+      // Loads a page the way loadChildren does, without an explicit ordering
+      const loadPage = parent =>
+        ContentNode.where({ parent, max_results: maxResults, ordering: null });
+
+      beforeEach(async () => {
+        await db[PAGINATION_TABLE].clear();
+        // Test setup stubs out fetching for every resource, but saving pagination only happens
+        // inside the real fetchCollection
+        jest
+          .spyOn(ContentNode, 'fetchCollection')
+          .mockImplementation(params =>
+            TreeResource.prototype.fetchCollection.call(ContentNode, params),
+          );
+        ContentNode._requests = {};
+      });
+
+      afterEach(() => {
+        // Restore by registry, since a failure in the hook above could leave a spy uninstalled
+        jest.restoreAllMocks();
+        ContentNode._requests = {};
+      });
+
+      it('should return the server "more" object when nothing is cached locally', async () => {
+        const parent = 'test-uncached-parent-id';
+        const { more } = mockPage(parent);
+
+        const response = await ContentNode.where({ parent, max_results: maxResults });
+
+        expect(response.more).toEqual(more);
+      });
+
+      it('should return the saved more obj when the cache holds exactly one full page', async () => {
+        const parent = 'test-cached-parent-id';
+        const { more } = mockPage(parent);
+
+        await loadPage(parent);
+
+        // One cached page is indistinguishable from a complete list locally, so the saved
+        // pagination has to supply the more obj
+        const response = await loadPage(parent);
+
+        expect(response.results.map(node => node.id)).toEqual([
+          `${parent}-child-1`,
+          `${parent}-child-2`,
+          `${parent}-child-3`,
+        ]);
+        expect(response.more).toEqual(more);
+      });
+
+      it('should not invent a more object when the server said there was nothing more', async () => {
+        const parent = 'test-final-page-parent-id';
+        mockPage(parent, { hasMore: false });
+
+        await loadPage(parent);
+        const response = await loadPage(parent);
+
+        expect(response.results).toHaveLength(maxResults);
+        expect(response.more).toBeNull();
+      });
+
+      it('should return the saved more obj even once children have been removed since it was saved', async () => {
+        const parent = 'test-shrunken-parent-id';
+        const { more } = mockPage(parent);
+
+        await loadPage(parent);
+        // Nothing invalidates saved pagination when children leave the parent. A more obj that
+        // fetches nothing beats hiding children that are still there, so it stands until the
+        // next fetch replaces it.
+        await db[TABLE_NAMES.CONTENTNODE].delete(`${parent}-child-2`);
+        await db[TABLE_NAMES.CONTENTNODE].delete(`${parent}-child-3`);
+
+        const response = await loadPage(parent);
+
+        expect(response.results).toHaveLength(1);
+        expect(response.more).toEqual(more);
+      });
+    });
+
     describe('ChannelUser resource', () => {
       const testChannelId = 'test-channel-id';
       const testUserId = 'test-user-id';

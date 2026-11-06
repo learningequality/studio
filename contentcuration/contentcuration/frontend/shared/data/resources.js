@@ -400,6 +400,23 @@ class IndexedDBResource {
     });
   }
 
+  isPaginated(params = {}) {
+    return !isNaN(Number(params[PAGINATION_FIELD]));
+  }
+
+  /**
+   * Returns a copy of the params with implicit values made explicit, so that equivalent queries
+   * serialize identically. Saved pagination is keyed off that serialization, which is also
+   * sensitive to key order, so equivalent queries must build their params in the same order.
+   */
+  normalizeParams(params = {}) {
+    const normalized = { ...params };
+    if (this.isPaginated(normalized) && !normalized[ORDER_FIELD] && this.defaultOrdering) {
+      normalized[ORDER_FIELD] = this.defaultOrdering;
+    }
+    return normalized;
+  }
+
   async where(params = {}) {
     const table = db[this.tableName];
     // Indexed parameters
@@ -414,11 +431,17 @@ class IndexedDBResource {
     let sortBy;
     let reverse;
 
+    params = this.normalizeParams(params);
+
     // Check for pagination
     const maxResults = Number(params[PAGINATION_FIELD]);
-    const paginationActive = !isNaN(maxResults);
-    if (paginationActive && !params[ORDER_FIELD]) {
-      params[ORDER_FIELD] = this.defaultOrdering;
+    const paginationActive = this.isPaginated(params);
+    if (paginationActive && !params[ORDER_FIELD] && process.env.NODE_ENV !== 'production') {
+      // `normalizeParams` fills in the default ordering, so reaching here means the resource
+      // has none, and both this page and its cursor will be arbitrary
+      /* eslint-disable no-console */
+      console.warn(`Tried to paginate ${this.tableName} which has no defaultOrdering`);
+      /* eslint-enable */
     }
     for (const key of Object.keys(params)) {
       if (key === PAGINATION_FIELD) {
@@ -906,6 +929,8 @@ class Resource extends mix(APIResource, IndexedDBResource) {
    * @return {Promise<Object[]>}
    */
   where(params = {}, doRefresh = true) {
+    // Normalize before serializing, so this key matches the one `fetchCollection` saves under
+    params = this.normalizeParams(params);
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
@@ -926,6 +951,9 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   whereLiveQuery(params = {}, doRefresh = true) {
+    // `super.where` normalizes its own copy, so without this `conditionalFetch` below would
+    // fetch under a different key than the query it is refreshing
+    params = this.normalizeParams(params);
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting liveQuery for ${this.tableName} table with params: `, params);
