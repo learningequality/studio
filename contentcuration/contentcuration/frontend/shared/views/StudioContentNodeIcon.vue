@@ -40,11 +40,7 @@
     },
     computed: {
       icon() {
-        try {
-          return getContentKindIcon(this.kind, this.isEmpty);
-        } catch (e) {
-          return null;
-        }
+        return getContentKindIcon(this.kind, this.isEmpty);
       },
       backgroundColor() {
         return getContentKindColor(this.kind);
@@ -57,14 +53,24 @@
 
 <style lang="scss" scoped>
 
+  // Icon-only ContentNodeIcon: .v-chip__content is 22px with 0 5px padding,
+  // and the Vuetify icon is small (16px). KIcon's svg defaults to 1.125em.
   .studio-content-node-icon {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 5px;
+    height: 22px;
+    padding: 0 5px;
     line-height: 1;
     vertical-align: middle;
     border-radius: 4px;
+
+    svg {
+      top: 0;
+      width: 16px;
+      height: 16px;
+    }
   }
 
 </style>

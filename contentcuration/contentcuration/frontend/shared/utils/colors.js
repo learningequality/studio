@@ -1,13 +1,6 @@
 import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-/**
- * Returns the KDS background color for a content node kind.
- * Falls back to a neutral grey for unknown/unsupported kinds.
- *
- * @param {string} kind - content node kind (e.g. 'video', 'topic')
- * @returns {string} color value
- */
 export function getContentKindColor(kind) {
   const palette = themePalette();
   const tokens = themeTokens();

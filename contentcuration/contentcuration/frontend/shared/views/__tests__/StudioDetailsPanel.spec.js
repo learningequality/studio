@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen, within } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import ContentLevels from 'kolibri-constants/labels/Levels';
 import Categories from 'kolibri-constants/labels/Subjects';
@@ -123,14 +123,22 @@ describe('StudioDetailsPanel', () => {
           kind_count: [
             { kind_id: 'video', count: 30 },
             { kind_id: 'exercise', count: 12 },
+            { kind_id: 'h5p', count: 7 },
           ],
         },
         loading: false,
       });
-      expect(screen.getByText('Video')).toBeInTheDocument();
-      expect(screen.getByText('30')).toBeInTheDocument();
-      expect(screen.getByText('Exercise')).toBeInTheDocument();
-      expect(screen.getByText('12')).toBeInTheDocument();
+
+      [
+        ['Video', '30'],
+        ['Exercise', '12'],
+        ['H5P App', '7'],
+      ].forEach(([label, count]) => {
+        const row = screen.getByText(label).closest('.resource-item');
+        expect(row).not.toBeNull();
+        expect(within(row).getByText(count)).toBeInTheDocument();
+        expect(row.querySelector('.studio-content-node-icon svg')).toBeInTheDocument();
+      });
     });
   });
 });
