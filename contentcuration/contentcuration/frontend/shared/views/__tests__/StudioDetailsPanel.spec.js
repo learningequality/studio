@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen, within } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import ContentLevels from 'kolibri-constants/labels/Levels';
 import Categories from 'kolibri-constants/labels/Subjects';
@@ -113,6 +113,32 @@ describe('StudioDetailsPanel', () => {
     it('shows placeholder text for empty fields', () => {
       const placeholders = screen.getAllByText('---');
       expect(placeholders.length).toBeGreaterThan(0);
+    });
+  });
+  describe('total resources', () => {
+    it('lists each content kind with its translated label and count', () => {
+      renderComponent({
+        details: {
+          ...fullChannel,
+          kind_count: [
+            { kind_id: 'video', count: 30 },
+            { kind_id: 'exercise', count: 12 },
+            { kind_id: 'h5p', count: 7 },
+          ],
+        },
+        loading: false,
+      });
+
+      [
+        ['Video', '30'],
+        ['Exercise', '12'],
+        ['H5P App', '7'],
+      ].forEach(([label, count]) => {
+        const row = screen.getByText(label).closest('.resource-item');
+        expect(row).not.toBeNull();
+        expect(within(row).getByText(count)).toBeInTheDocument();
+        expect(row.querySelector('.studio-content-node-icon svg')).toBeInTheDocument();
+      });
     });
   });
 });
