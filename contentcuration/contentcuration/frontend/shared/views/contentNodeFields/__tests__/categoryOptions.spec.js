@@ -139,7 +139,7 @@ describe('CategoryOptions', () => {
       expect(screen.queryByRole('button', { name: openMenuAction$() })).not.toBeInTheDocument();
       expect(screen.getByTestId('kmselect-dropdown-panel')).toBeInTheDocument();
       expect(await screen.findByRole('option', { name: DANCE_LABEL })).toBeInTheDocument();
-      expect(document.activeElement).toBe(document.body);
+      expect(document.body).toHaveFocus();
     });
 
     it('filters the category list from the search field', async () => {
