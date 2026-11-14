@@ -10,7 +10,10 @@ import { metadataTranslationMixin } from 'shared/mixins';
 const { translateMetadataString } = metadataTranslationMixin.methods;
 const { openMenuAction$ } = commonStrings;
 const { clearAllAction$ } = communityChannelsStrings;
-const { removeCategory$ } = createTranslator('CategoryOptions', CategoryOptions.$trs);
+const { removeCategory$, noCategoryFoundText$ } = createTranslator(
+  'CategoryOptions',
+  CategoryOptions.$trs,
+);
 
 const SCHOOL = 'd&WXdXWF';
 const ARTS = 'd&WXdXWF.5QAjgfv7';
@@ -136,29 +139,89 @@ describe('CategoryOptions', () => {
   });
 
   describe('expanded mode', () => {
-    it('renders the flat checkbox list instead of KMultiSelect', () => {
+    it('renders KMultiSelect with the category list inline and no menu toggle', async () => {
       renderComponent({ expanded: true });
 
       expect(screen.queryByRole('button', { name: openMenuAction$() })).not.toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: DANCE_LABEL })).toBeInTheDocument();
+      expect(screen.getByTestId('kmselect-dropdown-panel')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('combobox'));
+
+      expect(screen.getByRole('option', { name: DANCE_LABEL })).toBeInTheDocument();
     });
 
-    it('emits the added category applied to all edited nodes when checked', async () => {
+    it('filters the category list from the search field', async () => {
+      renderComponent({ expanded: true });
+
+      await userEvent.type(screen.getByRole('combobox'), DANCE_LABEL);
+
+      expect(screen.getByRole('option', { name: DANCE_LABEL })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: MUSIC_LABEL })).not.toBeInTheDocument();
+    });
+
+    it('shows the no results text when nothing matches the search', async () => {
+      renderComponent({ expanded: true });
+
+      await userEvent.type(screen.getByRole('combobox'), 'zzzz');
+
+      expect(
+        within(screen.getByTestId('kmselect-dropdown-panel')).getByText(noCategoryFoundText$()),
+      ).toBeInTheDocument();
+    });
+
+    it('emits the added category applied to all edited nodes when selected', async () => {
       const { emitted } = renderComponent({ expanded: true, nodeIds: [NODE_1] });
 
-      await userEvent.click(screen.getByRole('checkbox', { name: DANCE_LABEL }));
+      await userEvent.click(screen.getByRole('combobox'));
+      await userEvent.click(screen.getByRole('option', { name: DANCE_LABEL }));
 
       expect(lastInput(emitted)).toEqual({ [DANCE]: [NODE_1] });
     });
 
-    it('removes a category and its stored descendants when unchecked', async () => {
+    it('keeps categories applied to only some edited nodes when another is added', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(screen.getByRole('combobox'));
+      await userEvent.click(screen.getByRole('option', { name: DANCE_LABEL }));
+
+      expect(lastInput(emitted)).toEqual({
+        [MUSIC]: [NODE_1],
+        [DANCE]: [NODE_1, NODE_2],
+      });
+    });
+
+    it('removes a category and its stored descendants when its chip is removed', async () => {
       const { emitted } = renderComponent({
         expanded: true,
         value: { [ARTS]: [NODE_1], [DANCE]: [NODE_1] },
         nodeIds: [NODE_1],
       });
 
-      await userEvent.click(screen.getByRole('checkbox', { name: ARTS_LABEL }));
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: ARTS_PATH }) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('shows the full category path in the chip tooltip', async () => {
+      renderComponent({ expanded: true, value: { [DANCE]: [NODE_1] } });
+
+      expect(await screen.findByText(DANCE_PATH)).toBeInTheDocument();
+    });
+
+    it('clears every category, including partially applied ones, with the clear button', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1, NODE_2], [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: clearAllAction$() }));
 
       expect(lastInput(emitted)).toEqual({});
     });
