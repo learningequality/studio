@@ -65,12 +65,6 @@ describe('CategoryOptions', () => {
       expect(chipsArea.queryByText(MUSIC_LABEL)).not.toBeInTheDocument();
     });
 
-    it('shows the full category path in the chip tooltip', async () => {
-      renderComponent({ value: { [DANCE]: [NODE_1] } });
-
-      expect(await screen.findByText(DANCE_PATH)).toBeInTheDocument();
-    });
-
     it('renders parent categories as named groups in the dropdown', async () => {
       renderComponent();
 
@@ -144,10 +138,8 @@ describe('CategoryOptions', () => {
 
       expect(screen.queryByRole('button', { name: openMenuAction$() })).not.toBeInTheDocument();
       expect(screen.getByTestId('kmselect-dropdown-panel')).toBeInTheDocument();
-
-      await userEvent.click(screen.getByRole('combobox'));
-
-      expect(screen.getByRole('option', { name: DANCE_LABEL })).toBeInTheDocument();
+      expect(await screen.findByRole('option', { name: DANCE_LABEL })).toBeInTheDocument();
+      expect(document.activeElement).toBe(document.body);
     });
 
     it('filters the category list from the search field', async () => {
@@ -172,8 +164,7 @@ describe('CategoryOptions', () => {
     it('emits the added category applied to all edited nodes when selected', async () => {
       const { emitted } = renderComponent({ expanded: true, nodeIds: [NODE_1] });
 
-      await userEvent.click(screen.getByRole('combobox'));
-      await userEvent.click(screen.getByRole('option', { name: DANCE_LABEL }));
+      await userEvent.click(await screen.findByRole('option', { name: DANCE_LABEL }));
 
       expect(lastInput(emitted)).toEqual({ [DANCE]: [NODE_1] });
     });
@@ -185,8 +176,7 @@ describe('CategoryOptions', () => {
         nodeIds: [NODE_1, NODE_2],
       });
 
-      await userEvent.click(screen.getByRole('combobox'));
-      await userEvent.click(screen.getByRole('option', { name: DANCE_LABEL }));
+      await userEvent.click(await screen.findByRole('option', { name: DANCE_LABEL }));
 
       expect(lastInput(emitted)).toEqual({
         [MUSIC]: [NODE_1],
@@ -212,6 +202,20 @@ describe('CategoryOptions', () => {
       renderComponent({ expanded: true, value: { [DANCE]: [NODE_1] } });
 
       expect(await screen.findByText(DANCE_PATH)).toBeInTheDocument();
+    });
+
+    it('keeps partially applied categories when the last chip is removed', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1, NODE_2], [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: DANCE_PATH }) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({ [MUSIC]: [NODE_1] });
     });
 
     it('clears every category, including partially applied ones, with the clear button', async () => {

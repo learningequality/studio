@@ -20,7 +20,7 @@
           :text="option.text"
           :removeLabel="$tr('removeCategory', { label: tooltipText(option.value) })"
           close
-          @close="removeChip"
+          @close="onChipRemove(option.value, removeChip)"
           @mousedown.native.prevent
         />
       </span>
@@ -79,6 +79,11 @@
         default: false,
       },
     },
+    data() {
+      return {
+        pendingChipRemoval: null,
+      };
+    },
     computed: {
       categoriesList() {
         const categories = getSortedCategories();
@@ -116,18 +121,27 @@
       },
     },
     methods: {
+      onChipRemove(value, removeChip) {
+        this.pendingChipRemoval = value;
+        removeChip();
+      },
       /**
        * Applies the difference between the current and the new selection, so
        * categories that only some of the edited nodes have survive unrelated
-       * changes. Removing a category also removes its stored descendants, and
-       * an empty selection clears everything.
+       * changes.
        */
       onKMultiSelectInput(newValues) {
-        if (!newValues.length) {
+        const removing = this.pendingChipRemoval;
+        this.pendingChipRemoval = null;
+        const previous = this.autocompleteValues;
+        if (!newValues.length && !removing) {
+          // KMultiSelect emits [] both for clear-all and for removing the last
+          // chip; only chip removals go through onChipRemove, so an empty
+          // value without a pending removal is the clear-all button and wipes
+          // everything, partially applied categories included.
           this.selected = {};
           return;
         }
-        const previous = this.autocompleteValues;
         const next = new Set(newValues);
         const newSelected = { ...this.selected };
         previous
