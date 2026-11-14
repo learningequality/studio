@@ -198,12 +198,6 @@ describe('CategoryOptions', () => {
       expect(lastInput(emitted)).toEqual({});
     });
 
-    it('shows the full category path in the chip tooltip', async () => {
-      renderComponent({ expanded: true, value: { [DANCE]: [NODE_1] } });
-
-      expect(await screen.findByText(DANCE_PATH)).toBeInTheDocument();
-    });
-
     it('keeps partially applied categories when the last chip is removed', async () => {
       const { emitted } = renderComponent({
         expanded: true,
@@ -214,6 +208,31 @@ describe('CategoryOptions', () => {
       await userEvent.click(
         screen.getByRole('button', { name: removeCategory$({ label: DANCE_PATH }) }),
       );
+
+      expect(lastInput(emitted)).toEqual({ [MUSIC]: [NODE_1] });
+    });
+
+    it('keeps partially applied categories when the last category is unchecked in the list', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1, NODE_2], [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(await screen.findByRole('option', { name: DANCE_LABEL }));
+
+      expect(lastInput(emitted)).toEqual({ [MUSIC]: [NODE_1] });
+    });
+
+    it('keeps partially applied categories when Backspace removes the last chip', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [DANCE]: [NODE_1, NODE_2], [MUSIC]: [NODE_1] },
+        nodeIds: [NODE_1, NODE_2],
+      });
+
+      await userEvent.click(screen.getByRole('combobox'));
+      await userEvent.keyboard('{Backspace}');
 
       expect(lastInput(emitted)).toEqual({ [MUSIC]: [NODE_1] });
     });

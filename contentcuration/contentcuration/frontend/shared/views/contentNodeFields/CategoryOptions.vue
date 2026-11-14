@@ -13,6 +13,7 @@
     :noResultsText="$tr('noCategoryFoundText')"
     :messages="messages"
     @input="onKMultiSelectInput"
+    @click.native.capture="onRootClickCapture"
   >
     <template #chip="{ option, remove: removeChip }">
       <span :ref="'category-chip-' + option.value">
@@ -20,7 +21,7 @@
           :text="option.text"
           :removeLabel="$tr('removeCategory', { label: tooltipText(option.value) })"
           close
-          @close="onChipRemove(option.value, removeChip)"
+          @close="removeChip"
           @mousedown.native.prevent
         />
       </span>
@@ -81,7 +82,7 @@
     },
     data() {
       return {
-        pendingChipRemoval: null,
+        pendingClearAll: false,
       };
     },
     computed: {
@@ -121,9 +122,18 @@
       },
     },
     methods: {
-      onChipRemove(value, removeChip) {
-        this.pendingChipRemoval = value;
-        removeChip();
+      /**
+       * KMultiSelect emits an empty value for clear-all, for removing the last
+       * chip, for Backspace in an empty search field and for unchecking the last
+       * option, without saying which. Only clear-all should drop categories that
+       * are applied to some of the edited nodes, so the clear button's click is
+       * noted in the capture phase (it stops propagation itself) and read when
+       * the matching input event arrives.
+       */
+      onRootClickCapture(event) {
+        const button = event.target && event.target.closest ? event.target.closest('button') : null;
+        const { clearAllAction$ } = communityChannelsStrings;
+        this.pendingClearAll = Boolean(button && button.getAttribute('aria-label') === clearAllAction$());
       },
       /**
        * Applies the difference between the current and the new selection, so
@@ -131,14 +141,10 @@
        * changes.
        */
       onKMultiSelectInput(newValues) {
-        const removing = this.pendingChipRemoval;
-        this.pendingChipRemoval = null;
+        const clearAll = this.pendingClearAll;
+        this.pendingClearAll = false;
         const previous = this.autocompleteValues;
-        if (!newValues.length && !removing) {
-          // KMultiSelect emits [] both for clear-all and for removing the last
-          // chip; only chip removals go through onChipRemove, so an empty
-          // value without a pending removal is the clear-all button and wipes
-          // everything, partially applied categories included.
+        if (!newValues.length && clearAll) {
           this.selected = {};
           return;
         }
