@@ -241,14 +241,17 @@ class AsyncTaskTestCase(TransactionTestCase):
         self.assertEqual(expected_task.task_id, async_result.task_id)
 
     def test_requeue_task(self):
-        signature = requeue_test_task.generate_signature({})
-        existing_task_ids = requeue_test_task.find_ids(signature)
-        self.assertEqual(len(existing_task_ids), 0)
+        requeued_signature = requeue_test_task.generate_signature(
+            {"requeue": True, "ran": True}
+        )
+        self.assertEqual(len(requeue_test_task.find_ids(requeued_signature)), 0)
 
         first_async_result = requeue_test_task.enqueue(self.user, requeue=True)
         first_result = self._wait_for(first_async_result)
         self.assertIsNotNone(first_result)
         self.assertTrue(first_async_result.successful())
+
+        self.assertIn(first_result, requeue_test_task.find_ids(requeued_signature))
 
         second_async_result = requeue_test_task.fetch(first_result)
         # assert that the requeued task was requeued by the same user

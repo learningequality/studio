@@ -300,7 +300,7 @@ class CeleryTask(Task):
             )
         task_kwargs = request.kwargs.copy()
         task_kwargs.update(kwargs)
-        signature = self.generate_signature(kwargs)
+        signature = self.generate_signature(task_kwargs)
         custom_task_metadata = CustomTaskMetadata.objects.get(task_id=request.id)
         logging.info(
             f"Re-queuing task {self.name} for user {custom_task_metadata.user.pk} from {request.id} | {signature}"
