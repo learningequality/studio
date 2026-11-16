@@ -99,4 +99,42 @@ describe('ClickableRegion', () => {
 
     expect(screen.getByRole('button', { name: 'Test label' })).toHaveFocus();
   });
+
+  describe('pressed while suppressed, then unsuppressed before the click', () => {
+    const renderPressed = async () => {
+      const { emitted, container, updateProps } = render(ClickableRegion, {
+        props: { ariaLabel: 'Test label', suppressed: true },
+        routes: new VueRouter(),
+      });
+      await fireEvent.pointerDown(container.firstChild);
+      await updateProps({ suppressed: false });
+      return { emitted, container };
+    };
+
+    it('ignores the pointer click', async () => {
+      const { emitted, container } = await renderPressed();
+
+      await fireEvent.click(container.firstChild, { detail: 1 });
+
+      expect(emitted().click).toBeUndefined();
+    });
+
+    it('emits a keyboard click', async () => {
+      const { emitted } = await renderPressed();
+
+      await fireEvent.click(screen.getByRole('button'), { detail: 0 });
+
+      expect(emitted().click).toHaveLength(1);
+    });
+
+    it('emits the next pointer click', async () => {
+      const { emitted, container } = await renderPressed();
+      await fireEvent.click(container.firstChild, { detail: 1 });
+
+      await fireEvent.pointerDown(container.firstChild);
+      await fireEvent.click(container.firstChild, { detail: 1 });
+
+      expect(emitted().click).toHaveLength(1);
+    });
+  });
 });

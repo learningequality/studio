@@ -7,6 +7,7 @@
   <div
     class="clickable-area"
     :class="{ 'is-text-target': textCursor && !suppressed }"
+    @pointerdown.capture="onPointerdown"
     @click="onClick"
   >
     <button
@@ -35,8 +36,19 @@
     setup(props, { emit }) {
       const button = ref(null);
 
+      // Browsers run microtasks, and so Vue renders, between a click's listeners: a click
+      // that closes an editor inside the region un-suppresses it before the click bubbles here.
+      let pressedWhileSuppressed = false;
+
+      function onPointerdown() {
+        pressedWhileSuppressed = props.suppressed;
+      }
+
       function onClick(event) {
-        if (props.suppressed) return;
+        const isPointerClick = Boolean(event?.detail);
+        const wasSuppressed = isPointerClick && pressedWhileSuppressed;
+        pressedWhileSuppressed = false;
+        if (props.suppressed || wasSuppressed) return;
         if (event && event.stopPropagation) {
           event.stopPropagation();
         }
@@ -44,6 +56,7 @@
       }
       return {
         button,
+        onPointerdown,
         onClick,
         // Public: lets a parent move focus to the region.
         // eslint-disable-next-line vue/no-unused-properties
