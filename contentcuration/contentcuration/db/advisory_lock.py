@@ -88,18 +88,31 @@ def advisory_lock(key1, key2=None, shared=False):
         pass
 
 
-def try_advisory_lock(key1, key2=None, shared=False):
+def try_advisory_lock(key1, key2=None, shared=False, session=False):
     """
-    Creates a transaction level advisory lock that doesn't block
-
     :param key1: int
     :param key2: int
     :param shared: bool
     :raises: AdvisoryLockBusy
     """
-    with execute_lock(key1, key2=key2, shared=shared, wait=False) as cursor:
+    with execute_lock(
+        key1, key2=key2, shared=shared, session=session, wait=False
+    ) as cursor:
         # for `try` locks, the PG function will return True or False,
         # representing whether the lock was acquired or not
         results = cursor.fetchone()
         if not results[0]:
             raise AdvisoryLockBusy("Unable to acquire advisory lock")
+
+
+@contextmanager
+def try_session_advisory_lock(key1, key2=None):
+    """
+    :raises: AdvisoryLockBusy
+    """
+    try_advisory_lock(key1, key2=key2, session=True)
+    try:
+        yield
+    finally:
+        with execute_lock(key1, key2=key2, unlock=True, session=True):
+            pass

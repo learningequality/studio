@@ -6,6 +6,7 @@ from multiprocessing import Process
 from multiprocessing import set_start_method
 from time import sleep
 
+from django.db import connection
 from django.db import transaction
 from django.test.testcases import SimpleTestCase
 from django_concurrent_tests.management.commands.concurrent_call_wrapper import (
@@ -20,6 +21,7 @@ from contentcuration.db.advisory_lock import advisory_lock
 from contentcuration.db.advisory_lock import AdvisoryLockBusy
 from contentcuration.db.advisory_lock import execute_lock
 from contentcuration.db.advisory_lock import try_advisory_lock
+from contentcuration.db.advisory_lock import try_session_advisory_lock
 
 TEST_LOCK = 1337
 
@@ -330,3 +332,34 @@ class AdvisoryLockDatabaseTest(SimpleTestCase):
             # since the lock should already be acquired, this will raise the error
             with raises(AdvisoryLockBusy):
                 try_advisory_lock(TEST_LOCK)
+
+    def assert_advisory_locks_held(self, *locks):
+        with connection.cursor() as c:
+            c.execute(
+                "SELECT classid::bigint, objid::bigint, objsubid FROM pg_locks"
+                " WHERE locktype = 'advisory' AND pid = pg_backend_pid()"
+            )
+            self.assertEqual(sorted(c.fetchall()), sorted(locks))
+
+    @mark.timeout(30)
+    def test_try_session__busy(self):
+        with self.child_lock(shared=False):
+            with raises(AdvisoryLockBusy):
+                with try_session_advisory_lock(TEST_LOCK):
+                    pass
+
+    @mark.timeout(30)
+    def test_try_session__held_across_commits(self):
+        with try_session_advisory_lock(TEST_LOCK, key2=1):
+            self.assertFalse(connection.in_atomic_block)
+            with transaction.atomic():
+                pass
+            self.assert_advisory_locks_held((TEST_LOCK, 1, 2))
+        self.assert_advisory_locks_held()
+
+    @mark.timeout(30)
+    def test_try_session__released_on_exception(self):
+        with raises(ValueError):
+            with try_session_advisory_lock(TEST_LOCK, key2=1):
+                raise ValueError()
+        self.assert_advisory_locks_held()
