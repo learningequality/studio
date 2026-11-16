@@ -5,6 +5,8 @@ the tasks.
 """
 import logging
 import time
+import zlib
+from contextlib import ExitStack
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -13,6 +15,10 @@ from django.template.loader import render_to_string
 from django.utils.translation import override
 
 from contentcuration.celery import app
+from contentcuration.constants.locking import CHANNEL_CHANGE_LOCK
+from contentcuration.constants.locking import USER_CHANGE_LOCK
+from contentcuration.db.advisory_lock import AdvisoryLockBusy
+from contentcuration.db.advisory_lock import try_session_advisory_lock
 from contentcuration.models import Change
 from contentcuration.models import ContentNode
 from contentcuration.models import User
@@ -25,20 +31,37 @@ from contentcuration.viewsets.user import AdminUserFilter
 logger = get_task_logger(__name__)
 
 
+def channel_lock_key(channel_id):
+    # crc32 collisions let two channels share a lock, at odds of 2**-32 per pair
+    # of channels with tasks running at once; the loser's changes wait for that
+    # channel's next sync.
+    return zlib.crc32(channel_id.encode("utf-8"))
+
+
+def _apply_changes_exclusively(task, changes_qs, key1, key2):
+    from contentcuration.viewsets.sync.base import apply_changes
+
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(try_session_advisory_lock(key1, key2=key2))
+        except AdvisoryLockBusy:
+            logger.info(f"Skipping {task.name}: another task holds lock {key1}, {key2}")
+            return
+        apply_changes(changes_qs)
+    if changes_qs.exists():
+        task.requeue()
+
+
 @app.task(bind=True, name="apply_user_changes")
 def apply_user_changes_task(self, user_id):
     """
     :type self: contentcuration.utils.celery.tasks.CeleryTask
     :param user_id: The user ID for which to process changes
     """
-    from contentcuration.viewsets.sync.base import apply_changes
-
     changes_qs = Change.objects.filter(
         applied=False, errored=False, user_id=user_id, channel__isnull=True
     )
-    apply_changes(changes_qs)
-    if changes_qs.exists():
-        self.requeue()
+    _apply_changes_exclusively(self, changes_qs, USER_CHANGE_LOCK, user_id)
 
 
 @app.task(bind=True, name="apply_channel_changes")
@@ -47,14 +70,12 @@ def apply_channel_changes_task(self, channel_id):
     :type self: contentcuration.utils.celery.tasks.CeleryTask
     :param channel_id: The channel ID for which to process changes
     """
-    from contentcuration.viewsets.sync.base import apply_changes
-
     changes_qs = Change.objects.filter(
         applied=False, errored=False, channel_id=channel_id
     )
-    apply_changes(changes_qs)
-    if changes_qs.exists():
-        self.requeue()
+    _apply_changes_exclusively(
+        self, changes_qs, CHANNEL_CHANGE_LOCK, channel_lock_key(channel_id)
+    )
 
 
 class CustomEmailMessage(EmailMessage):
