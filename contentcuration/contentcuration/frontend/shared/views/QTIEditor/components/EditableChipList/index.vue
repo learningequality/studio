@@ -102,6 +102,7 @@
         -->
         <div
           v-if="isDraftOpen"
+          ref="draftRow"
           class="draft-row"
           @click.stop
         >
@@ -181,6 +182,7 @@
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
+  import { provideEditorBoundary } from 'shared/views/TipTapEditor/TipTapEditor/composables/useEditorBoundary';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import { hasRichTextContent } from 'shared/views/TipTapEditor/TipTapEditor/utils/comparisonKey';
 
@@ -202,6 +204,24 @@
       const addButton = ref(null);
       const deleteButtons = ref([]);
       const chipRegions = ref([]);
+      const draftRow = ref(null);
+
+      function isOnClosedChip(target) {
+        return chipRegions.value.some(
+          ({ $el, $props }) => !$props.suppressed && $el.contains(target),
+        );
+      }
+
+      function isOnOpenEditorButton(target) {
+        const button = target.closest('button');
+        const openEditorRows = [
+          ...chipRegions.value.filter(({ $props }) => $props.suppressed).map(({ $el }) => $el),
+          draftRow.value,
+        ];
+        return Boolean(button) && openEditorRows.some(row => row?.contains(button));
+      }
+
+      provideEditorBoundary(target => isOnClosedChip(target) || isOnOpenEditorButton(target));
 
       // The chip whose editor is open — `index` null for a new one — holding its
       // content as last written, since the chip prop lags a render behind.
@@ -390,6 +410,7 @@
         addButton,
         deleteButtons,
         chipRegions,
+        draftRow,
         open,
         draftKey,
         isDraftOpen,

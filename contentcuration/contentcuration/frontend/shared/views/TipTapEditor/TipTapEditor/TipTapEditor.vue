@@ -89,6 +89,7 @@
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
   import { useClickOutside } from './composables/useClickOutside';
+  import { injectEditorBoundary } from './composables/useEditorBoundary';
   import ImageUploadModal from './components/image/ImageUploadModal.vue';
   import { useImageHandling } from './composables/useImageHandling';
   import '../assets/styles/code-theme-dark.css';
@@ -258,6 +259,7 @@
         container: editorContainer,
         isFocused,
         isEditing: () => props.mode === 'edit',
+        isInsideBoundary: injectEditorBoundary(),
         syncContent: emitContentUpdate,
         close: minimize,
       });

@@ -9,7 +9,7 @@ import { useClickOutside } from '../TipTapEditor/composables/useClickOutside';
  * tests move by hand, and the menu trigger marks itself open the way KDropdownMenu does. The
  * dialog trigger stands in for content, such as a node view, whose popup renders outside.
  */
-function renderHarness({ editing = true } = {}) {
+function renderHarness({ editing = true, isInsideBoundary } = {}) {
   const isFocused = ref(false);
   const syncContent = jest.fn();
   const close = jest.fn();
@@ -21,6 +21,7 @@ function renderHarness({ editing = true } = {}) {
           container,
           isFocused,
           isEditing: () => props.editing,
+          isInsideBoundary,
           syncContent,
           close,
         });
@@ -42,6 +43,7 @@ function renderHarness({ editing = true } = {}) {
           <p><button aria-haspopup="dialog" :aria-expanded="String(dialogOpen)">Chip</button></p>
         </div>
         <button>Outside</button>
+        <button data-testid="save">Save</button>
         <div @click.stop><button>Stopped</button></div>
       </div>`,
     }),
@@ -78,6 +80,33 @@ describe('useClickOutside', () => {
       await user.click(button('Stopped'));
 
       expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    describe('with a boundary', () => {
+      const isInsideBoundary = target => target.dataset.testid === 'save';
+
+      it('syncs and stays open on a click inside the boundary', async () => {
+        const user = userEvent.setup();
+        const { close, syncContent } = renderHarness({ isInsideBoundary });
+        let syncsAtHandler;
+        button('Save').addEventListener('click', () => {
+          syncsAtHandler = syncContent.mock.calls.length;
+        });
+
+        await user.click(button('Save'));
+
+        expect(syncsAtHandler).toBe(1);
+        expect(close).not.toHaveBeenCalled();
+      });
+
+      it('closes on a click outside the boundary', async () => {
+        const user = userEvent.setup();
+        const { close } = renderHarness({ isInsideBoundary });
+
+        await user.click(button('Outside'));
+
+        expect(close).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('stays open on a click inside', async () => {
