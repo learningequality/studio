@@ -238,6 +238,6 @@ class DeleteAccountForm(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
-        if self.user.is_admin or self.user.email.lower() != self.cleaned_data["email"]:
+        if self.user.is_admin or self.user.email.lower() != email:
             raise ValidationError("Not allowed")
         return email
