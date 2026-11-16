@@ -753,13 +753,13 @@ describe('InlineChoiceEditor', () => {
       const { user } = await renderEditor({
         interaction: interactionOf({ passage: `<p>The ${chip('r1', [['sun', '']])}</p>` }),
       });
-      mockSendAssertiveMessage.mockClear();
+      mockSendPoliteMessage.mockClear();
       await openChip(user, 0);
       expect(dialog()).toHaveAccessibleDescription(
         `${tr.errorNoCorrectAnswer$()} ${tr.errorTooFewInlineChoiceOptions$({ count: 2 })}`,
       );
       expect(within(dialog()).queryAllByRole('alert')).toHaveLength(0);
-      expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+      expect(mockSendPoliteMessage).not.toHaveBeenCalled();
     });
 
     it('keeps the passage’s problems no alert when the panel they appeared in closes', async () => {
@@ -840,24 +840,23 @@ describe('InlineChoiceEditor', () => {
       expect(
         within(dialog()).getByText(tr.errorTooFewInlineChoiceOptions$({ count: 2 })),
       ).toBeInTheDocument();
-      // Remove moves focus to the next option: what appeared waits for that field to be read.
       expect(mockSendPoliteMessage).toHaveBeenCalledWith(
         tr.errorTooFewInlineChoiceOptions$({ count: 2 }),
       );
-      expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
 
       // The option Add option focuses reads its own error, so it is not announced as well.
-      mockSendAssertiveMessage.mockClear();
+      mockSendPoliteMessage.mockClear();
       await user.click(screen.getByRole('button', { name: tr.addInlineChoiceOptionBtn$() }));
       await waitFor(() => expect(optionInputs()[1]).toHaveFocus());
       expect(optionInputs()[1]).toHaveAccessibleDescription(tr.errorEmptyChoiceContent$());
-      expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+      expect(mockSendPoliteMessage).not.toHaveBeenCalled();
 
       // An error that appears as the author types is announced, once for rows that share it.
       await user.keyboard('revolves');
       expect(within(dialog()).getAllByText(tr.errorDuplicateChoiceContent$())).toHaveLength(2);
-      expect(mockSendAssertiveMessage).toHaveBeenCalledTimes(1);
-      expect(mockSendAssertiveMessage).toHaveBeenCalledWith(tr.errorDuplicateChoiceContent$());
+      expect(mockSendPoliteMessage).toHaveBeenCalledTimes(1);
+      expect(mockSendPoliteMessage).toHaveBeenCalledWith(tr.errorDuplicateChoiceContent$());
+      expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
     });
 
     it('asks for a second option on a dropdown with one in its panel', async () => {
