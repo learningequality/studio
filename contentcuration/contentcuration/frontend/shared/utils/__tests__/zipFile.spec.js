@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import JSZip from 'jszip';
 import { createPredictableZip, findFirstHtml, findCommonRoot } from '../zipFile';
 

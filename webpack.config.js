@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 const path = require('node:path');
 
 const baseConfig = require('kolibri-build/src/webpack.config.base');

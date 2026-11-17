@@ -1,8 +1,5 @@
-// The resolver does not read package `exports` subpaths.
-/* eslint-disable import/no-unresolved */
 import { Plugin, TextSelection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-/* eslint-enable import/no-unresolved */
 
 const caretOf = ({ selection }) => (selection.empty ? selection.$from : null);
 

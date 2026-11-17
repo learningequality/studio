@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-named-as-default
 import Vue, { set } from 'vue';
 
 export function SET_INITIALIZING(state, isInitializing) {

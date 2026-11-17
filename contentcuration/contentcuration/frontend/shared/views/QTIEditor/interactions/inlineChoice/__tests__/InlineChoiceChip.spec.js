@@ -1,8 +1,6 @@
 import { nextTick, ref } from 'vue';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-// The resolver does not read package `exports` subpaths.
-// eslint-disable-next-line import/no-unresolved
 import { NodeSelection } from '@tiptap/pm/state';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { CHIP, chip, findChip, renderPassage } from './renderPassage';

@@ -104,7 +104,7 @@ describe('validateFile', () => {
       }
     }
 
-    test.each(videoFormats)('should validate %j files correctly', async ({ ext, type }) => {
+    it.each(videoFormats)('should validate %j files correctly', async ({ ext, type }) => {
       const file = createMockFile(`test.${ext}`, type);
       const result = await validateFile(file);
       expect(result).toBe(VALID);
@@ -136,7 +136,7 @@ describe('validateFile', () => {
       }
     }
 
-    test.each(imagePresets)('should validate %j files correctly', async ({ ext, type }) => {
+    it.each(imagePresets)('should validate %j files correctly', async ({ ext, type }) => {
       const file = createMockFile(`test.${ext}`, type);
       const result = await validateFile(file);
       expect(result).toBe(VALID);

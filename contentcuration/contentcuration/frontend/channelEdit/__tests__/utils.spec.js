@@ -64,7 +64,7 @@ describe('channelEdit utils', () => {
   describe(`getCompletionCriteriaLabels`, () => {
     describe(`setting default values for completion and duration`, () => {
       describe(`for audio and video content`, () => {
-        it(`returns 'When time spent is equal to duration' completion label and  duration label equal to the file length in hh:mm:ss format`, () => {
+        it(`returns 'When time spent is equal to duration' completion label and  duration label equal to the audio file length in hh:mm:ss format`, () => {
           expect(
             getCompletionCriteriaLabels(
               {
@@ -80,7 +80,7 @@ describe('channelEdit utils', () => {
             duration: '01:40',
           });
         });
-        it(`returns 'When time spent is equal to duration' completion label and  duration label equal to the file length in hh:mm:ss format`, () => {
+        it(`returns 'When time spent is equal to duration' completion label and  duration label equal to the video file length in hh:mm:ss format`, () => {
           expect(
             getCompletionCriteriaLabels(
               {

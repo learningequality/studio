@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/namespace
 import { marked } from 'marked';
 import { preprocessMarkdown } from '../TipTapEditor/utils/markdown';
 import { storageUrl } from '../../../vuex/file/utils';

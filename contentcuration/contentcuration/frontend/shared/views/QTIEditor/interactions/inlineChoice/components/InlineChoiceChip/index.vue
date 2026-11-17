@@ -63,8 +63,6 @@
 <script>
 
   import { computed, ref, watchEffect } from 'vue';
-  // The resolver does not read package `exports` subpaths.
-  // eslint-disable-next-line import/no-unresolved
   import { DOMSerializer } from '@tiptap/pm/model';
   import { NodeViewWrapper } from '@tiptap/vue-2';
   import { describeChip, injectPassageChips } from '../../passageChips';

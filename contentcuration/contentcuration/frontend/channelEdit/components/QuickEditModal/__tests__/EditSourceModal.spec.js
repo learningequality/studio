@@ -78,13 +78,13 @@ describe('EditSourceModal', () => {
     });
   });
 
-  test('smoke test', () => {
+  it('smoke test', () => {
     const wrapper = makeWrapper(['node1']);
     expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected source on first render', () => {
-    test('should display the correct source values when one node is selected', () => {
+    it('should display the correct source values when one node is selected', () => {
       const testValues = {
         author: 'Test author',
         provider: 'Test provider',
@@ -99,7 +99,7 @@ describe('EditSourceModal', () => {
       expect(getSourceValues(wrapper)).toEqual(expect.anything(), testValues);
     });
 
-    test('should display the common source values when multiple nodes are selected', () => {
+    it('should display the common source values when multiple nodes are selected', () => {
       const testValues = {
         author: 'Test author',
         provider: 'Test provider',
@@ -112,7 +112,7 @@ describe('EditSourceModal', () => {
       expect(getSourceValues(wrapper)).toEqual(expect.anything(), testValues);
     });
 
-    test('should display the mixed value when the selected nodes have different values', () => {
+    it('should display the mixed value when the selected nodes have different values', () => {
       nodes['node1'].author = 'Test author';
       nodes['node2'].author = 'Test author 2';
 
@@ -122,7 +122,7 @@ describe('EditSourceModal', () => {
       expect(sourceValues.author).toEqual(MIXED_VALUE);
     });
 
-    test('should disable inputs when all nodes are imported', () => {
+    it('should disable inputs when all nodes are imported', () => {
       nodes['node1'].original_source_node_id = 'original_node1';
       nodes['node2'].original_source_node_id = 'original_node2';
 
@@ -136,7 +136,7 @@ describe('EditSourceModal', () => {
       );
     });
 
-    test('should show message that source cannot be edited when all nodes are imported', () => {
+    it('should show message that source cannot be edited when all nodes are imported', () => {
       nodes['node1'].original_source_node_id = 'original_node1';
       nodes['node2'].original_source_node_id = 'original_node2';
 
@@ -145,7 +145,7 @@ describe('EditSourceModal', () => {
       expect(wrapper.find('.help').text()).toContain(EditSourceModal.$trs.cannotEditPublic);
     });
 
-    test('should disable inputs when node has freeze_authoring_data set to true', () => {
+    it('should disable inputs when node has freeze_authoring_data set to true', () => {
       nodes['node1'].freeze_authoring_data = true;
 
       const wrapper = makeWrapper(['node1']);
@@ -158,7 +158,7 @@ describe('EditSourceModal', () => {
       );
     });
 
-    test('should show message that source cannot be edited when node has freeze_authoring_data set to true', () => {
+    it('should show message that source cannot be edited when node has freeze_authoring_data set to true', () => {
       nodes['node1'].freeze_authoring_data = true;
 
       const wrapper = makeWrapper(['node1']);
@@ -166,7 +166,7 @@ describe('EditSourceModal', () => {
       expect(wrapper.find('.help').text()).toContain(EditSourceModal.$trs.cannotEditPublic);
     });
 
-    test('should not disable inputs when not all nodes are imported', () => {
+    it('should not disable inputs when not all nodes are imported', () => {
       nodes['node1'].original_source_node_id = 'original_node1';
 
       const wrapper = makeWrapper(['node1', 'node2']);
@@ -179,7 +179,7 @@ describe('EditSourceModal', () => {
       );
     });
 
-    test('should show a message that edits will be reflected only for local resources if just some nodes are imported, but not all', () => {
+    it('should show a message that edits will be reflected only for local resources if just some nodes are imported, but not all', () => {
       nodes['node1'].original_source_node_id = 'original_node1';
 
       const wrapper = makeWrapper(['node1', 'node2']);
@@ -191,7 +191,7 @@ describe('EditSourceModal', () => {
   });
 
   describe('On submit', () => {
-    test('should not call updateContentNode on submit if copyright holder is missing', () => {
+    it('should not call updateContentNode on submit if copyright holder is missing', () => {
       nodes['node1'].copyright_holder = '';
       const wrapper = makeWrapper(['node1']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
@@ -199,14 +199,14 @@ describe('EditSourceModal', () => {
       expect(contentNodeActions.updateContentNode).not.toHaveBeenCalled();
     });
 
-    test('should call updateContentNode on success submit for all editable nodes', () => {
+    it('should call updateContentNode on success submit for all editable nodes', () => {
       const wrapper = makeWrapper(['node1', 'node2']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
 
       expect(contentNodeActions.updateContentNode).toHaveBeenCalled();
     });
 
-    test('should call updateContentNode with the correct parameters on success submit for all editable nodes', () => {
+    it('should call updateContentNode with the correct parameters on success submit for all editable nodes', () => {
       nodes['node1'].author = 'Test author';
       const newAuthor = 'new-author';
 
@@ -223,7 +223,7 @@ describe('EditSourceModal', () => {
       );
     });
 
-    test('should call updateContentNode on submit just for the editable nodes', () => {
+    it('should call updateContentNode on submit just for the editable nodes', () => {
       nodes['node1'].original_source_node_id = 'original_node1';
       const wrapper = makeWrapper(['node1', 'node2']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
@@ -243,7 +243,7 @@ describe('EditSourceModal', () => {
       );
     });
 
-    test('should not call updateContentNode on submit if all nodes are imported', () => {
+    it('should not call updateContentNode on submit if all nodes are imported', () => {
       nodes['node1'].original_source_node_id = 'original_node1';
       nodes['node2'].original_source_node_id = 'original_node2';
       const wrapper = makeWrapper(['node1', 'node2']);
@@ -252,7 +252,7 @@ describe('EditSourceModal', () => {
       expect(contentNodeActions.updateContentNode).not.toHaveBeenCalled();
     });
 
-    test('should show a snackbar with "Changes saved" on success submit', async () => {
+    it('should show a snackbar with "Changes saved" on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
       await flushPromises();
@@ -260,7 +260,7 @@ describe('EditSourceModal', () => {
       expect(useKSnackbar().snackbarOptions.value.text).toBe('Changes saved');
     });
 
-    test('should emit close event on success submit', async () => {
+    it('should emit close event on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
       await flushPromises();
@@ -269,7 +269,7 @@ describe('EditSourceModal', () => {
     });
   });
 
-  test('should render the message of the number of resources selected', () => {
+  it('should render the message of the number of resources selected', () => {
     const wrapper = makeWrapper(['node1', 'node2']);
 
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
@@ -277,7 +277,7 @@ describe('EditSourceModal', () => {
     expect(resourcesCounter.text()).toContain('2');
   });
 
-  test('should emit close event on cancel', () => {
+  it('should emit close event on cancel', () => {
     const wrapper = makeWrapper(['node1', 'node2']);
 
     wrapper.find('[data-test="edit-source-modal"]').vm.$emit('cancel');

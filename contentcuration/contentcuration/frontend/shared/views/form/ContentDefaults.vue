@@ -108,8 +108,8 @@
 <script>
 
   import defaultTo from 'lodash/defaultTo';
-  import { constantsTranslationMixin } from '../../../shared/mixins';
   import Checkbox from './Checkbox';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
   import { findLicense } from 'shared/utils/helpers';

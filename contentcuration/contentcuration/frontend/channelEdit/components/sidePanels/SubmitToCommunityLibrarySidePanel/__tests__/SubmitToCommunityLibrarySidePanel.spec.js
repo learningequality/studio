@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { factory } from '../../../../store';
 
-import SubmitToCommunityLibrarySidePanel from '../';
+import SubmitToCommunityLibrarySidePanel from '..';
 import Box from '../Box.vue';
 
 import { useVersionDetail } from '../composables/useVersionDetail';

@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// eslint-disable-next-line import/no-named-as-default
+// eslint-disable-next-line import-x/no-named-as-default
 import Dexie from 'dexie';
 import flatMap from 'lodash/flatMap';
 import { CHANGE_TYPES } from './constants';

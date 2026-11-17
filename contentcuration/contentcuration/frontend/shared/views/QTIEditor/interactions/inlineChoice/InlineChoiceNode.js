@@ -1,9 +1,6 @@
-// The resolver does not read package `exports` subpaths.
-/* eslint-disable import/no-unresolved */
 import { isHistoryTransaction } from '@tiptap/pm/history';
 import { DOMSerializer, Fragment, Slice } from '@tiptap/pm/model';
 import { Plugin } from '@tiptap/pm/state';
-/* eslint-enable import/no-unresolved */
 import {
   Node,
   combineTransactionSteps,

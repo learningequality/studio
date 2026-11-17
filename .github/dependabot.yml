@@ -23,8 +23,10 @@ updates:
       exclude:
         - kolibri-build
         - kolibri-constants
+        - kolibri-css-variables
         - kolibri-design-system
         - kolibri-format
+        - kolibri-glob
         - kolibri-i18n
         - kolibri-logging
     groups:
