@@ -1193,6 +1193,12 @@ class ChannelLanguageTestCase(StudioAPITestCase):
         self.channel.language_id = "en"
         self.channel.save()
 
+        self.editor = testdata.user(email="language-editor@user.com")
+        self.channel.editors.add(self.editor)
+        self.viewer = testdata.user(email="language-viewer@user.com")
+        self.channel.viewers.add(self.viewer)
+        self.non_member = testdata.user(email="language-nonmember@user.com")
+
         self.channel_id = self.channel.id
         self.node_id = "00000000000000000000000000000003"
         self.public_node = PublicContentNode.objects.create(
@@ -1276,9 +1282,40 @@ class ChannelLanguageTestCase(StudioAPITestCase):
         response = self._perform_action("channel-languages", None)
         self.assertEqual(response.status_code, 404, response.content)
 
-    def _perform_action(self, url_path, channel_id):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
+    def test_language_actions_viewer_has_access(self):
+        ContentNode.objects.filter(node_id=self.public_node.id).update(language_id="en")
+        response = self._perform_action(
+            "channel-language-exists", self.channel.id, user=self.viewer
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(response.json()["exists"])
+
+        response = self._perform_action(
+            "channel-languages", self.channel.id, user=self.viewer
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_language_actions_non_member_gets_404(self):
+        for url_path in ("channel-language-exists", "channel-languages"):
+            response = self._perform_action(
+                url_path, self.channel.id, user=self.non_member
+            )
+            self.assertEqual(response.status_code, 404, response.content)
+
+    def test_language_actions_nonexistent_channel_matches_non_member(self):
+        for url_path in ("channel-language-exists", "channel-languages"):
+            missing = self._perform_action(
+                url_path, uuid.uuid4().hex, user=self.non_member
+            )
+            denied = self._perform_action(
+                url_path, self.channel.id, user=self.non_member
+            )
+            self.assertEqual(missing.status_code, 404, missing.content)
+            self.assertEqual(missing.status_code, denied.status_code)
+            self.assertEqual(missing.content, denied.content)
+
+    def _perform_action(self, url_path, channel_id, user=None):
+        self.client.force_authenticate(user=user or self.editor)
         response = self.client.get(
             reverse(url_path, kwargs={"pk": channel_id}), format="json"
         )
