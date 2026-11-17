@@ -16,20 +16,18 @@
         md3
         sm3
       >
-        <DropdownWrapper>
-          <template #default="{ attach, menuProps }">
-            <VAutocomplete
-              v-model.number="minutes"
-              :step="increments"
-              box
-              :label="$tr('minutesRequired')"
-              :items="availableNumbers"
-              :menu-props="menuProps"
-              :attach="attach"
-              :rules="minutesRules"
-            />
-          </template>
-        </DropdownWrapper>
+        <KMultiSelect
+          v-model="minutes"
+          :multiple="false"
+          :label="$tr('minutesRequired')"
+          :options="availableNumbers"
+          :invalid="validated && Boolean(minutesInvalidText)"
+          :invalidText="minutesInvalidText"
+          :noResultsText="$tr('noResultsText')"
+          :messages="messages"
+          :appearanceOverrides="{ width: '100%' }"
+          @input="validate"
+        />
       </VFlex>
       <VFlex
         v-else
@@ -79,14 +77,18 @@
 
 <script>
 
+  import { ref, watch } from 'vue';
+  import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import { CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
   import {
     translateValidator,
+    getInvalidText,
     getActivityDurationValidators,
     getLongActivityDurationValidators,
     getShortActivityDurationValidators,
   } from 'shared/utils/validation';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { commonStrings } from 'shared/strings/commonStrings';
+  import { createMultiSelectMessages } from 'shared/utils/multiSelectMessages';
 
   const EXACT_MIN = 1;
   const EXACT_MAX = 1200;
@@ -95,7 +97,17 @@
 
   export default {
     name: 'ActivityDuration',
-    components: { DropdownWrapper },
+    components: { KMultiSelect },
+    setup(props) {
+      const validated = ref(false);
+      watch(
+        () => props.selectedDuration,
+        () => {
+          validated.value = false;
+        },
+      );
+      return { validated };
+    },
     props: {
       selectedDuration: {
         type: String,
@@ -176,18 +188,31 @@
           return EXACT_MIN;
         }
       },
-      minutesRules() {
+      minutesValidators() {
         if (this.isShortActivity) {
-          return getShortActivityDurationValidators().map(translateValidator);
+          return getShortActivityDurationValidators();
         } else if (this.isLongActivity) {
-          return getLongActivityDurationValidators().map(translateValidator);
+          return getLongActivityDurationValidators();
         } else if (
           this.isExactTime &&
           this.selectedCompletion === CompletionDropdownMap.completeDuration
         ) {
-          return getActivityDurationValidators().map(translateValidator);
+          return getActivityDurationValidators();
         }
         return [];
+      },
+      minutesRules() {
+        return this.minutesValidators.map(translateValidator);
+      },
+      minutesInvalidText() {
+        return getInvalidText(this.minutesValidators, this.minutes);
+      },
+      messages() {
+        const { clearAction$, optionRemovedLabel$ } = commonStrings;
+        return createMultiSelectMessages({
+          clearText: clearAction$,
+          cleared: optionRemovedLabel$,
+        });
       },
       sliderStyle() {
         const percent = ((this.minutes - this.minRange) / (this.maxRange - this.minRange)) * 100;
@@ -200,6 +225,15 @@
       },
     },
     methods: {
+      /**
+       * @public
+       */
+      validate() {
+        if (this.isShortActivity || this.isLongActivity) {
+          this.validated = true;
+          return this.minutesInvalidText;
+        }
+      },
       convertToMinutes(seconds) {
         return Math.floor(seconds / 60);
       },
@@ -226,6 +260,11 @@
     },
     $trs: {
       minutesRequired: 'Minutes',
+      noResultsText: {
+        message: 'No matching minutes',
+        context:
+          'Message shown when a search in the activity duration dropdown has no matching options',
+      },
       optionalLabel:
         '(Optional) Time required for the resource to be marked as completed. This value will not be displayed to learners.',
       notOptionalLabel:
