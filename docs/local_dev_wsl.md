@@ -59,7 +59,7 @@ For detailed instructions on installing and configuring Volta and uv, please see
 
 Studio requires some background services to be running:
 
-* Minio - a local S3 storage emulation
+* fake-gcs-server - a local Google Cloud Storage emulator
 * PostgreSQL - a relational database
 * Redis - a fast key/value store useful for caching
 
@@ -70,14 +70,9 @@ sudo apt-get update
 sudo apt-get install -y python-tk postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-12 ffmpeg libmagickwand-dev redis-server wkhtmltopdf
 ```
 
-### Install MinIO
+### Install the GCS emulator
 
-Download and install MinIO:
-
-```sh
-wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O bin/minio
-sudo chmod +x ~/bin/minio
-```
+Follow [Install the GCS emulator](./local_dev_host.md#install-the-gcs-emulator), choosing the Linux archive for your WSL architecture.
 
 ## Set Up the Database
 

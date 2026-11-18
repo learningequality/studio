@@ -13,5 +13,5 @@ To create a SQL dump of your preferred database data useful for local testing, r
 #### pgpass
 Stores the postgres authentication for the docker service for scripting access without manually providing a password, created by `make .docker/pgpass`
 
-### minio
-The `minio` directory is mounted to `/data`, since it isn't necessarily useful to have this data isolated based off the current git branch.
+### gcs
+The `gcs` directory is mounted to `/storage` in `fake-gcs-server`. Makefile service targets create `gcs/content` as the local bucket. Files persist across branches and container restarts.
