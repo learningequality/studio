@@ -156,11 +156,11 @@ function calculateCrc32(data) {
 }
 
 /**
- * Creates a predictable ZIP file from the given files.
+ * Creates a predictable ZIP file, reading and compressing one file at a time.
  *
- * @param {Object.<string, string|Uint8Array>} files - An object where the keys are file paths and
- * the values are file contents.
- * @returns {Promise<Buffer>} - A promise that resolves to a Buffer containing the ZIP file data.
+ * @param {string[]} paths - Paths of the files to include in the zip.
+ * @param {function(string): Promise<string|Uint8Array>} readFile - Returns the contents of a path.
+ * @returns {Promise<Blob>} - A promise that resolves to a Blob containing the ZIP file data.
  *
  * @example
  * const files = {
@@ -168,19 +168,19 @@ function calculateCrc32(data) {
  *   'file2.bin': new Uint8Array([0x00, 0x01, 0x02, 0x03]),
  *   'folder/nested.txt': 'Nested content',
  * };
- * createPredictableZip(files).then(zipBuffer => {
- *   // Do something with the zipBuffer
+ * createPredictableZip(Object.keys(files), async path => files[path]).then(zipBlob => {
+ *   // Do something with the zipBlob
  * });
  */
-export async function createPredictableZip(files) {
-  const sortedPaths = Object.keys(files).sort();
-  const entries = [];
+export async function createPredictableZip(paths, readFile) {
+  const sortedPaths = [...paths].sort();
+  const parts = [];
   let offset = 0;
   const centralDir = [];
   let centralDirSize = 0;
 
   for (const path of sortedPaths) {
-    const content = files[path];
+    const content = await readFile(path);
     // Handle binary data more carefully
     const rawData =
       typeof content === 'string'
@@ -207,24 +207,14 @@ export async function createPredictableZip(files) {
       checksum,
     );
 
-    const entry = {
-      header,
-      compressed: new Uint8Array(compressed),
-      path: filenameCleaned,
-      crc32: checksum,
-      compressedSize: compressed.length,
-      uncompressedSize: rawData.length,
-      offset,
-    };
-
-    entries.push(entry);
+    parts.push(header, compressed);
 
     const dirEntry = createCentralDirectoryEntry(
-      entry.path,
-      entry.compressedSize,
-      entry.uncompressedSize,
-      entry.offset,
-      entry.crc32,
+      filenameCleaned,
+      compressed.length,
+      rawData.length,
+      offset,
+      checksum,
     );
     centralDir.push(dirEntry);
     centralDirSize += dirEntry.length;
@@ -232,13 +222,9 @@ export async function createPredictableZip(files) {
     offset += header.length + compressed.length;
   }
 
-  const endOfCentralDir = createEndOfCentralDirectory(entries.length, centralDirSize, offset);
+  const endOfCentralDir = createEndOfCentralDirectory(centralDir.length, centralDirSize, offset);
 
-  return new Uint8Array([
-    ...entries.map(e => [...e.header, ...e.compressed]).flat(),
-    ...centralDir.map(dir => [...dir]).flat(),
-    ...endOfCentralDir,
-  ]);
+  return new Blob([...parts, ...centralDir, endOfCentralDir]);
 }
 
 /**

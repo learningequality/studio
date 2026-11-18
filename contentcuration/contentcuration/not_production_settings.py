@@ -27,6 +27,9 @@ MIGRATION_LINTER_OPTIONS = {
         "kolibri_content"
     ],  # SQLite content-export app; not on the safe-DDL Postgres backend
     "sql_analyser": "postgresql",
+    # Ignored here, not with the linter's IgnoreMigration operation, which would
+    # import this dev-only dependency from a migration production loads.
+    "ignore_name": ["0169_file_size_bigint_swap"],
 }
 
 # Use local instance for curriculum automation for development

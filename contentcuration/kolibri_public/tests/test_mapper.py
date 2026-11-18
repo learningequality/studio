@@ -15,6 +15,7 @@ from kolibri_public.tests.base import ChannelBuilder
 from kolibri_public.tests.base import OKAY_TAG
 from kolibri_public.utils.mapper import ChannelMapper
 from le_utils.constants import content_kinds
+from le_utils.constants import modalities
 from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration.models import Channel
@@ -289,6 +290,26 @@ class ChannelMapperTest(TestCase):
                 "ChannelMetadata should have categories_bitmask_0 field",
             )
             self.assertEqual(mapper.mapped_channel.categories_bitmask_0, 1 | 4 | 16)
+
+    def test_modality_annotation(self):
+        with using_content_database(self.tempdb):
+            source = (
+                kolibri_content_models.ContentNode.objects.filter(
+                    channel_id=self.channel.id, kind=content_kinds.TOPIC
+                )
+                .exclude(parent=None)
+                .first()
+            )
+            source.options = {"modality": modalities.COURSE}
+            source.save()
+
+            ChannelMapper(self.channel).run()
+
+            mapped = kolibri_public_models.ContentNode.objects.all()
+            self.assertEqual(mapped.get(id=source.id).modality, modalities.COURSE)
+            self.assertFalse(
+                mapped.exclude(id=source.id).filter(modality__isnull=False).exists()
+            )
 
     def tearDown(self):
         # Clean up datbase connection after the test

@@ -44,11 +44,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
+    - uses: actions/setup-python@v7
       with:
         python-version: '3.10'
-        ignore-nothing-to-cache: 'true'
     - name: Use pnpm
       uses: pnpm/action-setup@v6.1.0
     - name: Use Node.js
