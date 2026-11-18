@@ -90,7 +90,7 @@
     "pako": "^2.2.0",
     "papaparse": "^5.4.1",
     "pdfjs-dist": "^2.16.105",
-    "qs": "^6.16.0",
+    "qs": "^6.17.1",
     "regenerator-runtime": "^0.14.1",
     "sortablejs": "1.15.7",
     "spark-md5": "^3.0.0",
