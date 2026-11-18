@@ -405,13 +405,16 @@ class ResourceSizeHelper:
                     file_size
                 FROM contentcuration_file
                 WHERE contentnode_id IN ( SELECT id FROM contentcuration_contentnode WHERE ... )
+                    AND file_size IS NOT NULL
             ) subquery
             ;
 
         :return: An integer representing the resource size
         """
         sizes = (
-            self.queryset.values("checksum")
+            # SUM ignores NULL, but the isnull filter matches the partial index.
+            self.queryset.filter(file_size__isnull=False)
+            .values("checksum")
             .distinct()
             .aggregate(resource_size=Sum("file_size"))
         )
