@@ -949,6 +949,43 @@ class AdminViewSetTestCase(StudioAPITestCase):
             community_library_submission_constants.STATUS_PENDING,
         )
 
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__accept_mark_superseded_updates_date_updated(
+        self, apply_task_mock
+    ):
+        self.client.force_authenticate(user=self.admin_user)
+
+        # setUp freezes time at resolved_time, so every submission starts with
+        # date_updated == resolved_time. Resolve at a later time to make sure
+        # the superseded submission's date_updated actually moves forward.
+        superseded_time = datetime.datetime(2023, 11, 1, tzinfo=pytz.utc)
+        with mock.patch("django.utils.timezone.now", return_value=superseded_time):
+            response = self.client.post(
+                reverse(
+                    "admin-community-library-submission-resolve",
+                    args=[self.submission.id],
+                ),
+                self.resolve_approve_metadata,
+                format="json",
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        self._refresh_submissions_from_db()
+
+        self.assertEqual(
+            self.superseded_submission.status,
+            community_library_submission_constants.STATUS_SUPERSEDED,
+        )
+        self.assertEqual(self.superseded_submission.date_updated, superseded_time)
+        self.assertEqual(
+            self.not_superseded_submission.date_updated, self.resolved_time
+        )
+        self.assertEqual(
+            self.submission_for_other_channel.date_updated, self.resolved_time
+        )
+
     def test_resolve_submission__reject_do_not_mark_superseded(self):
         self.client.force_authenticate(user=self.admin_user)
 

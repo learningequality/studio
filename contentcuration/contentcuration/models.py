@@ -3057,6 +3057,7 @@ class CommunityLibrarySubmission(models.Model):
             status=community_library_submission.STATUS_LIVE,
         ).update(
             status=community_library_submission.STATUS_APPROVED,
+            date_updated=timezone.now(),
         )
 
         self.status = community_library_submission.STATUS_LIVE

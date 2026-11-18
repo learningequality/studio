@@ -2,6 +2,7 @@ import logging
 
 from django.db.models import OuterRef
 from django.db.models import Subquery
+from django.utils import timezone
 from django_filters import BaseInFilter
 from django_filters import ChoiceFilter
 from django_filters.rest_framework import DateTimeFilter
@@ -312,7 +313,10 @@ class AdminCommunityLibrarySubmissionViewSet(
             status=community_library_submission_constants.STATUS_PENDING,
             channel=submission.channel,
             channel_version__lt=submission.channel_version,
-        ).update(status=community_library_submission_constants.STATUS_SUPERSEDED)
+        ).update(
+            status=community_library_submission_constants.STATUS_SUPERSEDED,
+            date_updated=timezone.now(),
+        )
 
     def _add_to_community_library(self, submission):
         country_codes = sorted(country.code for country in submission.countries.all())
