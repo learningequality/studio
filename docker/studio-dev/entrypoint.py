@@ -1,13 +1,4 @@
 #!/usr/bin/env python
-"""
-The entrypoint for the studio-app docker image for development purposes.
-This script is not used in the production, develop, or staging setups (k8s).
-
-It currently has the following responsibilities:
-  - Waits for postgres and minio to be ready
-  - Runs the studio setup command
-  - Run the CMD specified in the Dockerfile or passed in via docker compose file
-"""
 import logging
 import os
 import subprocess
@@ -47,29 +38,25 @@ def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
             time.sleep(2)
 
 
-def check_minio_ready(minio_checks=CONNECT_TRIES):
+def check_gcs_ready(gcs_checks=CONNECT_TRIES):
     import requests
 
-    """
-    Check that minio is accepting requests.
-    """
+    host = os.getenv("STORAGE_EMULATOR_HOST") or "http://localhost:4443"
+    url = host.rstrip("/") + "/_internal/healthcheck"
     while True:
-        url = os.getenv("AWS_S3_ENDPOINT_URL") or "http://localhost:9000"
-
-        # Catch connection errors, as they will be thrown if minio is not ready
         try:
             robj = requests.get(url)
-            if robj.status_code == 403:  # what we expect when we have no keys
+            if robj.status_code == 200:
                 return True
         except requests.exceptions.ConnectionError:
             pass
 
-        if not minio_checks:
-            logging.error("Minio connection retries exceeded!")
+        if not gcs_checks:
+            logging.error("GCS emulator connection retries exceeded!")
             sys.exit(1)
 
-        logging.info("Minio refused connection. Waiting...")
-        minio_checks -= 1
+        logging.info("GCS emulator refused connection. Waiting...")
+        gcs_checks -= 1
         time.sleep(2)
 
 
@@ -100,6 +87,6 @@ def run_cmd():
 
 if __name__ == "__main__":
     check_postgresql_ready()
-    check_minio_ready()
+    check_gcs_ready()
     setup_studio()
     run_cmd()

@@ -253,7 +253,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
             )
 
         filepath = generate_object_storage_name(
-            checksum, filename, default_ext=file_format
+            checksum, filename, default_ext=".{}".format(file_format)
         )
         if resumable and hasattr(default_storage, "create_resumable_upload_session"):
             # Resumable response omits mimetype/might_skip.

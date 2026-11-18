@@ -30,7 +30,6 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.publish import create_associated_thumbnail
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -85,6 +84,15 @@ class FileThumbnailTestCase(BaseAPITestCase):
 
 
 class NodeFileDeletionTestCase(StudioTestCase):
+    def test_empty_content_is_stored(self):
+        _, _, path = write_raw_content_to_storage(b"", ext="txt")
+        try:
+            self.assertTrue(default_storage.exists(path))
+            with default_storage.open(path) as stored:
+                self.assertEqual(stored.read(), b"")
+        finally:
+            default_storage.delete(path)
+
     def test_delete_empty_file_reference(self):
         checksum, _, storage_path = write_raw_content_to_storage(
             b"some fake PDF data", ext=".pdf"

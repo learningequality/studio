@@ -260,7 +260,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
             checksum="aaa",
         )
 
-        f.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
+        f.file_on_disk.save("aaa.jpg", ContentFile(b"aaa"))
         file_url = f.file_on_disk.url
 
         # check that file_url exists before cleaning up
@@ -382,8 +382,8 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # The file they both share. This has the same checksum and contents.
         # Alas, a file cannot have an orphan and non-orphan reference. This must
         # not be deleted.
-        f.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
-        forphan.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
+        f.file_on_disk.save("aaa.jpg", ContentFile(b"aaa"))
+        forphan.file_on_disk.save("aaa.jpg", ContentFile(b"aaa"))
 
         # check that our file exists in object storage
         assert default_storage.exists("storage/a/a/aaa.jpg")

@@ -78,7 +78,7 @@ class FileFormatsTestCase(StudioTestCase):
         )
 
         with self.assertRaises(Exception):
-            unsupported_file.file_on_disk.save("aaa.wtf", ContentFile("aaa"))
+            unsupported_file.file_on_disk.save("aaa.wtf", ContentFile(b"aaa"))
 
     def test_guess_format_from_extension(self):
         """
@@ -94,7 +94,7 @@ class FileFormatsTestCase(StudioTestCase):
 
             try:
                 file_with_ext.file_on_disk.save(
-                    "aaa.{}".format(ext), ContentFile("aaa")
+                    "aaa.{}".format(ext), ContentFile(b"aaa")
                 )
             except Exception as e:
                 raise type(e)(

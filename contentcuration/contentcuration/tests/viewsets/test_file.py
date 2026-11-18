@@ -1,6 +1,10 @@
+import hashlib
+import os
 import uuid
 from unittest import mock
 
+import requests
+from django.core.files.storage import default_storage
 from django.urls import reverse
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
@@ -854,12 +858,22 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
         assert data["file"]["id"]
         mock_storage.create_resumable_upload_session.assert_not_called()
 
-    def test_resumable_falls_back_to_single_put_on_s3(self):
-        # default_storage is S3 in the test env → no resumable support
+    def test_resumable_upload_to_emulator(self):
+        content = b"resumable audio upload"
+        self.file["size"] = len(content)
+        self.file["checksum"] = hashlib.md5(content).hexdigest()
         self.client.force_authenticate(user=self.user)
-        resp = self.client.post(reverse("file-upload-url"), self.file, format="json")
-        data = resp.json()
-        assert data["resumable"] is False
-        assert "uploadURL" in data
-        assert "file" in data
-        assert data["file"]["id"]
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["resumable"])
+        self.assertTrue(
+            data["uploadURL"].startswith(os.environ["STORAGE_EMULATOR_HOST"] + "/")
+        )
+        path = models.generate_object_storage_name(self.file["checksum"], "audio.mp3")
+        self.addCleanup(default_storage.delete, path)
+        upload = requests.put(data["uploadURL"], data=content, timeout=30)
+        upload.raise_for_status()
+        self.assertTrue(default_storage.exists(path))

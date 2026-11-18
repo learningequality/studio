@@ -132,7 +132,7 @@ docs: clean-docs
 	$(MAKE) -C docs html
 
 setup:
-	python contentcuration/manage.py setup
+	python contentcuration/manage.py setup --settings=contentcuration.dev_settings
 
 ################################################################
 # DEVELOPMENT COMMANDS #########################################
@@ -164,9 +164,6 @@ devceleryworkers:
 run-services:
 	$(MAKE) -j 2 dcservicesup devceleryworkers
 
-.docker/minio:
-	mkdir -p $@
-
 .docker/postgres:
 	mkdir -p $@
 
@@ -182,9 +179,9 @@ dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
 	$(DOCKER_COMPOSE) build
 
-dcup: .docker/minio .docker/postgres
+dcup: .docker/postgres
 	# run all services
-	$(DOCKER_COMPOSE) up
+	GCS_PUBLIC_HOST=gcs:4443 $(DOCKER_COMPOSE) up
 
 dcdown:
 	# run make deverver in foreground with all dependent services using $(DOCKER_COMPOSE)
@@ -225,13 +222,13 @@ devserver-stripe:
 dcpsql: .docker/pgpass
 	PGPASSFILE=.docker/pgpass psql --host localhost --port 5432 --username learningequality --dbname "kolibri-studio"
 
-dctest: .docker/minio .docker/postgres
+dctest: .docker/postgres
 	# run backend tests inside docker, in new instances
-	$(DOCKER_COMPOSE) run studio-app make test
+	GCS_PUBLIC_HOST=gcs:4443 $(DOCKER_COMPOSE) run studio-app pytest --ds=contentcuration.test_settings
 
-dcservicesup: .docker/minio .docker/postgres
+dcservicesup: .docker/postgres
 	# launch all studio's dependent services using docker-compose
-	$(DOCKER_COMPOSE) up minio postgres redis
+	GCS_PUBLIC_HOST=localhost:4443 $(DOCKER_COMPOSE) up gcs postgres redis
 
 dcservicesdown:
 	# stop services that were started using dcservicesup

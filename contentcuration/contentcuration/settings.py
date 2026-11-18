@@ -21,8 +21,6 @@ from django.utils.timezone import now
 from contentcuration.utils.incidents import INCIDENTS
 from contentcuration.utils.secretmanagement import get_secret
 
-logging.getLogger("botocore").setLevel(logging.WARNING)
-logging.getLogger("boto3").setLevel(logging.WARNING)
 logging.basicConfig(level="INFO")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -85,7 +83,6 @@ INSTALLED_APPS = (
     "le_utils",
     "rest_framework.authtoken",
     "search",
-    "django_s3_storage",
     "webpack_loader",
     "django_filters",
     "django.contrib.postgres",
@@ -363,14 +360,13 @@ TWO_WEEKS_AGO = now() - timedelta(days=14)
 ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
 
 # CLOUD STORAGE SETTINGS
-DEFAULT_FILE_STORAGE = "django_s3_storage.storage.S3Storage"
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or "development"
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or "development"
+DEFAULT_FILE_STORAGE = "contentcuration.utils.gcs_storage.CompositeGCS"
 AWS_S3_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME") or "content"
-AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL") or "http://localhost:9000"
-AWS_AUTO_CREATE_BUCKET = False
-AWS_S3_FILE_OVERWRITE = True
-AWS_S3_BUCKET_AUTH = False
+AWS_S3_ENDPOINT_URL = (
+    os.getenv("AWS_S3_ENDPOINT_URL")
+    or os.getenv("STORAGE_EMULATOR_HOST")
+    or "https://storage.googleapis.com"
+)
 
 # the path to the service account json key to use for authentication to GCS. If not set,
 # defaults to what's inferred from the environment. See

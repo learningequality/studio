@@ -20,7 +20,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.py", "requirements.txt", "requirements-dev.txt", ".github/workflows/pythontest.yml"]'
+          paths: '["**.py", "requirements.txt", "requirements-dev.txt", ".github/workflows/pythontest.yml", "docker-compose.yml"]'
 
   unit_test:
     name: Python unit tests
@@ -64,13 +64,10 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
-    - name: Set up minio
+    - name: Set up GCS emulator
       run: |
-        docker run -d -p 9000:9000 --name minio \
-                    -e "MINIO_ROOT_USER=development" \
-                    -e "MINIO_ROOT_PASSWORD=development" \
-                    -e "MINIO_DEFAULT_BUCKETS=content:public" \
-                    bitnamilegacy/minio:2024.5.28
+        GCS_PUBLIC_HOST=localhost:4443 docker compose up --detach gcs
+        timeout 60 sh -c 'until curl -sf http://localhost:4443/_internal/healthcheck; do sleep 1; done'
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:

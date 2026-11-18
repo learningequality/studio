@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import json
 from datetime import datetime
+from unittest.mock import patch
 
+from django.test import SimpleTestCase
 from django.urls import reverse_lazy
 
 from .base import BaseAPITestCase
@@ -349,3 +351,16 @@ class ChannelGettersTestCase(BaseAPITestCase):
         self.channel.thumbnail = thumbnail_url
 
         assert self.channel.get_thumbnail() == generate_storage_url(thumbnail_url)
+
+
+class StorageURLTestCase(SimpleTestCase):
+    @patch(
+        "contentcuration.models.default_storage.url",
+        side_effect=FileNotFoundError,
+    )
+    def test_absent_file_has_content_url(self, storage_url):
+        with patch.dict("os.environ", {"RUN_MODE": "docker-compose"}):
+            self.assertEqual(
+                generate_storage_url("abcdef0123456789.mp3"),
+                "/content/storage/a/b/abcdef0123456789.mp3",
+            )

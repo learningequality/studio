@@ -1,13 +1,18 @@
 import logging
+import os
 import tempfile
 from gzip import GzipFile
 from io import BytesIO
 
 import backoff
+import requests
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.files import File
 from django.core.files.storage import Storage
+from django.utils.functional import cached_property
 from google.cloud.exceptions import InternalServerError
+from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 
@@ -20,6 +25,10 @@ OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 CONTENT_DATABASES_MAX_AGE = 5  # seconds
 
 MAX_RETRY_TIME = 60  # seconds
+
+
+def is_emulating():
+    return bool(os.environ.get("STORAGE_EMULATOR_HOST"))
 
 
 def _create_default_client(
@@ -71,15 +80,16 @@ class GoogleCloudStorage(Storage):
             # TODO (aron): remove hack once we've migrated all File models to remove the prefix
             if name.startswith(OLD_STUDIO_STORAGE_PREFIX):
                 name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
-            blob = self.bucket.get_blob(name)
+            blob = self.bucket.blob(name)
         else:
             blob = blob_object
 
-        if blob is None:
-            raise FileNotFoundError("{} not found".format(name))
-
         fobj = tempfile.NamedTemporaryFile()
-        blob.download_to_file(fobj)
+        try:
+            blob.download_to_file(fobj)
+        except NotFound:
+            fobj.close()
+            raise FileNotFoundError("{} not found".format(name))
         # flush it to disk
         fobj.flush()
         fobj.seek(0)
@@ -130,10 +140,6 @@ class GoogleCloudStorage(Storage):
         # because that's what google wants
         fobj.seek(0)
 
-        if self._is_file_empty(fobj):
-            logging.warning("Stopping the upload of an empty file: {}".format(name))
-            return name
-
         blob.upload_from_file(
             fobj,
             content_type=content_type,
@@ -170,7 +176,8 @@ class GoogleCloudStorage(Storage):
             name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
 
         blob = self.bucket.get_blob(name)
-        return blob.delete()
+        if blob is not None:
+            blob.delete()
 
     def get_accessed_time(self, name):
         raise NotImplementedError
@@ -194,27 +201,6 @@ class GoogleCloudStorage(Storage):
     def is_database_file(filename):
         return filename.endswith(".sqlite3")
 
-    @staticmethod
-    def _is_file_empty(fobj):
-        """
-        Return True if the file is empty, i.e. it has a length of 0. Raises an error
-        if the file object does not have the seek() or peek() method.
-        """
-
-        # Check if our fobj has the peek method. If so, just use that to check
-        # one byte ahead.
-        try:
-            byt = fobj.peek(1)
-        except AttributeError:
-            # emulate the peek method by saving our current location, reading
-            # one byte, then returning to the saved location. It would've been
-            # nice to use the os.SEEK_CUR argument to seek(), but that doesn't
-            # work on StringIO objects.
-            current_location = fobj.tell()
-            byt = fobj.read(1)
-            fobj.seek(current_location)
-        return len(byt) == 0
-
     def create_resumable_upload_session(self, name, md5, size):
         blob = self.bucket.blob(name)
         md5_b64 = hex_to_base64(md5)
@@ -229,16 +215,26 @@ class GoogleCloudStorage(Storage):
 
 
 class CompositeGCS(Storage):
-    def __init__(self):
-        self.backends = []
-        self.backends.append(
-            GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME)
-        )
+    @cached_property
+    def backends(self):
+        client = _create_default_client()
+        if is_emulating():
+            try:
+                client.get_bucket(settings.AWS_S3_BUCKET_NAME, retry=None, timeout=5)
+            except requests.exceptions.RequestException as e:
+                raise ImproperlyConfigured(
+                    "No GCS emulator reachable at STORAGE_EMULATOR_HOST={}".format(
+                        os.environ["STORAGE_EMULATOR_HOST"]
+                    )
+                ) from e
+        backends = [GoogleCloudStorage(client, settings.AWS_S3_BUCKET_NAME)]
         # Only add the studio-content bucket (the production bucket) if we're not in production
-        if settings.SITE_ID != settings.PRODUCTION_SITE_ID:
-            self.backends.append(
+        if not is_emulating() and settings.SITE_ID != settings.PRODUCTION_SITE_ID:
+            backends.append(
                 GoogleCloudStorage(Client.create_anonymous_client(), "studio-content")
             )
+
+        return backends
 
     def _get_writeable_backend(self):
         """
