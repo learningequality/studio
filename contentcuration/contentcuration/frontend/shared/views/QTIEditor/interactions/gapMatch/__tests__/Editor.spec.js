@@ -165,7 +165,8 @@ describe('GapMatchEditor', () => {
   });
 
   describe('validation', () => {
-    const distractorItems = () => within(section(tr.distractorsLabel$())).getAllByRole('listitem');
+    const distractorChip = number =>
+      screen.getByRole('button', { name: tr.editDistractorLabel$({ number }) });
 
     it('shows a gap with no answer and marks the question incomplete', async () => {
       const { emitted } = await renderEditor({
@@ -196,7 +197,7 @@ describe('GapMatchEditor', () => {
       expect(lastErrors(emitted())).toEqual([{ code: ValidationError.NO_CORRECT_ANSWER }]);
     });
 
-    it('shows a blank distractor under it', async () => {
+    it('describes a blank distractor’s chip by its message', async () => {
       const { emitted } = await renderEditor({
         interaction: interactionOf({
           distractors: [
@@ -206,16 +207,15 @@ describe('GapMatchEditor', () => {
         }),
       });
 
-      const [valid, blank] = distractorItems();
-      expect(blank).toHaveTextContent(tr.errorEmptyChoiceContent$());
-      expect(valid).not.toHaveTextContent(tr.errorEmptyChoiceContent$());
+      expect(distractorChip(2)).toHaveAccessibleDescription(tr.errorEmptyChoiceContent$());
+      expect(distractorChip(1)).not.toHaveAccessibleDescription();
       expect(lastErrors(emitted())).toContainEqual({
         code: ValidationError.EMPTY_CHOICE_CONTENT,
         id: 'choice_x',
       });
     });
 
-    it('shows a distractor that repeats an answer under it', async () => {
+    it('describes the chip of a distractor that repeats an answer by its message', async () => {
       const { emitted } = await renderEditor({
         interaction: interactionOf({
           distractors: [
@@ -225,9 +225,8 @@ describe('GapMatchEditor', () => {
         }),
       });
 
-      const [valid, repeated] = distractorItems();
-      expect(repeated).toHaveTextContent(tr.errorDuplicateDistractorContent$());
-      expect(valid).not.toHaveTextContent(tr.errorDuplicateDistractorContent$());
+      expect(distractorChip(2)).toHaveAccessibleDescription(tr.errorDuplicateDistractorContent$());
+      expect(distractorChip(1)).not.toHaveAccessibleDescription();
       expect(lastErrors(emitted())).toContainEqual(
         expect.objectContaining({ code: ValidationError.DUPLICATE_DISTRACTOR_CONTENT }),
       );

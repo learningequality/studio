@@ -240,12 +240,9 @@
        * dialog's description and each field's. A message that appears while it is open is
        * announced here, through KDS's live region, once. Not the errors of an option Add option
        * just made: it takes focus, and its field reads them, which an announcement would cut off.
-       * What appears on a press that moves focus, as Remove does, is announced politely, after the
-       * newly focused field is read.
        */
-      const { sendAssertiveMessage, sendPoliteMessage } = useKLiveRegion();
+      const { sendPoliteMessage } = useKLiveRegion();
       let addedOptionId = null;
-      let isMovingFocus = false;
       const messages = computed(() => {
         const shown = new Map(problems.value.map(problem => [problem, problem]));
         for (const { id } of props.dropdown.options) {
@@ -263,8 +260,7 @@
           .map(([, text]) => text);
         // Rows that share an error, such as a duplicate pair, announce it once.
         if (!appeared.length) return;
-        const send = isMovingFocus ? sendPoliteMessage : sendAssertiveMessage;
-        send([...new Set(appeared)].join(' '));
+        sendPoliteMessage([...new Set(appeared)].join(' '));
       });
 
       function optionStyle(id) {
@@ -306,10 +302,8 @@
         const index = props.dropdown.options.findIndex(o =>
           inputRefs[o.id]?.closest('li').contains(control),
         );
-        isMovingFocus = true;
         emit(direction);
         await nextTick();
-        isMovingFocus = false;
         if (panel.value && !panel.value.contains(document.activeElement)) focusOptionAt(index);
       }
 
@@ -346,10 +340,8 @@
       async function removeOption(id) {
         if (isOnlyOption.value) return;
         const index = props.dropdown.options.findIndex(o => o.id === id);
-        isMovingFocus = true;
         emit('update', { options: props.dropdown.options.filter(o => o.id !== id) });
         await nextTick();
-        isMovingFocus = false;
         focusOptionAt(index);
       }
 
