@@ -181,6 +181,8 @@ export const ConversionLoss = Object.freeze({
   SETTINGS_REMOVED: 'SETTINGS_REMOVED',
 });
 
+export const RECOMMENDED_MAX_OPTIONS = 5;
+
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
 
 export const SENTINEL_MARKER = 'data-studio-sentinel';

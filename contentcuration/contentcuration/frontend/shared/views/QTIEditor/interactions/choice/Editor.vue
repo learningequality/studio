@@ -59,6 +59,7 @@
     <div
       v-if="mode === 'edit' || showAnswers"
       class="choice-editor__section"
+      data-testid="answersSection"
     >
       <ValidationMessage v-if="noCorrectAnswerError">
         {{ errorNoCorrectAnswer$() }}
@@ -73,6 +74,13 @@
         warning
       >
         {{ warningSingleChoice$() }}
+      </ValidationMessage>
+      <ValidationMessage
+        v-if="tooManyChoicesWarning"
+        key="too-many-choices-warning"
+        warning
+      >
+        {{ tooManyChoicesWarning }}
       </ValidationMessage>
       <h4
         :id="answersHeaderId"
@@ -267,7 +275,7 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { ValidationError } from '../../constants';
+  import { RECOMMENDED_MAX_OPTIONS, ValidationError } from '../../constants';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
   import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
@@ -312,6 +320,7 @@
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
         warningSingleChoice$,
+        warningTooManyChoices$,
         questionLabel$,
         answersLabel$,
         answersDescriptionSingleChoice$,
@@ -454,6 +463,12 @@
         () =>
           props.mode === 'edit' && errors.value.length === 0 && state.value.choices.length === 1,
       );
+      const tooManyChoicesText = warningTooManyChoices$({ count: RECOMMENDED_MAX_OPTIONS });
+      const tooManyChoicesWarning = computed(() =>
+        props.mode === 'edit' && state.value.choices.length > RECOMMENDED_MAX_OPTIONS
+          ? tooManyChoicesText
+          : null,
+      );
 
       function onToggleCorrect(id) {
         // Readonly controls can still emit `change`, e.g. arrow keys on a radio
@@ -562,6 +577,7 @@
         noCorrectAnswerError,
         tooManyCorrectError,
         singleChoiceWarning,
+        tooManyChoicesWarning,
         emptyChoiceIds,
         duplicateChoiceIds,
         choiceHasError,

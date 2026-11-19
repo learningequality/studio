@@ -387,6 +387,42 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Warning shown when a single-choice or multiple-select question has only one answer option. It does not block saving the question.',
   },
+  warningTooManyChoices: {
+    message:
+      'Questions with more than {count, plural, one {# option} other {# options}} can be harder for learners to follow. Consider using fewer.',
+    context:
+      'Warning shown when a single-choice or multiple-select question has more answer options than recommended. {count} is the recommended maximum. It does not block saving the question.',
+  },
+  warningTooManyOrderItems: {
+    message:
+      'Questions with more than {count, plural, one {# item} other {# items}} to order can be harder for learners to follow. Consider using fewer.',
+    context:
+      'Warning shown when an ordering question has more items to put in order than recommended. {count} is the recommended maximum. It does not block saving the question.',
+  },
+  warningTooManyPairs: {
+    message:
+      'Questions with more than {count, plural, one {# pair} other {# pairs}} can be harder for learners to follow. Consider using fewer.',
+    context:
+      'Warning shown when an associate question has more correct pairs than recommended. {count} is the recommended maximum. It does not block saving the question.',
+  },
+  warningTooManyRows: {
+    message:
+      'Questions with more than {count, plural, one {# row} other {# rows}} can be harder for learners to follow. Consider using fewer.',
+    context:
+      'Warning shown when a match question has more matching rows than recommended. {count} is the recommended maximum. It does not block saving the question.',
+  },
+  warningTooManyDistractors: {
+    message:
+      'Questions with more than {count, plural, one {# distractor} other {# distractors}} can be harder for learners to follow. Consider using fewer.',
+    context:
+      'Warning shown when an associate or match question has more distractors (wrong options that match nothing) than recommended. {count} is the recommended maximum. It does not block saving the question.',
+  },
+  warningTooManyInlineChoiceOptions: {
+    message:
+      'This dropdown has more than {count, plural, one {# option} other {# options}}, which can be harder for learners to follow. Consider using fewer.',
+    context:
+      'Warning shown in the options panel of a dropdown in an inline choice question when the dropdown has more options than recommended. {count} is the recommended maximum. It does not block saving the question.',
+  },
   errorEmptyChoiceContent: {
     message: 'Answer cannot be blank',
     context: 'Validation error when an answer option is empty',
