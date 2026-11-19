@@ -15,10 +15,19 @@ const hasOpenPopup = container =>
  * @param {Ref<HTMLElement>} options.container the editor's root element
  * @param {Ref<boolean>} options.isFocused whether the editor content has focus
  * @param {Function} options.isEditing whether the editor is open for editing
+ * @param {Function} [options.isInsideBoundary] (target: Element) => whether a click on `target`
+ *   outside the editor only syncs its content, leaving it open
  * @param {Function} options.syncContent emits the content if it changed
  * @param {Function} options.close syncs the content and closes the editor
  */
-export function useClickOutside({ container, isFocused, isEditing, syncContent, close }) {
+export function useClickOutside({
+  container,
+  isFocused,
+  isEditing,
+  isInsideBoundary = null,
+  syncContent,
+  close,
+}) {
   // A blur caused by a press syncs once the press ends, so the re-render it may cause
   // cannot move the pressed target away before the click.
   let isPressing = false;
@@ -54,12 +63,16 @@ export function useClickOutside({ container, isFocused, isEditing, syncContent, 
   const handleClick = event => {
     const root = container.value;
     const isOutside = isEditing() && root && !root.contains(event.target) && !hasOpenPopup(root);
-    if (isOutside) {
-      // `close` syncs the content itself.
-      hasHeldSync = false;
-      close();
-    } else {
+    if (!isOutside) {
       flushHeldSync();
+      return;
+    }
+    hasHeldSync = false;
+    if (isInsideBoundary?.(event.target)) {
+      syncContent();
+    } else {
+      // `close` syncs the content itself.
+      close();
     }
   };
 
