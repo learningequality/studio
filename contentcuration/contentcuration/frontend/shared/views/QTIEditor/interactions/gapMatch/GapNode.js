@@ -131,6 +131,11 @@ function targetRange(view, event) {
   };
 }
 
+function aimsAtGap(view, event) {
+  const range = targetRange(view, event);
+  return Boolean(range) && touchesGap(view.state.doc.resolve(range.from));
+}
+
 const PLACEHOLDER = String.fromCharCode(0x200b);
 const compositionKey = new PluginKey('gapComposition');
 
@@ -287,7 +292,8 @@ export const GapNode = Node.create({
           handleDOMEvents: {
             // Chrome puts text typed at the edge of a gap, or into a blank one, outside the gap,
             // removes a gap when a delete empties its answer, and leaves the caret inside a gap
-            // after a delete beside it. So these edits go through ProseMirror instead.
+            // after a delete beside it. Chrome also aims text typed after a space that ends a
+            // paragraph into the gap before it.
             beforeinput(view, event) {
               const { selection, tr } = view.state;
               const { $from, $to } = selection;
@@ -304,7 +310,7 @@ export const GapNode = Node.create({
                 selection.empty &&
                 event.inputType === 'insertText' &&
                 event.data &&
-                touchesGap($from)
+                (touchesGap($from) || aimsAtGap(view, event))
               ) {
                 tr.insertText(event.data);
               } else {
