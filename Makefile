@@ -39,7 +39,8 @@ migrate:
 # 4) Remove the management command from this `deploy-migrate` recipe
 # 5) Repeat!
 deploy-migrate:
-	echo "Nothing to do here!"
+	# studio#6456: remove after release.
+	python contentcuration/manage.py backfill_public_file_included_presets
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect
