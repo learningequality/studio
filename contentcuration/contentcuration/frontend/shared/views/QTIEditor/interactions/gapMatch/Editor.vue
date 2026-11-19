@@ -45,13 +45,13 @@
     >
       <ValidationMessage
         v-if="hasGapErrors"
-        :alert="isGapErrorsAlert"
+        :announce="isGapErrorsAlert"
       >
         {{ errorEmptyGap$() }}
       </ValidationMessage>
       <ValidationMessage
         v-if="hasNoGap"
-        :alert="isNoGapAlert"
+        :announce="isNoGapAlert"
       >
         {{ errorNoGap$() }}
       </ValidationMessage>

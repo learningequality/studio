@@ -15,7 +15,7 @@
     <p
       v-else
       class="validation-message"
-      :role="alert ? 'alert' : null"
+      :role="announce ? 'alert' : null"
     >
       <slot></slot>
     </p>
@@ -27,24 +27,22 @@
 <script>
 
   import { onMounted, ref } from 'vue';
-  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
+  import { useAnnouncePolitely } from '../../composables/useAnnouncePolitely';
 
   export default {
     name: 'ValidationMessage',
 
     setup(props) {
-      const { sendPoliteMessage } = useKLiveRegion();
+      const announcePolitely = useAnnouncePolitely();
       const warningText = ref(null);
 
       // A polite region inserted already filled is often skipped by screen readers,
       // so announce through KDS's persistent live region instead.
-      function announceWarning() {
-        if (props.warning) {
-          sendPoliteMessage(warningText.value.textContent.trim());
+      onMounted(() => {
+        if (props.warning && props.announce) {
+          announcePolitely(warningText.value.textContent.trim());
         }
-      }
-
-      onMounted(announceWarning);
+      });
 
       return { warningText };
     },
@@ -55,11 +53,7 @@
         type: Boolean,
         default: false,
       },
-      /**
-       * Whether an error is an alert, read out as it appears. Off when the component showing
-       * it announces its messages itself.
-       */
-      alert: {
+      announce: {
         type: Boolean,
         default: true,
       },

@@ -12,20 +12,22 @@
       role="dialog"
       aria-modal="true"
       :aria-label="inlineChoiceOptionsDialogLabel$({ number })"
-      :aria-describedby="problems.length ? problems.map((_, i) => problemId(i)).join(' ') : null"
+      :aria-describedby="
+        panelMessages.length ? panelMessages.map((_, i) => panelMessageId(i)).join(' ') : null
+      "
       class="options-panel"
       @focusout="onFocusout"
       @keydown="onHistoryKeydown"
       @keydown.esc.stop="$emit('close')"
     >
-      <!-- The dropdown's chip shows the first of these -->
       <ValidationMessage
-        v-for="(problem, i) in problems"
-        :id="problemId(i)"
-        :key="problem"
-        :alert="false"
+        v-for="(message, i) in panelMessages"
+        :id="panelMessageId(i)"
+        :key="message.text"
+        :warning="message.warning"
+        :announce="false"
       >
-        {{ problem }}
+        {{ message.text }}
       </ValidationMessage>
       <div class="options-header">
         <h4
@@ -131,7 +133,7 @@
                 <ValidationMessage
                   v-if="isEmpty(option.id)"
                   :id="errorId(option.id, 'empty')"
-                  :alert="false"
+                  :announce="false"
                   class="option-validation-message"
                 >
                   {{ errorEmptyChoiceContent$() }}
@@ -139,7 +141,7 @@
                 <ValidationMessage
                   v-if="isDuplicate(option.id)"
                   :id="errorId(option.id, 'duplicate')"
-                  :alert="false"
+                  :announce="false"
                   class="option-validation-message"
                 >
                   {{ errorDuplicateChoiceContent$() }}
@@ -164,11 +166,11 @@
 <script>
 
   import { computed, nextTick, ref, watch } from 'vue';
-  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../../../qtiEditorStrings';
-  import { ValidationError } from '../../../../constants';
+  import { RECOMMENDED_MAX_OPTIONS, ValidationError } from '../../../../constants';
   import { generateRandomSlug } from '../../../../utils/generateRandomSlug';
+  import { useAnnouncePolitely } from '../../../../composables/useAnnouncePolitely';
   import ValidationMessage from '../../../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../../../components/AddListItemButton/index.vue';
   import { historyShortcut } from '../../historyShortcut';
@@ -207,6 +209,7 @@
         deleteInlineChoiceOptionBtn$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
+        warningTooManyInlineChoiceOptions$,
       } = qtiEditorStrings;
 
       const palette = themePalette();
@@ -220,8 +223,17 @@
       const isEmpty = id => emptyIds.value.has(id);
       const isDuplicate = id => duplicateIds.value.has(id);
       const hasError = id => isEmpty(id) || isDuplicate(id);
-      const problems = computed(() => dropdownProblems(props.dropdown));
-      const problemId = index => `${headerId}-problem-${index}`;
+      const tooManyOptionsWarning = warningTooManyInlineChoiceOptions$({
+        count: RECOMMENDED_MAX_OPTIONS,
+      });
+      const panelMessages = computed(() => {
+        const shown = dropdownProblems(props.dropdown).map(text => ({ text, warning: false }));
+        if (props.dropdown.options.length > RECOMMENDED_MAX_OPTIONS) {
+          shown.push({ text: tooManyOptionsWarning, warning: true });
+        }
+        return shown;
+      });
+      const panelMessageId = index => `${headerId}-message-${index}`;
 
       const isOnlyOption = computed(() => props.dropdown.options.length <= 1);
 
@@ -241,10 +253,10 @@
        * announced here, through KDS's live region, once. Not the errors of an option Add option
        * just made: it takes focus, and its field reads them, which an announcement would cut off.
        */
-      const { sendPoliteMessage } = useKLiveRegion();
+      const announcePolitely = useAnnouncePolitely();
       let addedOptionId = null;
       const messages = computed(() => {
-        const shown = new Map(problems.value.map(problem => [problem, problem]));
+        const shown = new Map(panelMessages.value.map(({ text }) => [text, text]));
         for (const { id } of props.dropdown.options) {
           if (isEmpty(id)) shown.set(errorId(id, 'empty'), errorEmptyChoiceContent$());
           if (isDuplicate(id)) shown.set(errorId(id, 'duplicate'), errorDuplicateChoiceContent$());
@@ -259,8 +271,7 @@
           .filter(([key]) => !before.has(key) && !unread.has(key))
           .map(([, text]) => text);
         // Rows that share an error, such as a duplicate pair, announce it once.
-        if (!appeared.length) return;
-        sendPoliteMessage([...new Set(appeared)].join(' '));
+        appeared.forEach(announcePolitely);
       });
 
       function optionStyle(id) {
@@ -393,8 +404,8 @@
         hasError,
         errorId,
         errorIdsOf,
-        problems,
-        problemId,
+        panelMessages,
+        panelMessageId,
         isOnlyOption,
         optionStyle,
         setInputRef,
