@@ -59,7 +59,7 @@
                     :tabindex="-1"
                     class="editor"
                     @update="html => onChipUpdate(index, html)"
-                    @minimize="close"
+                    @minimize="onMinimize"
                   />
                   <div
                     v-if="isChipOpen(index)"
@@ -83,11 +83,11 @@
                     ref="deleteButtons"
                     icon="close"
                     size="small"
-                    :disabled="!canRemove"
-                    :ariaLabel="deleteLabel(index + 1)"
-                    :tooltip="deleteLabel(index + 1)"
-                    :color="canRemove ? $themePalette.grey.v_700 : $themeTokens.textDisabled"
-                    @click="event => onRemove(index, event)"
+                    :disabled="!canDelete(index)"
+                    :ariaLabel="deleteButtonLabel(index)"
+                    :tooltip="deleteButtonLabel(index)"
+                    :color="canDelete(index) ? $themePalette.grey.v_700 : $themeTokens.textDisabled"
+                    @click="event => onDeleteButton(index, event)"
                   />
                 </div>
               </div>
@@ -119,7 +119,7 @@
               :tabindex="-1"
               class="editor"
               @update="onDraftUpdate"
-              @minimize="close"
+              @minimize="onMinimize"
             />
             <div class="save-row">
               <KButton
@@ -198,7 +198,7 @@
 
     setup(props, { emit }) {
       const tokens = themeTokens();
-      const { saveChipBtn$ } = qtiEditorStrings;
+      const { saveChipBtn$, closeChipEditorBtn$ } = qtiEditorStrings;
 
       const poolBox = ref(null);
       const addButton = ref(null);
@@ -240,6 +240,18 @@
 
       function isChipOpen(index) {
         return open.value?.index === index;
+      }
+
+      function closesEditor(index) {
+        return isChipOpen(index) && !canRemove.value;
+      }
+
+      function canDelete(index) {
+        return canRemove.value || isChipOpen(index);
+      }
+
+      function deleteButtonLabel(index) {
+        return closesEditor(index) ? closeChipEditorBtn$() : props.deleteLabel(index + 1);
       }
 
       const blankChips = computed(() => props.chips.map(chip => !hasRichTextContent(chip.content)));
@@ -382,8 +394,28 @@
         }
       }
 
+      function onDeleteButton(index, event) {
+        if (closesEditor(index)) {
+          onSave(event);
+        } else {
+          onRemove(index, event);
+        }
+      }
+
       async function onSave(event) {
         event.stopPropagation();
+        await closeAndRefocus();
+      }
+
+      function onMinimize() {
+        if (poolBox.value.$el.contains(document.activeElement)) {
+          closeAndRefocus();
+        } else {
+          close();
+        }
+      }
+
+      async function closeAndRefocus() {
         const { index } = open.value;
         const wasNew = index === null;
         const wasDropped = commit() !== null;
@@ -416,8 +448,9 @@
         isDraftOpen,
         isRegionActive,
         firstBlankIndex,
-        canRemove,
         isChipOpen,
+        canDelete,
+        deleteButtonLabel,
         showsPlaceholder,
         chipStyles,
         messages,
@@ -429,8 +462,9 @@
         onRegionClick,
         onChipUpdate,
         onDraftUpdate,
-        onRemove,
+        onDeleteButton,
         onSave,
+        onMinimize,
         onDiscard,
         saveChipBtn$,
       };
