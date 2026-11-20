@@ -265,6 +265,10 @@ _webhook_serializers = {
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        logger.error("Stripe webhook secret is not configured; rejecting webhook.")
+        return JsonResponse({"error": "Webhook is not configured"}, status=400)
+
     try:
         event = stripe.Webhook.construct_event(
             request.body,
