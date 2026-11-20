@@ -10,6 +10,8 @@ jest.mock('kolibri-design-system/lib/composables/useKLiveRegion');
 
 let sendPoliteMessage;
 
+const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+
 beforeEach(() => {
   sendPoliteMessage = jest.fn();
   useKLiveRegion.mockReturnValue({ sendPoliteMessage });
@@ -219,15 +221,19 @@ describe('EditableChipList', () => {
       it('announces a message as a chip gains it, once however many chips gain it', async () => {
         const message = errorEmptyChoiceContent$();
         const { updateProps } = renderList({ errorMessages: [message, message, null] });
+        await nextFrame();
         expect(sendPoliteMessage).not.toHaveBeenCalled();
 
         await updateProps({ errorMessages: [message, message, message] });
+        await nextFrame();
         expect(sendPoliteMessage.mock.calls).toEqual([[message]]);
 
         sendPoliteMessage.mockClear();
         await updateProps({ errorMessages: [null, null, null] });
+        await nextFrame();
         expect(sendPoliteMessage).not.toHaveBeenCalled();
         await updateProps({ errorMessages: [message, message, null] });
+        await nextFrame();
         expect(sendPoliteMessage.mock.calls).toEqual([[message]]);
       });
 
@@ -235,6 +241,7 @@ describe('EditableChipList', () => {
         const message = errorEmptyChoiceContent$();
         const { updateProps } = renderList({ errorMessages: [message, null, null] });
         await updateProps({ errorMessages: [message, 'Other fault', null] });
+        await nextFrame();
         expect(sendPoliteMessage.mock.calls).toEqual([['Other fault']]);
       });
 
@@ -247,6 +254,7 @@ describe('EditableChipList', () => {
         });
 
         await updateProps({ errorMessages: [errorEmptyChoiceContent$(), null] });
+        await nextFrame();
         expect(sendPoliteMessage).toHaveBeenCalledWith(errorEmptyChoiceContent$());
       });
 
@@ -255,6 +263,7 @@ describe('EditableChipList', () => {
           errorMessages: [errorEmptyChoiceContent$(), 'Other fault', null],
         });
         await updateProps({ chips: CHIPS.slice(1), errorMessages: ['Other fault', null] });
+        await nextFrame();
         expect(sendPoliteMessage).not.toHaveBeenCalled();
       });
     });

@@ -52,9 +52,19 @@
     </KeepAlive>
 
     <!-- Matching rows -->
-    <div class="editor-section">
+    <div
+      class="editor-section"
+      data-testid="rowsSection"
+    >
       <ValidationMessage v-if="tooFewRowsError">
         {{ errorTooFewRows$() }}
+      </ValidationMessage>
+      <ValidationMessage
+        v-if="tooManyRowsWarning"
+        key="too-many-rows-warning"
+        warning
+      >
+        {{ warningTooManyRows$({ count: RECOMMENDED_MAX_OPTIONS }) }}
       </ValidationMessage>
 
       <div class="section-headers">
@@ -257,7 +267,15 @@
     <div
       v-if="mode === 'edit'"
       class="editor-section"
+      data-testid="distractorsSection"
     >
+      <ValidationMessage
+        v-if="tooManyDistractorsWarning"
+        key="too-many-distractors-warning"
+        warning
+      >
+        {{ warningTooManyDistractors$({ count: RECOMMENDED_MAX_OPTIONS }) }}
+      </ValidationMessage>
       <div class="section-headers">
         <h4
           class="section-label"
@@ -301,7 +319,7 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { ValidationError } from '../../constants';
+  import { RECOMMENDED_MAX_OPTIONS, ValidationError } from '../../constants';
   import { useMatchInteraction } from '../../composables/useMatchInteraction';
   import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
@@ -371,6 +389,8 @@
         errorDuplicateMatchContent$,
         errorDuplicateDistractorContent$,
         errorEmptyChoiceContent$,
+        warningTooManyRows$,
+        warningTooManyDistractors$,
       } = qtiEditorStrings;
 
       const questionTypeRef = computed(() => props.questionType);
@@ -570,6 +590,14 @@
         () => showsAnswers.value && getErrorsWith(ValidationError.TOO_FEW_ROWS).length > 0,
       );
 
+      const tooManyRowsWarning = computed(
+        () => props.mode === 'edit' && state.value.rows.length > RECOMMENDED_MAX_OPTIONS,
+      );
+
+      const tooManyDistractorsWarning = computed(
+        () => state.value.distractors.length > RECOMMENDED_MAX_OPTIONS,
+      );
+
       const rowMessages = {
         [ValidationError.EMPTY_ROW_CONTENT]: errorEmptyRowContent$,
         [ValidationError.ROW_WITHOUT_MATCH]: errorRowWithoutMatch$,
@@ -706,6 +734,9 @@
         onRemoveRow,
         promptHasError,
         tooFewRowsError,
+        tooManyRowsWarning,
+        tooManyDistractorsWarning,
+        RECOMMENDED_MAX_OPTIONS,
         rowErrorMessages,
         matchErrorMessages,
         distractorErrorMessages,
@@ -736,6 +767,8 @@
         editDistractorLabel$,
         responsePoolLabel$,
         errorTooFewRows$,
+        warningTooManyRows$,
+        warningTooManyDistractors$,
       };
     },
 

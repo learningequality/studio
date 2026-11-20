@@ -52,13 +52,13 @@
     <div class="inline-choice-editor__section">
       <ValidationMessage
         v-if="hasDropdownErrors"
-        :alert="isProblemsAlert"
+        :announce="isProblemsAlert"
       >
         {{ errorInlineChoiceOptionProblems$() }}
       </ValidationMessage>
       <ValidationMessage
         v-if="hasNoDropdown"
-        :alert="isNoDropdownAlert"
+        :announce="isNoDropdownAlert"
       >
         {{ errorNoInlineChoice$() }}
       </ValidationMessage>

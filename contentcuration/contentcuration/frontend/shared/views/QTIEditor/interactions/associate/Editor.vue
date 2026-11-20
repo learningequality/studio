@@ -55,9 +55,17 @@
     <div
       v-if="mode === 'edit' || showAnswers"
       class="editor-section"
+      data-testid="pairsSection"
     >
       <ValidationMessage v-if="tooFewPairsError">
         {{ errorTooFewPairs$() }}
+      </ValidationMessage>
+      <ValidationMessage
+        v-if="tooManyPairsWarning"
+        key="too-many-pairs-warning"
+        warning
+      >
+        {{ warningTooManyPairs$({ count: RECOMMENDED_MAX_OPTIONS }) }}
       </ValidationMessage>
 
       <div class="section-headers">
@@ -196,7 +204,15 @@
     <div
       v-if="mode === 'edit'"
       class="editor-section"
+      data-testid="distractorsSection"
     >
+      <ValidationMessage
+        v-if="tooManyDistractorsWarning"
+        key="too-many-distractors-warning"
+        warning
+      >
+        {{ warningTooManyDistractors$({ count: RECOMMENDED_MAX_OPTIONS }) }}
+      </ValidationMessage>
       <div class="section-headers">
         <h4
           class="section-label"
@@ -240,7 +256,7 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { ValidationError } from '../../constants';
+  import { RECOMMENDED_MAX_OPTIONS, ValidationError } from '../../constants';
   import { useAssociateInteraction } from '../../composables/useAssociateInteraction';
   import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
@@ -301,6 +317,8 @@
         errorRepeatedPair$,
         errorDuplicateDistractorContent$,
         errorEmptyChoiceContent$,
+        warningTooManyPairs$,
+        warningTooManyDistractors$,
       } = qtiEditorStrings;
 
       const questionTypeRef = computed(() => props.questionType);
@@ -451,6 +469,14 @@
         errorCodes.value.includes(ValidationError.TOO_FEW_PAIRS),
       );
 
+      const tooManyPairsWarning = computed(
+        () => props.mode === 'edit' && state.value.pairs.length > RECOMMENDED_MAX_OPTIONS,
+      );
+
+      const tooManyDistractorsWarning = computed(
+        () => state.value.distractors.length > RECOMMENDED_MAX_OPTIONS,
+      );
+
       // Blankness is re-derived from the content rather than read off the
       // EMPTY_CHOICE_CONTENT error's id, because an id may repeat across choices.
       function isBlank(choice) {
@@ -580,6 +606,9 @@
         onAddPair,
         promptHasError,
         tooFewPairsError,
+        tooManyPairsWarning,
+        tooManyDistractorsWarning,
+        RECOMMENDED_MAX_OPTIONS,
         pairErrorMessages,
         distractorErrorMessages,
         pairItemStyles,
@@ -599,6 +628,8 @@
         addDistractorBtn$,
         editPairItemLabel$,
         errorTooFewPairs$,
+        warningTooManyPairs$,
+        warningTooManyDistractors$,
       };
     },
 

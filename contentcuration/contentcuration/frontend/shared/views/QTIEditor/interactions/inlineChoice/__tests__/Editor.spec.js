@@ -780,6 +780,7 @@ describe('InlineChoiceEditor', () => {
         `${tr.errorNoCorrectAnswer$()} ${tr.errorTooFewInlineChoiceOptions$({ count: 2 })}`,
       );
       expect(within(dialog()).queryAllByRole('alert')).toHaveLength(0);
+      await new Promise(requestAnimationFrame);
       expect(mockSendPoliteMessage).not.toHaveBeenCalled();
     });
 
@@ -861,6 +862,7 @@ describe('InlineChoiceEditor', () => {
       expect(
         within(dialog()).getByText(tr.errorTooFewInlineChoiceOptions$({ count: 2 })),
       ).toBeInTheDocument();
+      await new Promise(requestAnimationFrame);
       expect(mockSendPoliteMessage).toHaveBeenCalledWith(
         tr.errorTooFewInlineChoiceOptions$({ count: 2 }),
       );
@@ -870,11 +872,13 @@ describe('InlineChoiceEditor', () => {
       await user.click(screen.getByRole('button', { name: tr.addInlineChoiceOptionBtn$() }));
       await waitFor(() => expect(optionInputs()[1]).toHaveFocus());
       expect(optionInputs()[1]).toHaveAccessibleDescription(tr.errorEmptyChoiceContent$());
+      await new Promise(requestAnimationFrame);
       expect(mockSendPoliteMessage).not.toHaveBeenCalled();
 
       // An error that appears as the author types is announced, once for rows that share it.
       await user.keyboard('revolves');
       expect(within(dialog()).getAllByText(tr.errorDuplicateChoiceContent$())).toHaveLength(2);
+      await new Promise(requestAnimationFrame);
       expect(mockSendPoliteMessage).toHaveBeenCalledTimes(1);
       expect(mockSendPoliteMessage).toHaveBeenCalledWith(tr.errorDuplicateChoiceContent$());
       expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
@@ -960,6 +964,65 @@ describe('InlineChoiceEditor', () => {
       expect(within(dialog()).getByText(tr.errorEmptyChoiceContent$())).toBeInTheDocument();
       expect(optionInputs()[2]).toHaveAccessibleDescription(tr.errorEmptyChoiceContent$());
       expect(optionInputs()[0]).not.toHaveAttribute('aria-describedby');
+    });
+
+    describe('too many options warning', () => {
+      const tooManyWarning = () => tr.warningTooManyInlineChoiceOptions$({ count: 5 });
+      const renderWithOptions = count => {
+        const options = Array.from({ length: count }, (_, i) => [`o${i}`, `Option text ${i}`]);
+        return renderEditor({
+          interaction: interactionOf({ passage: `<p>The ${chip('r1', options, 'o0')} rises</p>` }),
+        });
+      };
+      const openClearingAnnouncements = async user => {
+        mockSendAssertiveMessage.mockClear();
+        mockSendPoliteMessage.mockClear();
+        return openChip(user, 0);
+      };
+
+      it('does not warn on a dropdown with 5 options', async () => {
+        const { user } = await renderWithOptions(5);
+        await openChip(user, 0);
+        expect(within(dialog()).queryByText(tooManyWarning())).not.toBeInTheDocument();
+      });
+
+      it('describes the panel of a dropdown with 6 options with it, unannounced', async () => {
+        const { emitted, user } = await renderWithOptions(6);
+        expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+        await openClearingAnnouncements(user);
+        expect(dialog()).toHaveAccessibleDescription(tooManyWarning());
+        await new Promise(requestAnimationFrame);
+        expect(mockSendPoliteMessage).not.toHaveBeenCalled();
+        expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+      });
+
+      it('announces it politely once, after focus reaches the added option', async () => {
+        const { user } = await renderWithOptions(5);
+        await openClearingAnnouncements(user);
+        const focusedWhenAnnounced = [];
+        mockSendPoliteMessage.mockImplementation(() =>
+          focusedWhenAnnounced.push(document.activeElement),
+        );
+        await user.click(screen.getByRole('button', { name: tr.addInlineChoiceOptionBtn$() }));
+        await waitFor(() => expect(mockSendPoliteMessage).toHaveBeenCalled());
+        expect(mockSendPoliteMessage.mock.calls).toEqual([[tooManyWarning()]]);
+        mockSendPoliteMessage.mockReset();
+
+        expect(within(dialog()).getByText(tooManyWarning())).toBeInTheDocument();
+        expect(focusedWhenAnnounced).toEqual([optionInputs()[5]]);
+        await new Promise(requestAnimationFrame);
+        expect(mockSendPoliteMessage).not.toHaveBeenCalled();
+        expect(mockSendAssertiveMessage).not.toHaveBeenCalled();
+      });
+
+      it('stops warning once an option is removed, leaving 5', async () => {
+        const { user } = await renderWithOptions(6);
+        await openChip(user, 0);
+        await user.click(
+          screen.getByRole('button', { name: tr.deleteInlineChoiceOptionBtn$({ number: 6 }) }),
+        );
+        expect(within(dialog()).queryByText(tooManyWarning())).not.toBeInTheDocument();
+      });
     });
 
     it('shows a passage without dropdowns on the passage editor', async () => {

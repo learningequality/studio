@@ -162,7 +162,7 @@
       v-for="message in messages"
       :id="message.id"
       :key="message.text"
-      :alert="false"
+      :announce="false"
     >
       {{ message.text }}
     </ValidationMessage>
@@ -175,12 +175,12 @@
 
   import { computed, nextTick, ref, watch } from 'vue';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
-  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
   import AddListItemButton from '../AddListItemButton/index.vue';
   import ClickableRegion from '../ClickableRegion/index.vue';
   import ValidationMessage from '../ValidationMessage/index.vue';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
+  import { useAnnouncePolitely } from '../../composables/useAnnouncePolitely';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import { provideEditorBoundary } from 'shared/views/TipTapEditor/TipTapEditor/composables/useEditorBoundary';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
@@ -262,7 +262,7 @@
         return props.chips.map((_, index) => idByText.get(props.errorMessages[index]) ?? null);
       });
 
-      const { sendPoliteMessage } = useKLiveRegion();
+      const announcePolitely = useAnnouncePolitely();
       const messageByChipKey = computed(() => {
         const occurrences = new Map();
         return new Map(
@@ -277,7 +277,7 @@
         const gained = [...current]
           .filter(([id, text]) => text && text !== before.get(id))
           .map(([, text]) => text);
-        if (gained.length) sendPoliteMessage([...new Set(gained)].join(' '));
+        gained.forEach(announcePolitely);
       });
 
       const chipStyles = computed(() =>

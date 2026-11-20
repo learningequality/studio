@@ -43,9 +43,17 @@
     <div
       v-if="mode === 'edit' || showAnswers"
       class="editor-section"
+      data-testid="itemsSection"
     >
       <ValidationMessage v-if="tooFewItemsError">
         {{ errorTooFewChoices$() }}
+      </ValidationMessage>
+      <ValidationMessage
+        v-if="tooManyItemsWarning"
+        key="too-many-items-warning"
+        warning
+      >
+        {{ warningTooManyOrderItems$({ count: RECOMMENDED_MAX_OPTIONS }) }}
       </ValidationMessage>
 
       <!-- Section header -->
@@ -200,7 +208,7 @@
   import { computed, ref, watch } from 'vue';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { ValidationError } from '../../constants';
+  import { RECOMMENDED_MAX_OPTIONS, ValidationError } from '../../constants';
   import { useOrderingInteraction } from '../../composables/useOrderingInteraction';
   import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
@@ -241,6 +249,7 @@
         errorTooFewChoices$,
         errorEmptyItemContent$,
         errorDuplicateItemContent$,
+        warningTooManyOrderItems$,
         editQuestionLabel$,
         editAnswerOptionLabel$,
       } = qtiEditorStrings;
@@ -335,6 +344,10 @@
         () => errors.value.length > 0 && errorCodes.value.includes(ValidationError.TOO_FEW_CHOICES),
       );
 
+      const tooManyItemsWarning = computed(
+        () => props.mode === 'edit' && state.value.items.length > RECOMMENDED_MAX_OPTIONS,
+      );
+
       const emptyItemIds = computed(
         () =>
           new Set(
@@ -408,6 +421,8 @@
         isOnlyItem,
         promptHasError,
         tooFewItemsError,
+        tooManyItemsWarning,
+        RECOMMENDED_MAX_OPTIONS,
         emptyItemIds,
         duplicateItemIds,
         isPromptOpen,
@@ -437,6 +452,7 @@
         deleteItemBtn$,
         orderingItemLabel$,
         errorTooFewChoices$,
+        warningTooManyOrderItems$,
         errorEmptyItemContent$,
         errorDuplicateItemContent$,
         editQuestionLabel$,

@@ -17,6 +17,14 @@ import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
 
+const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+// KDS writes to `window.politeRegionEl`, clearing it 350ms later; a fresh one per test
+// keeps an earlier test's clear from emptying it.
+beforeEach(() => {
+  window.politeRegionEl = document.createElement('div');
+});
+
 let mockWindowIsLarge = true;
 let mockWindowIsSmall = false;
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
@@ -392,6 +400,150 @@ describe('AssociateEditor', () => {
 
       const pool = screen.getByRole('list', { name: tr.$tr('distractorsLabel') });
       expect(within(pool).queryAllByRole('listitem')).toHaveLength(0);
+    });
+  });
+
+  describe('too many pairs and distractors warnings', () => {
+    const pairsWarning = () => tr.$tr('warningTooManyPairs', { count: 5 });
+    const distractorsWarning = () => tr.$tr('warningTooManyDistractors', { count: 5 });
+    const range = count => Array.from({ length: count }, (_, i) => i);
+    const choice = (id, content) =>
+      `<qti-simple-associable-choice identifier="${id}" match-max="1">${content}</qti-simple-associable-choice>`;
+    const countedXml = (
+      pairs,
+      distractors,
+    ) => `<qti-associate-interaction response-identifier="RESPONSE">
+      <qti-prompt><p>Match each character to his adversary.</p></qti-prompt>
+      ${range(pairs)
+        .map(i => choice(`left${i}`, `Left ${i}`) + choice(`right${i}`, `Right ${i}`))
+        .join('')}
+      ${range(distractors)
+        .map(i => choice(`extra${i}`, `Extra ${i}`))
+        .join('')}
+    </qti-associate-interaction>`;
+    const countedDecl =
+      pairs => `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+      <qti-correct-response>
+        ${range(pairs)
+          .map(i => `<qti-value>left${i} right${i}</qti-value>`)
+          .join('')}
+      </qti-correct-response>
+    </qti-response-declaration>`;
+    const renderCounted = (pairs, distractors, props = {}) =>
+      renderEditor({
+        interaction: blockWithDecl(countedXml(pairs, distractors), countedDecl(pairs)),
+        ...props,
+      });
+
+    it('does not warn at 5 pairs and 5 distractors', async () => {
+      renderCounted(5, 5);
+      expect(screen.queryByText(pairsWarning())).not.toBeInTheDocument();
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+      await nextFrame();
+      expect(window.politeRegionEl).toBeEmptyDOMElement();
+    });
+
+    it('warns only about pairs at 6 pairs, without reporting an error', async () => {
+      const { emitted } = renderCounted(6, 5);
+      expect(
+        within(screen.getByTestId('pairsSection')).getByText(pairsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(window.politeRegionEl).toHaveTextContent(pairsWarning());
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+      expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+    });
+
+    it('warns only about distractors at 6 distractors, without reporting an error', async () => {
+      const { emitted } = renderCounted(5, 6);
+      expect(
+        within(screen.getByTestId('distractorsSection')).getByText(distractorsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(window.politeRegionEl).toHaveTextContent(distractorsWarning());
+      expect(screen.queryByText(pairsWarning())).not.toBeInTheDocument();
+      expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+    });
+
+    it('warns and announces both at 6 pairs and 6 distractors', async () => {
+      renderCounted(6, 6);
+      expect(
+        within(screen.getByTestId('pairsSection')).getByText(pairsWarning()),
+      ).toBeInTheDocument();
+      expect(
+        within(screen.getByTestId('distractorsSection')).getByText(distractorsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(window.politeRegionEl).toHaveTextContent(pairsWarning());
+      expect(window.politeRegionEl).toHaveTextContent(distractorsWarning());
+    });
+
+    it('warns as soon as a blank 6th pair is added', async () => {
+      const user = userEvent.setup();
+      renderCounted(5, 0);
+      await user.click(button(tr.$tr('addPairBtn')));
+      expect(
+        within(screen.getByTestId('pairsSection')).getByText(pairsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(window.politeRegionEl).toHaveTextContent(pairsWarning());
+    });
+
+    it('warns once a 6th distractor is committed', async () => {
+      const user = userEvent.setup();
+      renderCounted(1, 5);
+      await user.click(button(tr.$tr('addDistractorBtn')));
+      await user.type(openTextarea(), 'Demetrius');
+      await user.click(button(editPairItem(1, 1)));
+      expect(
+        within(screen.getByTestId('distractorsSection')).getByText(distractorsWarning()),
+      ).toBeInTheDocument();
+      await nextFrame();
+      expect(window.politeRegionEl).toHaveTextContent(distractorsWarning());
+    });
+
+    it('announces a 6th distractor that duplicates another along with the warning', async () => {
+      const user = userEvent.setup();
+      renderCounted(1, 5);
+      await user.click(button(tr.$tr('addDistractorBtn')));
+      await user.type(openTextarea(), 'Extra 0');
+      await user.click(button(editPairItem(1, 1)));
+      await nextFrame();
+      expect(window.politeRegionEl).toHaveTextContent(distractorsWarning());
+      expect(window.politeRegionEl).toHaveTextContent(tr.$tr('errorDuplicateDistractorContent'));
+    });
+
+    it('stops warning once a pair is deleted, leaving 5', async () => {
+      const user = userEvent.setup();
+      renderCounted(6, 0);
+      await user.click(button(tr.$tr('deletePairBtn', { number: 6 })));
+      expect(screen.queryByText(pairsWarning())).not.toBeInTheDocument();
+    });
+
+    it('stops warning once a distractor is deleted, leaving 5', async () => {
+      const user = userEvent.setup();
+      renderCounted(1, 6);
+      await user.click(button(tr.$tr('deleteDistractorBtn', { number: 6 })));
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+    });
+
+    it('still adds a 7th pair', async () => {
+      const user = userEvent.setup();
+      renderCounted(6, 0);
+      await user.click(button(tr.$tr('addPairBtn')));
+      expect(
+        within(screen.getByTestId('pairsSection')).getByText(
+          tr.$tr('pairNumberLabel', { number: 7 }),
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('does not warn in view mode', async () => {
+      renderCounted(6, 6, { mode: 'view', showAnswers: true });
+      expect(screen.queryByText(pairsWarning())).not.toBeInTheDocument();
+      expect(screen.queryByText(distractorsWarning())).not.toBeInTheDocument();
+      await nextFrame();
+      expect(window.politeRegionEl).toBeEmptyDOMElement();
     });
   });
 
