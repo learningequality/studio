@@ -10,7 +10,6 @@ item must never abort the channel publish.
 """
 import json
 import logging
-import math
 from dataclasses import dataclass
 from typing import List
 from typing import Optional
@@ -20,6 +19,7 @@ from lxml import etree
 
 from contentcuration.utils.assessment.qti.catalog import KOLIBRI_HINT_SUPPORT
 from contentcuration.utils.assessment.qti.constants import BaseType
+from contentcuration.utils.assessment.qti.convert import is_finite_double
 from contentcuration.utils.assessment.qti.html_to_markdown import html_to_markdown
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 
@@ -137,7 +137,7 @@ def _accepted_values(declaration) -> List[str]:
             for entry in _children_by_localname(mappings[0], "qti-map-entry")
             if (_as_float(entry.get("mapped-value")) or 0) >= 1
         ]
-    return list(dict.fromkeys(value for value in values if _is_number(value)))
+    return list(dict.fromkeys(value for value in values if is_finite_double(value)))
 
 
 def _as_float(value) -> Optional[float]:
@@ -145,11 +145,6 @@ def _as_float(value) -> Optional[float]:
         return float(value)
     except (TypeError, ValueError):
         return None
-
-
-def _is_number(value) -> bool:
-    number = _as_float(value)
-    return number is not None and math.isfinite(number)
 
 
 def _children_by_localname(el, localname):
@@ -248,11 +243,24 @@ def is_answerless_numeric_entry(raw_data: str) -> bool:
     return derivable is not None and _is_answerless(derivable)
 
 
+def declares_unreadable_number(raw_data: str) -> bool:
+    """Kolibri's QTI viewer throws on a numeric correct response ``Number()``
+    rejects or reads as non-finite."""
+    root, _ = _parse(raw_data)
+    return root is not None and any(
+        value and not is_finite_double(value)
+        for declaration in root.iter()
+        if _local(declaration) == "qti-response-declaration"
+        and declaration.get("base-type") in _NUMERIC_BASE_TYPES
+        for value in _correct_values(declaration)
+    )
+
+
 def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     """Django ``AssessmentItem`` → ``DerivedAssessmentItem`` proxy, or ``None``.
 
     Returns ``None`` (with a warning) when the item is unparseable or its
-    interaction is not Perseus-expressible, or it is an answerless numeric entry.
+    interaction is not Perseus-expressible.
 
     The proxy's ``assessment_id`` is the QTI item's root ``identifier`` — the
     same id the QTI archive records for the item in the manifest, and hence in
@@ -274,14 +282,6 @@ def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     if derivable is None:
         logger.warning(
             "QTI item %s is not Perseus-expressible; skipping derivation",
-            assessment_item.assessment_id,
-        )
-        return None
-
-    # The QTI archive leaves this item out too, so both archives list the same ids.
-    if _is_answerless(derivable):
-        logger.warning(
-            "QTI item %s has no correct answer; skipping derivation",
             assessment_item.assessment_id,
         )
         return None
