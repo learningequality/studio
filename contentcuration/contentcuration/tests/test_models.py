@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 import mock
@@ -733,6 +734,50 @@ class CommunityLibrarySubmissionTestCase(
             submission_other_channel.status,
             community_library_submission.STATUS_LIVE,
         )
+
+    def test_mark_live__updates_previous_live_date_updated(self):
+        submission_a = testdata.community_library_submission()
+        submission_b = testdata.community_library_submission()
+
+        channel = submission_a.channel
+        channel.version = 2
+        submission_b.channel = channel
+
+        submission_a.channel_version = 1
+        submission_a.status = community_library_submission.STATUS_LIVE
+        submission_a.save()
+
+        submission_b.channel_version = 2
+        submission_b.author = submission_a.author
+        submission_b.status = community_library_submission.STATUS_APPROVED
+        submission_b.save()
+
+        submission_other_channel = testdata.community_library_submission()
+        submission_other_channel.status = community_library_submission.STATUS_LIVE
+        submission_other_channel.save()
+
+        # Use QuerySet.update() so auto_now does not overwrite the old timestamp
+        old_time = datetime.datetime(2023, 1, 1, tzinfo=datetime.timezone.utc)
+        CommunityLibrarySubmission.objects.filter(
+            pk__in=[submission_a.pk, submission_other_channel.pk]
+        ).update(date_updated=old_time)
+
+        new_time = datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
+        with mock.patch("django.utils.timezone.now", return_value=new_time):
+            submission_b.mark_live()
+
+        submission_a.refresh_from_db()
+        submission_other_channel.refresh_from_db()
+
+        self.assertEqual(
+            submission_a.status, community_library_submission.STATUS_APPROVED
+        )
+        self.assertEqual(submission_a.date_updated, new_time)
+        self.assertEqual(
+            submission_other_channel.status,
+            community_library_submission.STATUS_LIVE,
+        )
+        self.assertEqual(submission_other_channel.date_updated, old_time)
 
     def test_cannot_create_multiple_submissions_same_channel_same_version(self):
         from django.db import IntegrityError, transaction
