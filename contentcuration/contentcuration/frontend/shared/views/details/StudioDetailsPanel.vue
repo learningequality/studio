@@ -106,7 +106,7 @@
             >
               <KGridItem :layout="{ span: 3 }">
                 <dt>
-                  <ContentNodeIcon
+                  <StudioContentNodeIcon
                     class="resource-icon"
                     :kind="item.kind_id"
                   />
@@ -445,7 +445,7 @@
     metadataTranslationMixin,
   } from '../../mixins';
   import { CategoriesLookup, LevelsLookup } from '../../constants';
-  import ContentNodeIcon from '../ContentNodeIcon';
+  import StudioContentNodeIcon from '../StudioContentNodeIcon';
   import ExpandableList from '../ExpandableList';
   import StudioChip from '../StudioChip';
   import StudioLargeLoader from '../StudioLargeLoader';
@@ -495,7 +495,7 @@
     name: 'StudioDetailsPanel',
     components: {
       StudioLargeLoader,
-      ContentNodeIcon,
+      StudioContentNodeIcon,
       ExpandableList,
       StudioCopyToken,
       StudioDetailsRow,
