@@ -2,6 +2,14 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-2';
 import LazyMathNodeView from '../components/math/LazyMathNodeView.vue';
 
+/**
+ * @param {Element} math - A MathML `<math>` element
+ * @returns {string|undefined} The LaTeX it was rendered from, as published formulas annotate it
+ */
+export function mathmlLatex(math) {
+  return math.querySelector('annotation[encoding="application/x-tex"]')?.textContent;
+}
+
 export const Math = Node.create({
   name: 'math',
   group: 'inline',
@@ -23,7 +31,16 @@ export const Math = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'span[data-latex]' }];
+    return [
+      { tag: 'span[data-latex]' },
+      {
+        tag: 'math',
+        getAttrs: element => {
+          const latex = mathmlLatex(element);
+          return latex ? { latex } : false;
+        },
+      },
+    ];
   },
 
   renderHTML({ HTMLAttributes }) {

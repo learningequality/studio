@@ -9,7 +9,7 @@
     <qti-item-body>
         <qti-choice-interaction response-identifier="RESPONSE" shuffle="true" max-choices="1" min-choices="0" orientation="vertical">
             <qti-prompt>
-                <p>Solve the equation <math display="inline"><semantics><mrow><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\frac{x}{2} = 3</annotation></semantics></math> for x. What is the value of x?</p>
+                <p>Solve the equation <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><semantics><mrow><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\frac{x}{2} = 3</annotation></semantics></math> for x. What is the value of x?</p>
             </qti-prompt>
             <qti-simple-choice identifier="choice_0" show-hide="show" fixed="false"><p>6</p></qti-simple-choice>
             <qti-simple-choice identifier="choice_1" show-hide="show" fixed="false"><p>3</p></qti-simple-choice>

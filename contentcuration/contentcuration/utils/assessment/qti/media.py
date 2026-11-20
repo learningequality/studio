@@ -4,6 +4,9 @@ from typing import Tuple
 
 from lxml import etree
 
+from contentcuration.utils.assessment.markdown import LATEX_ATTRIBUTE
+from contentcuration.utils.assessment.markdown import latex_source
+from contentcuration.utils.assessment.markdown import latex_to_mathml
 from contentcuration.utils.assessment.qti.fields import (
     entry_pattern as srcset_entry_pattern,
 )
@@ -18,6 +21,8 @@ QTI_MEDIA_REFERENCE_XPATH = etree.XPath(
 )
 PIXEL_LENGTH_REGEX = re.compile(r"[1-9][0-9]*")
 XML_LANG_ATTRIBUTE = "{http://www.w3.org/XML/1998/namespace}lang"
+LATEX_SPAN_XPATH = etree.XPath(f"//*[local-name()='span'][@{LATEX_ATTRIBUTE}]")
+UNCONVERTED_LATEX_TAG = "unconverted-latex"
 
 
 def img_pixel_size(width, height) -> Optional[Tuple[int, int]]:
@@ -135,4 +140,22 @@ def strip_studio_attributes(raw_data):
         for name in list(element.attrib):
             if name.startswith("data-studio-"):
                 del element.attrib[name]
+    return _serialize(doc)
+
+
+def render_qti_latex_spans(raw_data):
+    if LATEX_ATTRIBUTE not in raw_data:
+        return raw_data
+    doc = parse_qti_xml(raw_data)
+    for span in LATEX_SPAN_XPATH(doc):
+        latex = span.attrib.pop(LATEX_ATTRIBUTE)
+        mathml = latex_to_mathml(latex)
+        if mathml is None:
+            span.text = latex_source(latex)
+            span.tag = UNCONVERTED_LATEX_TAG
+            continue
+        math = etree.fromstring(mathml)
+        math.tail = span.tail
+        span.getparent().replace(span, math)
+    etree.strip_tags(doc, UNCONVERTED_LATEX_TAG)
     return _serialize(doc)
