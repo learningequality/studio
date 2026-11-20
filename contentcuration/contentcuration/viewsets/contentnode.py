@@ -8,11 +8,9 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Exists
 from django.db.models import F
-from django.db.models import IntegerField as DjangoIntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models.functions import Cast
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
@@ -893,6 +891,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         if not pk:
             raise Http404
 
+        node = self.get_object()
+
         # Here we are fetching the entire prerequisite relationship tree
         # for the channel. It is possible that this could get very large,
         # and cause performance issues, and it may not need to be loaded
@@ -902,10 +902,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # Do a filter just on the tree_id of the target node, as relationships
         # should not be cross channel, and are not meaningful if they are.
         prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
-            target_node__tree_id=Cast(
-                ContentNode.filter_by_pk(pk=pk).values_list("tree_id", flat=True)[:1],
-                output_field=DjangoIntegerField(),
-            )
+            target_node__tree_id=node.tree_id
         ).values("target_node_id", "prerequisite_id")
 
         return Response(

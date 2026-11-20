@@ -2146,6 +2146,62 @@ class CRUDTestCase(StudioAPITestCase):
             any(entry for entry in response.data if entry["target_node"] == postreq.id)
         )
 
+    def test_fetch_requisites__non_member(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=contentnode, prerequisite=prereq
+        )
+        non_member = testdata.user(email="nonmember@test.com")
+        self.client.force_authenticate(user=non_member)
+        response = self.client.get(
+            reverse("contentnode-requisites", kwargs={"pk": contentnode.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+
+    def test_fetch_requisites__viewer(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        postreq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=contentnode, prerequisite=prereq
+        )
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=postreq, prerequisite=contentnode
+        )
+        viewer = testdata.user(email="viewer@test.com")
+        self.channel.viewers.add(viewer)
+        self.client.force_authenticate(user=viewer)
+        response = self.client.get(
+            reverse("contentnode-requisites", kwargs={"pk": contentnode.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            any(
+                entry
+                for entry in response.data
+                if entry["target_node"] == contentnode.id
+                and entry["prerequisite"] == prereq.id
+            )
+        )
+        self.assertTrue(
+            any(
+                entry
+                for entry in response.data
+                if entry["target_node"] == postreq.id
+                and entry["prerequisite"] == contentnode.id
+            )
+        )
+
+    def test_fetch_requisites__nonexistent_id(self):
+        response = self.client.get(
+            reverse("contentnode-requisites", kwargs={"pk": uuid.uuid4().hex}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+
     def test_create_contentnode(self):
         contentnode = self.contentnode_metadata
         response = self.client.post(
