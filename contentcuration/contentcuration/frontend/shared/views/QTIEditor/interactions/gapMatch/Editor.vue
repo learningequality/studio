@@ -144,6 +144,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { ValidationError } from '../../constants';
   import { useGapMatchInteraction } from '../../composables/useGapMatchInteraction';
+  import { useInteractionUpdates } from '../../composables/useInteractionUpdates';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import EditableChipList from '../../components/EditableChipList/index.vue';
@@ -306,7 +307,11 @@
         bodyXml: bodyXml.value,
         responseDeclarations: responseDeclarations.value,
       }));
-      watch(workingInteraction, newVal => emit('update:interaction', newVal), { immediate: true });
+      useInteractionUpdates(
+        workingInteraction,
+        () => props.mode,
+        newVal => emit('update:interaction', newVal),
+      );
       // Errors are reported the same way, for the card to show that the question needs work.
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });
 

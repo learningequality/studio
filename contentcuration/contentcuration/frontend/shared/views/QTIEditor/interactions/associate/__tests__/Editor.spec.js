@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/vue';
+import { fireEvent, render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
@@ -9,6 +9,7 @@ import {
   ASSOCIATE_DECL_XML,
   mockInteractionBlock as block,
   mockInteractionBlockWithDecl as blockWithDecl,
+  updates,
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
 import { parseXML } from '../../../serialization/xml';
@@ -114,7 +115,6 @@ const renderEditor = (props = {}) =>
 const pairRows = () =>
   within(screen.getByRole('list', { name: tr.$tr('correctPairsLabel') })).getAllByRole('listitem');
 
-const updates = emitted => emitted()['update:interaction'] || [];
 const latestBodyXml = emitted => updates(emitted).at(-1)[0].bodyXml;
 
 describe('AssociateEditor', () => {
@@ -508,6 +508,13 @@ describe('AssociateEditor', () => {
       const payload = updates(emitted).at(-1)[0];
       expect(typeof payload.bodyXml).toBe('string');
       expect(Array.isArray(payload.responseDeclarations)).toBe(true);
+    });
+
+    it('emits update:interaction for an edit made as the card closes', async () => {
+      const { emitted, updateProps } = renderEditor();
+      fireEvent.click(button(tr.$tr('addPairBtn')));
+      await updateProps({ mode: 'view' });
+      expect(updates(emitted)).toHaveLength(1);
     });
 
     it('does not emit update:interaction when moving between editors changes nothing', async () => {

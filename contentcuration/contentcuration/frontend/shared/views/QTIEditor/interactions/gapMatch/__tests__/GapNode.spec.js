@@ -97,6 +97,15 @@ describe('GapNode', () => {
       expect(editor.getText()).toBe('abxyzcd');
     });
 
+    it('types at the caret when the browser aims a keystroke into a gap', async () => {
+      const editor = await renderAt(AFTER_GAP + 1);
+
+      input(editor, 'insertText', 'z', { from: ANSWER_END, to: ANSWER_END });
+
+      expect(answerOf(editor, 'gap_a')).toBe('xy');
+      expect(editor.getText()).toBe('abxyczd');
+    });
+
     it('keeps a gap blank when its last character is deleted', async () => {
       const editor = await renderAt(5, `<p>ab${gap('gap_a', 'x')}cd</p>`);
 
