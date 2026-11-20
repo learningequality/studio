@@ -36,13 +36,11 @@
   export default defineComponent({
     name: 'ToolbarButton',
     setup(props, { emit }) {
-      const isRtl = computed(() => {
-        return document.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
-      });
+      const isRtl = window.isRTL;
 
       // Determine which icon to use based on RTL status
       const currentIcon = computed(() => {
-        if (isRtl.value && props.rtlIcon) {
+        if (isRtl && props.rtlIcon) {
           return props.rtlIcon;
         }
         return props.icon;
