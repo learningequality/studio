@@ -849,7 +849,7 @@ class ContentNodeTreeViewset(BaseContentNodeMixin, TreeQueryMixin, BaseValuesVie
         """
 
         try:
-            UUID(pk)
+            pk = UUID(pk).hex
         except ValueError:
             return Response(
                 {"error": "Invalid UUID format."}, status=status.HTTP_400_BAD_REQUEST
