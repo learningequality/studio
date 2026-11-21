@@ -18,7 +18,6 @@ INTERNAL_IPS = (
     "192.168.31.9",
 )
 
-AWS_AUTO_CREATE_BUCKET = True
 
 INSTALLED_APPS += ("django_migration_linter",)  # noqa F405
 

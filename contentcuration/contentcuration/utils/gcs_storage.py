@@ -1,17 +1,23 @@
 import logging
 import tempfile
+from datetime import timedelta
 from gzip import GzipFile
 from io import BytesIO
 
 import backoff
+import requests
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.files import File
 from django.core.files.storage import Storage
+from django.utils.functional import cached_property
 from google.cloud.exceptions import InternalServerError
+from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 
 from .files import determine_content_type
+from .files import emulator_download_url
 from contentcuration.utils.files import base64_to_hex
 from contentcuration.utils.files import hex_to_base64
 
@@ -31,12 +37,9 @@ def _create_default_client(
 
 
 class GoogleCloudStorage(Storage):
-    def __init__(self, client, bucket_name):
+    def __init__(self, client, bucket_name, *, retry_options=None):
         self.client = client
-        self.bucket = self.client.get_bucket(bucket_name)
-
-    def get_client(self):
-        return self.client
+        self.bucket = self.client.get_bucket(bucket_name, **(retry_options or {}))
 
     @property
     def writeable(self):
@@ -65,21 +68,28 @@ class GoogleCloudStorage(Storage):
                 " Please use Storage.save() instead."
             )
 
-        if not blob_object:
+        if blob_object is None:
             # the old studio storage had a prefix if /contentworkshop_content/
             # before the path; remove that first before passing it in to GCS
             # TODO (aron): remove hack once we've migrated all File models to remove the prefix
             if name.startswith(OLD_STUDIO_STORAGE_PREFIX):
                 name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
-            blob = self.bucket.get_blob(name)
+            if settings.GCS_EMULATOR_HOST:
+                blob = self.bucket.blob(name)
+            else:
+                metadata = self.bucket.get_blob(name)
+                if metadata is None:
+                    raise FileNotFoundError("{} not found".format(name))
+                blob = self.bucket.blob(name, generation=metadata.generation)
         else:
             blob = blob_object
 
-        if blob is None:
-            raise FileNotFoundError("{} not found".format(name))
-
         fobj = tempfile.NamedTemporaryFile()
-        blob.download_to_file(fobj)
+        try:
+            blob.download_to_file(fobj)
+        except NotFound:
+            fobj.close()
+            raise FileNotFoundError("{} not found".format(name))
         # flush it to disk
         fobj.flush()
         fobj.seek(0)
@@ -117,9 +127,8 @@ class GoogleCloudStorage(Storage):
 
             # Compress the database file so that users can save bandwith and download faster.
             buffer = BytesIO()
-            compressed = GzipFile(fileobj=buffer, mode="w")
-            compressed.write(fobj.read())
-            compressed.close()
+            with GzipFile(fileobj=buffer, mode="w") as compressed:
+                compressed.write(fobj.read())
 
             blob.content_encoding = "gzip"
             fobj = buffer
@@ -129,19 +138,16 @@ class GoogleCloudStorage(Storage):
         # force the current file to be at file location 0, to
         # because that's what google wants
         fobj.seek(0)
-
-        if self._is_file_empty(fobj):
-            logging.warning("Stopping the upload of an empty file: {}".format(name))
-            return name
-
-        blob.upload_from_file(
-            fobj,
-            content_type=content_type,
-        )
-
-        # Close StringIO object and discard memory buffer if created
-        if buffer:
-            buffer.close()
+        try:
+            if not settings.GCS_EMULATOR_HOST:
+                if not fobj.read(1):
+                    logging.warning("Stopping the upload of an empty file: %s", name)
+                    return name
+                fobj.seek(0)
+            blob.upload_from_file(fobj, content_type=content_type)
+        finally:
+            if buffer is not None:
+                buffer.close()
 
         return name
 
@@ -158,6 +164,10 @@ class GoogleCloudStorage(Storage):
         if name.startswith(OLD_STUDIO_STORAGE_PREFIX):
             name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
 
+        if settings.GCS_EMULATOR_HOST:
+            return emulator_download_url(
+                settings.GCS_EMULATOR_HOST, self.bucket.name, name
+            )
         blob = self.bucket.get_blob(name)
         return blob.public_url
 
@@ -170,7 +180,8 @@ class GoogleCloudStorage(Storage):
             name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
 
         blob = self.bucket.get_blob(name)
-        return blob.delete()
+        if blob is not None:
+            blob.delete()
 
     def get_accessed_time(self, name):
         raise NotImplementedError
@@ -194,27 +205,6 @@ class GoogleCloudStorage(Storage):
     def is_database_file(filename):
         return filename.endswith(".sqlite3")
 
-    @staticmethod
-    def _is_file_empty(fobj):
-        """
-        Return True if the file is empty, i.e. it has a length of 0. Raises an error
-        if the file object does not have the seek() or peek() method.
-        """
-
-        # Check if our fobj has the peek method. If so, just use that to check
-        # one byte ahead.
-        try:
-            byt = fobj.peek(1)
-        except AttributeError:
-            # emulate the peek method by saving our current location, reading
-            # one byte, then returning to the saved location. It would've been
-            # nice to use the os.SEEK_CUR argument to seek(), but that doesn't
-            # work on StringIO objects.
-            current_location = fobj.tell()
-            byt = fobj.read(1)
-            fobj.seek(current_location)
-        return len(byt) == 0
-
     def create_resumable_upload_session(self, name, md5, size):
         blob = self.bucket.blob(name)
         md5_b64 = hex_to_base64(md5)
@@ -223,22 +213,56 @@ class GoogleCloudStorage(Storage):
         blob.metadata = {"declared-size": str(size)}
         return blob.create_resumable_upload_session(client=self.client)
 
+    def generate_upload_url(self, name, md5, lifetime_sec, size):
+        """
+        :param md5: hex-encoded md5 of the file; signed PUT requests send it
+            base64-encoded as the Content-MD5 header.
+        :param lifetime_sec: lifetime of the URL, in seconds.
+        :param size: the size of the file, in bytes.
+        """
+        if settings.GCS_EMULATOR_HOST:
+            return self.create_resumable_upload_session(name, md5, size)
+        return self.bucket.blob(name).generate_signed_url(
+            method="PUT",
+            content_md5=hex_to_base64(md5).strip(),
+            content_type=determine_content_type(name),
+            expiration=timedelta(seconds=lifetime_sec),
+        )
+
     def get_stored_object_md5(self, name):
         blob = self.bucket.get_blob(name)
-        return base64_to_hex(blob.md5_hash) if blob is not None else None
+        return (
+            base64_to_hex(blob.md5_hash) if blob is not None and blob.md5_hash else None
+        )
 
 
 class CompositeGCS(Storage):
-    def __init__(self):
-        self.backends = []
-        self.backends.append(
-            GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME)
-        )
+    @cached_property
+    def backends(self):
+        client = _create_default_client()
+        if settings.GCS_EMULATOR_HOST:
+            try:
+                return [
+                    GoogleCloudStorage(
+                        client,
+                        settings.GCS_BUCKET_NAME,
+                        retry_options={"retry": None, "timeout": 5},
+                    )
+                ]
+            except requests.exceptions.RequestException as e:
+                raise ImproperlyConfigured(
+                    "No GCS emulator reachable at STORAGE_EMULATOR_HOST={}".format(
+                        settings.GCS_EMULATOR_HOST
+                    )
+                ) from e
+        backends = [GoogleCloudStorage(client, settings.GCS_BUCKET_NAME)]
         # Only add the studio-content bucket (the production bucket) if we're not in production
         if settings.SITE_ID != settings.PRODUCTION_SITE_ID:
-            self.backends.append(
+            backends.append(
                 GoogleCloudStorage(Client.create_anonymous_client(), "studio-content")
             )
+
+        return backends
 
     def _get_writeable_backend(self):
         """
@@ -257,9 +281,6 @@ class CompositeGCS(Storage):
             if backend.exists(name):
                 return backend
         raise FileNotFoundError("{} not found".format(name))
-
-    def get_client(self):
-        return self._get_writeable_backend().get_client()
 
     def open(self, name, mode="rb"):
         return self._get_readable_backend(name).open(name, mode)
@@ -301,12 +322,10 @@ class CompositeGCS(Storage):
             name, md5_b64, size
         )
 
+    def generate_upload_url(self, name, md5, lifetime_sec, size):
+        return self._get_writeable_backend().generate_upload_url(
+            name, md5, lifetime_sec, size
+        )
+
     def get_stored_object_md5(self, name):
-        # A not-yet-uploaded object exists in no backend; treat that as "no
-        # stored md5" (None) rather than raising, matching
-        # GoogleCloudStorage.get_stored_object_md5 for a missing blob.
-        try:
-            backend = self._get_readable_backend(name)
-        except FileNotFoundError:
-            return None
-        return backend.get_stored_object_md5(name)
+        return self._get_writeable_backend().get_stored_object_md5(name)

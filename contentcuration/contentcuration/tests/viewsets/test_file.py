@@ -1,6 +1,10 @@
+import hashlib
 import uuid
 from unittest import mock
 
+import requests
+from django.conf import settings
+from django.core.files.storage import default_storage
 from django.urls import reverse
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
@@ -840,7 +844,11 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
         assert data["alreadyUploaded"] is False
         assert "file" in data
         assert data["file"]["id"]
-        mock_storage.create_resumable_upload_session.assert_called_once()
+        key = data["file"]["url"].removeprefix("/content/")
+        mock_storage.get_stored_object_md5.assert_called_once_with(key)
+        mock_storage.create_resumable_upload_session.assert_called_once_with(
+            key, self.file["checksum"], self.file["size"]
+        )
 
     @mock.patch("contentcuration.viewsets.file.default_storage")
     def test_resumable_skips_when_already_stored(self, mock_storage):
@@ -854,12 +862,29 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
         assert data["file"]["id"]
         mock_storage.create_resumable_upload_session.assert_not_called()
 
-    def test_resumable_falls_back_to_single_put_on_s3(self):
-        # default_storage is S3 in the test env → no resumable support
+    def test_resumable_upload_to_emulator(self):
+        content = uuid.uuid4().bytes
+        self.file["name"] = "mismatched.pdf"
+        self.file["size"] = len(content)
+        self.file["checksum"] = hashlib.md5(content).hexdigest()
         self.client.force_authenticate(user=self.user)
-        resp = self.client.post(reverse("file-upload-url"), self.file, format="json")
-        data = resp.json()
-        assert data["resumable"] is False
-        assert "uploadURL" in data
-        assert "file" in data
-        assert data["file"]["id"]
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["resumable"])
+        self.assertTrue(data["uploadURL"].startswith(settings.GCS_EMULATOR_HOST + "/"))
+        path = models.generate_object_storage_name(self.file["checksum"], "audio.mp3")
+        self.addCleanup(default_storage.delete, path)
+        upload = requests.put(data["uploadURL"], data=content, timeout=30)
+        upload.raise_for_status()
+        saved = models.File.objects.get(pk=data["file"]["id"])
+        self.assertEqual(saved.file_on_disk.name, path)
+        self.assertEqual(data["file"]["url"], "/content/" + path)
+        with saved.file_on_disk.open("rb") as stored:
+            self.assertEqual(stored.read(), content)
+        repeat = self.client.post(reverse("file-upload-url"), self.file, format="json")
+        self.assertEqual(repeat.status_code, 200)
+        self.assertTrue(repeat.json()["alreadyUploaded"])
+        self.assertIsNone(repeat.json()["uploadURL"])

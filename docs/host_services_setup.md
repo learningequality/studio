@@ -8,7 +8,7 @@ For detailed instructions on installing and configuring Volta and uv, please see
 ## Install system dependencies and services
 Studio requires some background services to be running:
 
-* Minio - a local S3 storage emulation
+* fake-gcs-server - a local Google Cloud Storage emulator
 * PostgreSQL - a relational database
 * Redis - a fast key/value store useful for caching
 
@@ -18,17 +18,11 @@ Studio requires some background services to be running:
 sudo apt-get install -y python-tk \
     postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-16 \
     ffmpeg libmagickwand-dev redis-server wkhtmltopdf
-
-# Install minio
-wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O bin/minio
-sudo chmod +x bin/minio
 ```
 
 ### Mac OS
 ```bash
 brew install postgresql@16 redis ffmpeg imagemagick@6 gs
-# note, this version of minio may not be compatible with Studio
-brew install minio/stable/minio
 brew link --force postgresql@16
 brew link --force imagemagick@6
 ```
@@ -36,6 +30,10 @@ brew link --force imagemagick@6
 ### Windows
 
 **Note:** Windows is no longer supported due to incompatibilities with some required packages. If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
+
+### Install the GCS emulator
+
+Follow [Install the GCS emulator](./local_dev_host.md#install-the-gcs-emulator) for the binary and [Use a real GCS bucket](./local_dev_host.md#use-a-real-gcs-bucket) to opt out.
 
 ## Set up the database
 

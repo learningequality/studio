@@ -2,11 +2,11 @@ x-studio-environment:
   &studio-environment
     MPLBACKEND: ps
     SHELL: /bin/bash
-    AWS_S3_ENDPOINT_URL: http://minio:9000
+    STORAGE_EMULATOR_HOST: http://gcs:4443
+    GOOGLE_CLOUD_PROJECT: studio-emulator
     AWS_BUCKET_NAME: content
-    DATA_DB_HOST: postgres
     DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
-    RUN_MODE: docker-compose
+    DATA_DB_HOST: postgres
     CELERY_TIMEZONE: America/Los_Angeles
     CELERY_REDIS_DB: 0
     CELERY_BROKER_ENDPOINT: redis
@@ -22,7 +22,7 @@ x-studio-worker:
       dockerfile: docker/Dockerfile.dev
     image: learningequality/studio-app-dev
     depends_on:
-      - minio
+      - gcs
       - postgres
       - redis
     volumes:
@@ -53,17 +53,14 @@ services:
     <<: *studio-worker
     command: make prodceleryworkers
 
-  # this service is for development emulation only
-  minio:
-    image: 'bitnamilegacy/minio:2024.5.28'
-    environment:
-      - "MINIO_DEFAULT_BUCKETS=content:public"
-      - MINIO_ROOT_USER=development
-      - MINIO_ROOT_PASSWORD=development
+  gcs:
+    image: fsouza/fake-gcs-server:1.55.1
+    entrypoint: ["sh", "-c", "mkdir -p /storage/content && exec /bin/fake-gcs-server \"$$@\"", "--"]
+    command: -scheme http -public-host ${GCS_PUBLIC_HOST:-gcs:4443} -backend filesystem -filesystem-root /storage -cors-headers Content-MD5
     ports:
-      - "9000:9000"
+      - "4443:4443"
     volumes:
-      - minio:/bitnami/minio/data
+      - gcs:/storage
 
   postgres:
     image: ghcr.io/learningequality/postgres
@@ -88,5 +85,5 @@ services:
 
 
 volumes:
-  minio:
+  gcs:
   pgdata:

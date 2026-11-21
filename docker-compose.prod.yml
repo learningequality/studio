@@ -11,11 +11,11 @@ services:
     environment:
       MPLBACKEND: ps
       SHELL: /bin/bash
-      AWS_S3_ENDPOINT_URL: http://minio:9000
+      STORAGE_EMULATOR_HOST: http://gcs:4443
+      GOOGLE_CLOUD_PROJECT: studio-emulator
       AWS_BUCKET_NAME: content
       DATA_DB_HOST: postgres
       DJANGO_SETTINGS_MODULE: contentcuration.settings
-      RUN_MODE: docker-compose
       CELERY_TIMEZONE: America/Los_Angeles
       CELERY_REDIS_DB: 0
       CELERY_BROKER_ENDPOINT: redis

@@ -2,7 +2,6 @@ import urllib.parse
 
 from django.conf import settings
 from django.contrib import admin
-from django.core.files.storage import default_storage
 from django.http.response import HttpResponseNotFound
 from django.http.response import HttpResponseRedirect
 from django.urls import include
@@ -13,6 +12,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from .urls import urlpatterns
+from .utils.files import emulator_download_url
 
 
 def webpack_redirect_view(request):
@@ -24,24 +24,28 @@ def webpack_redirect_view(request):
 
 
 def file_server(request, storage_path=None):
-    """
-    Development fallback to redirect file storage requests to Minio
-    """
-    # generate the minio storage URL, so we can get the GET parameters that give everyone
-    # access even if they don't need to log in
     if storage_path is None:
         return HttpResponseNotFound()
 
-    params = urllib.parse.urlparse(default_storage.url(storage_path)).query
-    host = request.META["HTTP_HOST"].split(":")[0]
-    port = 9000  # hardcoded to the default minio IP address
-    url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
-        host=host,
-        port=port,
-        bucket=settings.AWS_S3_BUCKET_NAME,
-        path=storage_path,
-        params=params,
-    )
+    if settings.GCS_EMULATOR_HOST:
+        emulator = urllib.parse.urlparse(settings.GCS_EMULATOR_HOST)
+        hostname = urllib.parse.urlsplit("//" + request.get_host()).hostname
+        if ":" in hostname:
+            hostname = "[{}]".format(hostname)
+        authority = (
+            "{}:{}".format(hostname, emulator.port) if emulator.port else hostname
+        )
+        url = emulator_download_url(
+            "{}://{}".format(emulator.scheme, authority),
+            settings.GCS_BUCKET_NAME,
+            storage_path,
+        )
+    else:
+        url = "{}/{}/{}".format(
+            settings.GCS_ENDPOINT_URL.rstrip("/"),
+            settings.GCS_BUCKET_NAME,
+            storage_path,
+        )
     return HttpResponseRedirect(url)
 
 

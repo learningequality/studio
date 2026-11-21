@@ -1,19 +1,28 @@
+from gzip import decompress
 from io import BytesIO
+from uuid import uuid4
 
 import mock
+import requests
+from django.core.exceptions import ImproperlyConfigured
 from django.core.files import File
-from django.test import TestCase
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.test import override_settings
+from django.test import SimpleTestCase
+from google.auth.credentials import AnonymousCredentials
 from google.cloud.storage import Bucket
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 from mixer.main import mixer
+from urllib3.response import HTTPResponse
 
 from contentcuration.utils.files import hex_to_base64
 from contentcuration.utils.gcs_storage import CompositeGCS
 from contentcuration.utils.gcs_storage import GoogleCloudStorage
 
 
-class GoogleCloudStorageSaveTestCase(TestCase):
+class GoogleCloudStorageSaveTestCase(SimpleTestCase):
     """
     Tests for GoogleCloudStorage.save().
     """
@@ -48,15 +57,30 @@ class GoogleCloudStorageSaveTestCase(TestCase):
             self.content, content_type="image/jpeg"
         )
 
-    def test_checks_does_not_upload_file_if_empty(self):
-        """
-        Check that it doesn't call upload_from_file if the file is empty.
-        """
-        content = BytesIO()
-        self.storage.save("myfile.jpg", content, blob_object=self.blob_obj)
+    def test_empty_write_to_existing_object(self):
+        name = "myfile.txt"
+        saved = b""
 
-        # check that upload_from_file is never called
-        self.blob_obj.upload_from_file.assert_not_called()
+        def store(data):
+            nonlocal saved
+            saved = data
+
+        self.blob_obj.upload_from_file.side_effect = lambda stream, **kwargs: store(
+            stream.read()
+        )
+        self.blob_obj.upload_from_string.side_effect = lambda data, **kwargs: store(
+            data
+        )
+        self.blob_obj.download_to_file.side_effect = lambda stream: stream.write(saved)
+
+        for emulator, expected in ((None, b"original"), ("http://emulator:4443", b"")):
+            with self.subTest(emulator=emulator), override_settings(
+                GCS_EMULATOR_HOST=emulator
+            ):
+                self.storage.save(name, BytesIO(b"original"), blob_object=self.blob_obj)
+                self.storage.save(name, BytesIO(), blob_object=self.blob_obj)
+                with self.storage.open(name, blob_object=self.blob_obj) as result:
+                    self.assertEqual(result.read(), expected)
 
     def test_uploads_max_age_of_5_if_content_database(self):
         """
@@ -75,23 +99,20 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert "private" in self.blob_obj.cache_control
 
-    @mock.patch("contentcuration.utils.gcs_storage.BytesIO")
-    @mock.patch(
-        "contentcuration.utils.gcs_storage.GoogleCloudStorage._is_file_empty",
-        return_value=False,
-    )
-    def test_gzip_if_content_database(self, bytesio_mock, file_empty_mock):
-        """
-        Check that if we're uploading a gzipped content database and
-        if the BytesIO object has been closed.
-        """
-        filename = "content/databases/myfile.sqlite3"
-        self.storage.save(filename, self.content, blob_object=self.blob_obj)
-        assert self.blob_obj.content_encoding == "gzip"
-        assert bytesio_mock.called
+    def test_gzip_if_content_database(self):
+        self.blob_obj.upload_from_file.side_effect = (
+            lambda stream, **kwargs: self.assertEqual(
+                decompress(stream.read()), b"content"
+            )
+        )
+        self.storage.save(
+            "content/databases/myfile.sqlite3", self.content, blob_object=self.blob_obj
+        )
+        self.blob_obj.upload_from_file.assert_called_once()
+        self.assertEqual(self.blob_obj.content_encoding, "gzip")
 
 
-class GoogleCloudStorageOpenTestCase(TestCase):
+class GoogleCloudStorageOpenTestCase(SimpleTestCase):
     """
     Tests for GoogleCloudStorage.open().
     """
@@ -140,32 +161,35 @@ class GoogleCloudStorageOpenTestCase(TestCase):
         assert f.name
 
 
-class CompositeGCSTestCase(TestCase):
+class CompositeGCSTestCase(SimpleTestCase):
     """
     Tests for the GoogleCloudStorage class.
     """
 
     def setUp(self):
-        mock_client_cls = mock.MagicMock(spec_set=Client)
-        bucket_cls = mock.MagicMock(spec_set=Bucket)
+        emulator = override_settings(GCS_EMULATOR_HOST=None)
+        emulator.enable()
+        self.addCleanup(emulator.disable)
         self.blob_cls = mock.MagicMock(spec_set=Blob)
 
-        self.mock_default_client = mock_client_cls(project="project")
-        self.mock_anon_client = mock_client_cls(project=None)
-
-        self.mock_default_bucket = bucket_cls(self.mock_default_client, "bucket")
+        self.mock_default_client = mock.MagicMock(spec=Client, project="project")
+        self.mock_anon_client = mock.MagicMock(spec=Client, project=None)
+        self.mock_default_bucket = mock.MagicMock(spec_set=Bucket)
+        self.mock_anon_bucket = mock.MagicMock(spec_set=Bucket)
+        self.mock_default_bucket.get_blob.return_value = None
+        self.mock_anon_bucket.get_blob.return_value = None
         self.mock_default_client.get_bucket.return_value = self.mock_default_bucket
-        self.mock_anon_bucket = bucket_cls(self.mock_anon_client, "bucket")
         self.mock_anon_client.get_bucket.return_value = self.mock_anon_bucket
 
         with mock.patch(
-            "contentcuration.utils.gcs_storage._create_default_client",
+            "contentcuration.utils.gcs_storage.Client",
             return_value=self.mock_default_client,
         ), mock.patch(
             "contentcuration.utils.gcs_storage.Client.create_anonymous_client",
             return_value=self.mock_anon_client,
         ):
             self.storage = CompositeGCS()
+            self.storage.backends
 
     def test_get_writeable_backend(self):
         backend = self.storage._get_writeable_backend()
@@ -204,6 +228,19 @@ class CompositeGCSTestCase(TestCase):
         self.mock_default_bucket.get_blob.return_value = mock_blob
         self.storage.delete("blob")
         mock_blob.delete.assert_called()
+
+    def test_generate_upload_url_signs_with_writeable_backend(self):
+        blob = self.mock_default_bucket.blob.return_value
+        blob.generate_signed_url.return_value = "https://signed/upload"
+        url = self.storage.generate_upload_url(
+            "file.jpg", "d41d8cd98f00b204e9800998ecf8427e", 60, 12
+        )
+        self.assertEqual(url, "https://signed/upload")
+        self.mock_default_bucket.blob.assert_called_once_with("file.jpg")
+
+    def test_delete__missing_object_is_a_no_op(self):
+        self.mock_default_bucket.get_blob.return_value = None
+        self.storage.delete("blob")
 
     def test_exists(self):
         self.mock_default_bucket.get_blob.return_value = self.blob_cls("blob", "blob")
@@ -244,10 +281,144 @@ class CompositeGCSTestCase(TestCase):
         )
 
     def test_get_stored_object_md5__returns_none_if_not_found(self):
-        # Regression: a not-yet-uploaded object is in no backend, so
-        # _get_readable_backend raises FileNotFoundError. get_stored_object_md5
-        # must swallow that and return None (else the resumable upload_url
-        # endpoint 500s on every new file), not propagate the error.
         self.mock_default_bucket.get_blob.return_value = None
-        self.mock_anon_bucket.get_blob.return_value = None
         self.assertIsNone(self.storage.get_stored_object_md5("blob"))
+
+    def test_get_stored_object_md5_ignores_read_through_bucket(self):
+        self.mock_default_bucket.get_blob.return_value = None
+        blob = self.blob_cls("blob", "blob")
+        blob.md5_hash = hex_to_base64("d41d8cd98f00b204e9800998ecf8427e")
+        self.mock_anon_bucket.get_blob.return_value = blob
+        self.assertIsNone(self.storage.get_stored_object_md5("blob"))
+        self.mock_anon_bucket.get_blob.assert_not_called()
+
+
+class LazyCompositeGCSTestCase(SimpleTestCase):
+    def test_clients_are_created_once_on_first_use(self):
+        with override_settings(GCS_EMULATOR_HOST="http://localhost:4443"), mock.patch(
+            "contentcuration.utils.gcs_storage.Client"
+        ) as client, mock.patch(
+            "contentcuration.utils.gcs_storage.Client.create_anonymous_client"
+        ):
+            storage = CompositeGCS()
+            client.assert_not_called()
+            storage.exists("first")
+            storage.exists("second")
+            client.assert_called_once()
+            client.create_anonymous_client.assert_not_called()
+
+    @override_settings(GCS_EMULATOR_HOST="http://emulator:4443")
+    @mock.patch.dict("os.environ", {"STORAGE_EMULATOR_HOST": "http://emulator:4443"})
+    @mock.patch("requests.adapters.HTTPAdapter.send", autospec=True)
+    def test_stalled_emulator_bucket_lookup_is_bounded(self, send):
+        send.side_effect = requests.exceptions.ReadTimeout
+        with self.assertRaisesMessage(ImproperlyConfigured, "http://emulator:4443"):
+            CompositeGCS().exists("first")
+        send.assert_called_once()
+        self.assertEqual(send.call_args.kwargs["timeout"], 5)
+        self.assertEqual(
+            send.call_args.args[1].path_url.partition("?")[0], "/storage/v1/b/content"
+        )
+
+    @override_settings(GCS_EMULATOR_HOST="http://emulator:4443")
+    @mock.patch.dict("os.environ", {"STORAGE_EMULATOR_HOST": "http://emulator:4443"})
+    @mock.patch("requests.adapters.HTTPAdapter.send", autospec=True)
+    def test_emulator_reuses_fetched_bucket(self, send):
+        response = requests.Response()
+        response.status_code = 200
+        response._content = b'{"name": "content"}'
+        send.return_value = response
+
+        storage = CompositeGCS()
+        self.assertTrue(storage.exists("first"))
+        self.assertTrue(storage.exists("second"))
+        self.assertEqual(
+            [call.args[1].path_url.partition("?")[0] for call in send.call_args_list],
+            [
+                "/storage/v1/b/content",
+                "/storage/v1/b/content/o/first",
+                "/storage/v1/b/content/o/second",
+            ],
+        )
+
+    def _emulator_storage(self, *responses):
+        bucket = requests.Response()
+        bucket.status_code = 200
+        bucket._content = b'{"name": "bucket"}'
+        transport = mock.Mock(spec=requests.Session)
+        transport.request.side_effect = [bucket, *responses]
+        client = Client(
+            project="test",
+            credentials=AnonymousCredentials(),
+            _http=transport,
+            client_options={"api_endpoint": "http://emulator:4443"},
+        )
+        return transport, GoogleCloudStorage(client, "bucket")
+
+    def _assert_download(self, expected):
+        metadata = requests.Response()
+        metadata.status_code = 200
+        metadata._content = (
+            b'{"generation": "42", "mediaLink": "http://wrong-host/file"}'
+        )
+        transport, storage = self._emulator_storage()
+
+        def request(method, url, **kwargs):
+            if not kwargs.get("stream"):
+                return metadata
+            prefix = "http://emulator:4443/download/storage/v1/b/bucket/o/"
+            self.assertTrue(url.startswith(prefix), url)
+            key = url.removeprefix(prefix).replace("?alt=media&", "?")
+            key = key.removesuffix("?alt=media").removesuffix("&alt=media")
+            content = {
+                "file": b"latest",
+                "file?generation=42": b"original",
+                "file.bak": b"backup",
+            }[key]
+            response = requests.Response()
+            response.status_code = 200
+            response.headers["content-length"] = str(len(content))
+            response.raw = HTTPResponse(body=BytesIO(content), preload_content=False)
+            return response
+
+        transport.request.side_effect = request
+        with storage.open("file") as downloaded:
+            self.assertEqual(downloaded.read(), expected)
+
+    @override_settings(GCS_EMULATOR_HOST=None)
+    def test_download_preserves_generation(self):
+        self._assert_download(b"original")
+
+    @override_settings(GCS_EMULATOR_HOST="http://emulator:4443")
+    def test_emulator_download_reads_current_generation(self):
+        self._assert_download(b"latest")
+
+    def test_object_without_md5_returns_none(self):
+        metadata = requests.Response()
+        metadata.status_code = 200
+        metadata._content = b'{"name": "clip.mp3"}'
+        _, storage = self._emulator_storage(metadata)
+        self.assertIsNone(storage.get_stored_object_md5("clip.mp3"))
+
+    def test_open_missing_object_raises_file_not_found(self):
+        missing = requests.Response()
+        missing.status_code = 404
+        missing.raw = HTTPResponse(body=BytesIO(b"Not Found"), preload_content=False)
+        missing.request = requests.Request("GET", "http://emulator:4443/").prepare()
+        _, storage = self._emulator_storage(missing)
+        with self.assertRaises(FileNotFoundError):
+            storage.open("file")
+
+
+class EmulatorDownloadURLTestCase(SimpleTestCase):
+    def test_download_through_alias(self):
+        name = f"{uuid4().hex}/file #1.txt"
+        self.addCleanup(default_storage.delete, name)
+        content = b"download through alias"
+        default_storage.save(name, ContentFile(content))
+
+        response = requests.get(
+            default_storage.url(name), headers={"Host": "storage-alias"}, timeout=5
+        )
+        response.raise_for_status()
+        self.assertEqual(response.content, content)

@@ -16,12 +16,6 @@ backoff==2.2.1
     # via -r requirements.in
 billiard==4.2.1
     # via celery
-boto3==1.17.75
-    # via django-s3-storage
-botocore==1.20.75
-    # via
-    #   boto3
-    #   s3transfer
 celery==5.6.3
     # via
     #   -r requirements.in
@@ -61,7 +55,6 @@ django==3.2.24
     #   django-pgtrigger
     #   django-redis
     #   django-registration
-    #   django-s3-storage
     #   djangorestframework
     #   jsonfield
 django-celery-results==2.5.1
@@ -89,8 +82,6 @@ django-prometheus==2.3.1
 django-redis==5.4.0
     # via -r requirements.in
 django-registration==3.4
-    # via -r requirements.in
-django-s3-storage==0.15.0
     # via -r requirements.in
 django-webpack-loader==0.7.0
     # via -r requirements.in
@@ -164,10 +155,6 @@ httplib2==0.19.1
     # via django-postmark
 idna==2.10
     # via requests
-jmespath==0.10.0
-    # via
-    #   boto3
-    #   botocore
 jsonfield==3.1.0
     # via -r requirements.in
 jsonschema==4.26.0
@@ -236,7 +223,6 @@ pyparsing==2.4.7
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in
-    #   botocore
     #   celery
 python-postmark==0.7.0
     # via -r requirements.in
@@ -264,8 +250,6 @@ rpds-py==0.30.0
     #   referencing
 rsa==4.7.2
     # via google-auth
-s3transfer==0.4.2
-    # via boto3
 sentry-sdk==2.48.0
     # via -r requirements.in
 six==1.16.0
@@ -294,7 +278,6 @@ tzlocal==5.3.1
     # via celery
 urllib3==1.26.18
     # via
-    #   botocore
     #   requests
     #   sentry-sdk
 vine==5.1.0
