@@ -11,7 +11,7 @@ This guide will walk through setting up Kolibri Studio for local development, wh
 ## Install system dependencies and services
 Studio requires some background services to be running:
 
-* Minio - a local S3 storage emulation
+* fake-gcs-server - a local Google Cloud Storage emulator
 * PostgreSQL - a relational database
 * Redis - a fast key/value store useful for caching
 
@@ -21,17 +21,11 @@ Studio requires some background services to be running:
 sudo apt-get install -y python-tk \
     postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-16 \
     ffmpeg libmagickwand-dev redis-server wkhtmltopdf
-
-# Install minio
-wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O bin/minio
-sudo chmod +x bin/minio
 ```
 
 ### Mac OS
 ```bash
 brew install postgresql@16 redis ffmpeg imagemagick@6 gs
-# note, this version of minio may not be compatible with Studio
-brew install minio/stable/minio
 brew link --force postgresql@16
 brew link --force imagemagick@6
 ```
@@ -39,6 +33,23 @@ brew link --force imagemagick@6
 ### Windows
 
 Windows is no longer supported due to incompatibilities with some required packages.
+
+### Install the GCS emulator
+
+Download `fake-gcs-server_1.55.1_<OS>_<arch>.tar.gz` from the [v1.55.1 release](https://github.com/fsouza/fake-gcs-server/releases/tag/v1.55.1). Choose `Linux` or `Darwin` for `<OS>` and `amd64` or `arm64` for `<arch>` to match your machine.
+
+Extract the archive and put the `fake-gcs-server` binary on your `PATH`:
+
+```bash
+mkdir -p ~/.local/bin
+tar -xzf fake-gcs-server_1.55.1_Linux_amd64.tar.gz fake-gcs-server
+install -m 755 fake-gcs-server ~/.local/bin/fake-gcs-server
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Use your downloaded archive's filename in the extraction command. Add the `PATH` export to your shell startup file.
+
+`pnpm services` starts the emulator at `http://localhost:4443` with a `content` bucket stored in `~/.fake_gcs_data/content`.
 
 ## Set up the database
 
@@ -140,3 +151,29 @@ Either of the above commands will take a few minutes to build the frontend. When
 - url: `http://localhost:8080/accounts/login/`
 - username: `a@a.com`
 - password: `a`
+
+## Use a real GCS bucket
+
+Export these in every terminal that runs `pnpm services`, `make run-services`, `make devceleryworkers`, `pnpm devsetup` or `pnpm devserver`:
+
+```bash
+export STUDIO_GCS_EMULATOR=0
+export AWS_BUCKET_NAME=your-development-bucket
+export GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS=/absolute/path/to/service-account.json
+```
+
+User credentials cannot sign upload URLs; use a service-account key.
+
+The bucket needs:
+- Read and write access for the service account: `gcloud storage buckets add-iam-policy-binding gs://your-development-bucket --member=serviceAccount:SERVICE_ACCOUNT_EMAIL --role=roles/storage.objectAdmin`, then the same with `--role=roles/storage.legacyBucketReader`.
+- Public read, for previews: `gcloud storage buckets add-iam-policy-binding gs://your-development-bucket --member=allUsers --role=roles/storage.objectViewer`
+- A CORS policy allowing browser uploads from `http://localhost:8080`:
+
+```bash
+cat > cors.json <<'EOF'
+[{"origin": ["http://localhost:8080"], "method": ["GET", "HEAD", "PUT"], "responseHeader": ["Content-Type", "Content-MD5"], "maxAgeSeconds": 3600}]
+EOF
+gcloud storage buckets update gs://your-development-bucket --cors-file=cors.json
+```
+
+Tests always use the emulator, including when `STUDIO_GCS_EMULATOR=0`.

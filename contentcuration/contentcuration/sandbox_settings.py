@@ -6,5 +6,3 @@ DEBUG = True
 DEFAULT_FILE_STORAGE = "contentcuration.utils.gcs_storage.CompositeGCS"
 
 LANGUAGES += (("ar", gettext("Arabic")),)  # noqa
-
-AWS_AUTO_CREATE_BUCKET = True

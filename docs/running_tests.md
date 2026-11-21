@@ -1,7 +1,7 @@
 # Running tests
 
 ## Backend tests
-Make sure you've installed the requirements in `requirements-dev.txt`, set up a virtual environment, and started Studio's necessary services (postgres, minio, and redis). Then you may use the following command to run backend/Python tests:
+Make sure you've installed the requirements in `requirements-dev.txt`, set up a virtual environment, and started Studio's necessary services (postgres, fake-gcs-server, and redis). Then you may use the following command to run backend/Python tests:
 
     make test
 
@@ -11,12 +11,19 @@ Make sure you've installed all frontend requirements (`pnpm install`). Then you 
     pnpm run test
 
 ## Tests within Docker
-You may run either of the above in `docker` by using `docker-compose run studio-app`. For example:
+Run backend tests with:
 
-    docker-compose run studio-app make test
+    make dctest
+
+This sets `GCS_PUBLIC_HOST=gcs:4443` for requests from the app container. Run `make dcservicesdown` when switching between host and container tests.
+
+Run frontend tests with:
+
     docker-compose run studio-app pnpm run test
 
-You may run arbitrary commands in the docker container, including customized test runs like those below, by prepending `docker-compose run studio-app ` to the command.
+For a custom backend test command, run:
+
+    GCS_PUBLIC_HOST=gcs:4443 docker-compose run studio-app pytest --ds=contentcuration.test_settings contentcuration/contentcuration/tests/test_utils.py
 
 ## Customizing Test Runs and Output
 

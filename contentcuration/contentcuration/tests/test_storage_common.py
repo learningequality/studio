@@ -1,12 +1,14 @@
 import hashlib
+import os
 from datetime import timedelta
 from io import BytesIO
+from unittest.mock import patch
 
 import pytest
 import requests
+from django.core.files.storage import default_storage
 from django.core.files.storage import FileSystemStorage
-from django.test import TestCase
-from django_s3_storage.storage import S3Storage
+from django.test import SimpleTestCase
 from mock import MagicMock
 
 from .base import StudioTestCase
@@ -20,7 +22,7 @@ from contentcuration.utils.storage_common import UnknownStorageBackendError
 # The modules we'll test
 
 
-class MimeTypesTestCase(TestCase):
+class MimeTypesTestCase(SimpleTestCase):
     """
     Tests for determining and setting mimetypes.
     """
@@ -64,7 +66,7 @@ class MimeTypesTestCase(TestCase):
         assert typ == "application/octet-stream"
 
 
-class FileSystemStoragePresignedURLTestCase(TestCase):
+class FileSystemStoragePresignedURLTestCase(SimpleTestCase):
     """
     Test cases for generating presigned URLs with the FileSystemStorage backend.
     """
@@ -86,7 +88,7 @@ class FileSystemStoragePresignedURLTestCase(TestCase):
             )
 
 
-class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
+class GoogleCloudStoragePresignedURLUnitTestCase(SimpleTestCase):
     """
     Test cases for generating presigned URLs for GCS.
 
@@ -175,36 +177,7 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         blob.create_resumable_upload_session.assert_called_once()
 
 
-class S3StoragePresignedURLUnitTestCase(StudioTestCase):
-    """
-    Test cases for generating presigned URLs for S3 storage, i.e. Minio.
-    """
-
-    STORAGE = S3Storage()
-
-    def setUp(self):
-        self.client = MagicMock()
-        super().setUp()
-
-    def test_returns_string_if_inputs_are_valid(self):
-        """
-        Sanity check that get_presigned_upload_url returns a string if all arguments
-        are valid.
-        """
-
-        # use a real connection here as a sanity check
-        ret = get_presigned_upload_url(
-            "a/b/abc.jpg",
-            "d41d8cd98f00b204e9800998ecf8427e",
-            10,
-            1,
-            storage=self.STORAGE,
-            client=None,
-        )
-        url = ret["uploadURL"]
-
-        assert isinstance(url, str)
-
+class EmulatorStorageUploadTestCase(StudioTestCase):
     def test_can_upload_file_to_presigned_url(self):
         """
         Test that we can get a 200 OK when we upload a file to the URL returned by get_presigned_upload_url.
@@ -228,3 +201,32 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
             },
         )
         resp.raise_for_status()
+        self.assertTrue(default_storage.exists(filepath))
+
+
+class EmulatorUploadURLTestCase(SimpleTestCase):
+    def test_uses_session_without_signing(self):
+        client = MagicMock()
+        storage = GoogleCloudStorage(client, "bucket")
+        blob = client.get_bucket.return_value.blob.return_value
+        blob.create_resumable_upload_session.return_value = "http://emulator/session"
+        blob.generate_signed_url.side_effect = AssertionError("signing")
+        with patch.dict(os.environ, {"STORAGE_EMULATOR_HOST": "http://localhost:4443"}):
+            result = get_presigned_upload_url(
+                "file.jpg", "d41d8cd98f00b204e9800998ecf8427e", 60, 12, storage=storage
+            )
+        self.assertEqual(result["uploadURL"], "http://emulator/session")
+        self.assertEqual(blob.metadata, {"declared-size": "12"})
+
+    def test_real_bucket_uses_signed_url(self):
+        client = MagicMock()
+        storage = GoogleCloudStorage(client, "bucket")
+        blob = client.get_bucket.return_value.blob.return_value
+        blob.generate_signed_url.return_value = "https://signed/upload"
+        blob.create_resumable_upload_session.side_effect = AssertionError("session")
+        with patch.dict(os.environ):
+            os.environ.pop("STORAGE_EMULATOR_HOST", None)
+            result = get_presigned_upload_url(
+                "file.jpg", "d41d8cd98f00b204e9800998ecf8427e", 60, 12, storage=storage
+            )
+        self.assertEqual(result["uploadURL"], "https://signed/upload")

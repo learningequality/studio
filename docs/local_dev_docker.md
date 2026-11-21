@@ -31,7 +31,7 @@ pnpm install
 
 Studio requires some background services to be running:
 
-* Minio - a local S3 storage emulation
+* fake-gcs-server - a local Google Cloud Storage emulator
 * PostgreSQL (postgres) - a relational database
 * Redis - a fast key/value store useful for caching
 * Celery - the task manager and executor, which relies on the Studio codebase
@@ -48,15 +48,7 @@ make dcservicesup
 make devceleryworkers
 ```
 
-To confirm that docker-based services are running, you should see three containers when executing `docker ps`. For example:
-
-```bash
-> docker ps
-CONTAINER ID        IMAGE                             COMMAND                  CREATED             STATUS              PORTS                    NAMES
-e09c5c203b93        redis:6.0.9                       "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:6379->6379/tcp   studio_vue-refactor_redis_1
-6164371efb6b        minio/minio                       "minio server /data"     51 seconds ago      Up 49 seconds       0.0.0.0:9000->9000/tcp   studio_vue-refactor_minio_1
-c86bbfa3a59e        postgres:12.10                      "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:5432->5432/tcp   studio_vue-refactor_postgres_1
-```
+Run `docker ps` to confirm that `gcs`, `postgres`, and `redis` are running. The GCS emulator uses `fsouza/fake-gcs-server:1.55.1` on port `4443` and stores its `content` bucket in the `gcs` volume.
 
 To stop the services, press <kbd>Ctrl</kbd> + <kbd>C</kbd> in the terminal where you ran `make run-services` (or `dcservicesup`). Once you've done that, you may run the following command to remove the docker containers (they will be recreated when you run `run-services` or `dcservicesup` again):
 ```bash
@@ -91,3 +83,5 @@ make devceleryworkers
 ```
 
 Stop and restart the above to reload your changes.
+
+For development against a real GCS bucket, see [Use a real GCS bucket](./local_dev_host.md#use-a-real-gcs-bucket).
