@@ -14,8 +14,11 @@ INSTALLED_APPS += ("django_concurrent_tests",)  # noqa F405
 
 MANAGE_PY_PATH = "./contentcuration/manage.py"
 
-os.environ.setdefault("STORAGE_EMULATOR_HOST", "http://localhost:4443")
+os.environ["STORAGE_EMULATOR_HOST"] = (
+    os.environ.get("STORAGE_EMULATOR_HOST") or "http://localhost:4443"
+)
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "studio-emulator")
-AWS_S3_ENDPOINT_URL = os.environ["STORAGE_EMULATOR_HOST"]
-AWS_S3_BUCKET_NAME = "content"
+GCS_EMULATOR_HOST = os.environ["STORAGE_EMULATOR_HOST"]
+GCS_ENDPOINT_URL = GCS_EMULATOR_HOST
+GCS_BUCKET_NAME = "content"
 GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH = None

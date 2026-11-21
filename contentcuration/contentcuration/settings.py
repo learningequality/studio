@@ -361,10 +361,11 @@ ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
 
 # CLOUD STORAGE SETTINGS
 DEFAULT_FILE_STORAGE = "contentcuration.utils.gcs_storage.CompositeGCS"
-AWS_S3_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME") or "content"
-AWS_S3_ENDPOINT_URL = (
+GCS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME") or "content"
+GCS_EMULATOR_HOST = os.getenv("STORAGE_EMULATOR_HOST") or None
+GCS_ENDPOINT_URL = (
     os.getenv("AWS_S3_ENDPOINT_URL")
-    or os.getenv("STORAGE_EMULATOR_HOST")
+    or GCS_EMULATOR_HOST
     or "https://storage.googleapis.com"
 )
 

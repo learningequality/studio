@@ -1,9 +1,9 @@
 import hashlib
-import os
 import uuid
 from unittest import mock
 
 import requests
+from django.conf import settings
 from django.core.files.storage import default_storage
 from django.urls import reverse
 from le_utils.constants import content_kinds
@@ -831,6 +831,7 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
 
     @mock.patch("contentcuration.viewsets.file.default_storage")
     def test_resumable_returns_session_when_not_stored(self, mock_storage):
+        self.file["name"] = "mismatched.pdf"
         mock_storage.get_stored_object_md5.return_value = None
         mock_storage.create_resumable_upload_session.return_value = (
             "https://session.url"
@@ -844,7 +845,11 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
         assert data["alreadyUploaded"] is False
         assert "file" in data
         assert data["file"]["id"]
-        mock_storage.create_resumable_upload_session.assert_called_once()
+        key = data["file"]["url"].removeprefix("/content/")
+        mock_storage.get_stored_object_md5.assert_called_once_with(key)
+        mock_storage.create_resumable_upload_session.assert_called_once_with(
+            key, self.file["checksum"], self.file["size"]
+        )
 
     @mock.patch("contentcuration.viewsets.file.default_storage")
     def test_resumable_skips_when_already_stored(self, mock_storage):
@@ -869,9 +874,7 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["resumable"])
-        self.assertTrue(
-            data["uploadURL"].startswith(os.environ["STORAGE_EMULATOR_HOST"] + "/")
-        )
+        self.assertTrue(data["uploadURL"].startswith(settings.GCS_EMULATOR_HOST + "/"))
         path = models.generate_object_storage_name(self.file["checksum"], "audio.mp3")
         self.addCleanup(default_storage.delete, path)
         upload = requests.put(data["uploadURL"], data=content, timeout=30)

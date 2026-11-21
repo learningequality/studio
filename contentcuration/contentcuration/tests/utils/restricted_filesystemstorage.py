@@ -2,6 +2,15 @@ from django.core.files.storage import FileSystemStorage
 
 
 class RestrictedFileSystemStorage:
+    """
+    A wrapper around FileSystemStorage that is restricted to more closely match
+    the behavior of GoogleCloudStorage which is used in production. In particuler,
+    it does not expose the `path` method, and opening files for writing
+    is not allowed.
+    This cannot be solved by just mocking the `path` method, because
+    it is used by the `FileSystemStorage` class internally.
+    """
+
     def __init__(self, *args, **kwargs):
         self._inner = FileSystemStorage(*args, **kwargs)
 

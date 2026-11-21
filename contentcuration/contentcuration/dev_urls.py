@@ -1,4 +1,3 @@
-import os
 import urllib.parse
 
 from django.conf import settings
@@ -13,7 +12,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from .urls import urlpatterns
-from contentcuration.utils.gcs_storage import is_emulating
+from .utils.files import emulator_download_url
 
 
 def webpack_redirect_view(request):
@@ -25,24 +24,29 @@ def webpack_redirect_view(request):
 
 
 def file_server(request, storage_path=None):
+    """
+    Development fallback to redirect file storage requests to GCS or its emulator
+    """
     if storage_path is None:
         return HttpResponseNotFound()
 
-    if is_emulating():
-        emulator = urllib.parse.urlparse(os.environ["STORAGE_EMULATOR_HOST"])
+    if settings.GCS_EMULATOR_HOST:
+        emulator = urllib.parse.urlparse(settings.GCS_EMULATOR_HOST)
         hostname = urllib.parse.urlsplit("//" + request.get_host()).hostname
         if ":" in hostname:
             hostname = "[{}]".format(hostname)
         authority = (
             "{}:{}".format(hostname, emulator.port) if emulator.port else hostname
         )
-        url = "{}://{}/download/storage/v1/b/{}/o/{}".format(
-            emulator.scheme, authority, settings.AWS_S3_BUCKET_NAME, storage_path
+        url = emulator_download_url(
+            "{}://{}".format(emulator.scheme, authority),
+            settings.GCS_BUCKET_NAME,
+            storage_path,
         )
     else:
         url = "{}/{}/{}".format(
-            settings.AWS_S3_ENDPOINT_URL.rstrip("/"),
-            settings.AWS_S3_BUCKET_NAME,
+            settings.GCS_ENDPOINT_URL.rstrip("/"),
+            settings.GCS_BUCKET_NAME,
             storage_path,
         )
     return HttpResponseRedirect(url)

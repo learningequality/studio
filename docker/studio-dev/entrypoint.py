@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+"""
+The entrypoint for the studio-app docker image for development purposes.
+This script is not used in the production, develop, or staging setups (k8s).
+
+It currently has the following responsibilities:
+  - Waits for postgres and the GCS emulator to be ready
+  - Runs the studio setup command
+  - Run the CMD specified in the Dockerfile or passed in via docker compose file
+"""
 import logging
 import os
 import subprocess
@@ -41,14 +50,21 @@ def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
 def check_gcs_ready(gcs_checks=CONNECT_TRIES):
     import requests
 
+    """
+    Check that the GCS emulator is accepting requests.
+    """
+    if os.getenv("STUDIO_GCS_EMULATOR") == "0":
+        return True
+
     host = os.getenv("STORAGE_EMULATOR_HOST") or "http://localhost:4443"
     url = host.rstrip("/") + "/_internal/healthcheck"
     while True:
+        # Catch connection errors, as they will be thrown if the GCS emulator is not ready
         try:
-            robj = requests.get(url)
+            robj = requests.get(url, timeout=5)
             if robj.status_code == 200:
                 return True
-        except requests.exceptions.ConnectionError:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             pass
 
         if not gcs_checks:

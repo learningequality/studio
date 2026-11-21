@@ -253,17 +253,19 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
             )
 
         filepath = generate_object_storage_name(
-            checksum, filename, default_ext=".{}".format(file_format)
+            checksum, "{}.{}".format(checksum, file_format)
         )
-        if resumable and hasattr(default_storage, "create_resumable_upload_session"):
+        if resumable:
             # Resumable response omits mimetype/might_skip.
             stored = default_storage.get_stored_object_md5(filepath) == checksum
             retval = {
                 "resumable": True,
-                "uploadURL": None
-                if stored
-                else default_storage.create_resumable_upload_session(
-                    filepath, checksum, size
+                "uploadURL": (
+                    None
+                    if stored
+                    else default_storage.create_resumable_upload_session(
+                        filepath, checksum, size
+                    )
                 ),
                 "alreadyUploaded": stored,
             }

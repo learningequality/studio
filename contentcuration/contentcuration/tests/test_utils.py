@@ -1,9 +1,12 @@
 from io import BytesIO
+from unittest.mock import patch
 
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.management import call_command
+from django.test import override_settings
+from django.test import SimpleTestCase
 from django.test import TestCase
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
@@ -28,6 +31,22 @@ class TestTheTestsTestCase(StudioTestCase):
         This test checks that the Django settings for the test suite are properly set.
         """
         assert settings.RUNNING_TESTS
+
+
+class EmulatorFileDiffTestCase(SimpleTestCase):
+    @override_settings(
+        GCS_BUCKET_NAME="content",
+        GCS_ENDPOINT_URL="http://alias:4443",
+        GCS_EMULATOR_HOST="http://alias:4443",
+    )
+    @patch("contentcuration.utils.files.requests.Session")
+    def test_head_uses_host_independent_route(self, session):
+        head = session.return_value.head
+        head.return_value.status_code = 200
+        self.assertEqual(get_file_diff(["abc.jpg"]), [])
+        head.assert_called_once_with(
+            "http://alias:4443/download/storage/v1/b/content/o/storage/a/b/abc.jpg"
+        )
 
 
 class GetFileDiffTestCase(StudioTestCase):

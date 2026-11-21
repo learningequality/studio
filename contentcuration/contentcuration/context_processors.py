@@ -16,9 +16,9 @@ def site_variables(request):
         "BETA_MODE": settings.BETA_MODE,
         "DEPRECATED": "contentworkshop" in request.get_host(),
         "STORAGE_BASE_URL": "{bucket}/{storage_root}/".format(
-            bucket=settings.AWS_S3_BUCKET_NAME, storage_root=settings.STORAGE_ROOT
+            bucket=settings.GCS_BUCKET_NAME, storage_root=settings.STORAGE_ROOT
         ),
-        "STORAGE_HOST": settings.AWS_S3_ENDPOINT_URL,
+        "STORAGE_HOST": settings.GCS_ENDPOINT_URL,
         "DEBUG": settings.DEBUG,
         "LANG_INFO": json_for_parse_from_data(language_globals()),
         "LOGGED_IN": not request.user.is_anonymous,

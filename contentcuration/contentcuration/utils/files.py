@@ -7,6 +7,7 @@ import re
 import tempfile
 from io import BytesIO
 from multiprocessing.dummy import Pool
+from urllib.parse import quote
 
 import requests
 from django.conf import settings
@@ -50,6 +51,12 @@ def create_file_from_contents(
     return result
 
 
+def emulator_download_url(endpoint, bucket, name):
+    return "{}/download/storage/v1/b/{}/o/{}".format(
+        endpoint.rstrip("/"), bucket, quote(name)
+    )
+
+
 def get_file_diff(files):
     """Given a list of filenames as strings, find the filenames that aren't in our
     storage, and return.
@@ -71,9 +78,14 @@ def get_file_diff(files):
 
     def check_file_url(f):
         filepath = generate_object_storage_name(os.path.splitext(f)[0], f)
-        url = "/".join(
-            [settings.AWS_S3_ENDPOINT_URL, settings.AWS_S3_BUCKET_NAME, filepath]
-        )
+        if settings.GCS_EMULATOR_HOST:
+            url = emulator_download_url(
+                settings.GCS_EMULATOR_HOST, settings.GCS_BUCKET_NAME, filepath
+            )
+        else:
+            url = "/".join(
+                [settings.GCS_ENDPOINT_URL, settings.GCS_BUCKET_NAME, filepath]
+            )
         resp = session.head(url)
         if resp.status_code != 200:
             ret.append(f)
