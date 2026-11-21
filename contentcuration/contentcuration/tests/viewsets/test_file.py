@@ -831,7 +831,6 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
 
     @mock.patch("contentcuration.viewsets.file.default_storage")
     def test_resumable_returns_session_when_not_stored(self, mock_storage):
-        self.file["name"] = "mismatched.pdf"
         mock_storage.get_stored_object_md5.return_value = None
         mock_storage.create_resumable_upload_session.return_value = (
             "https://session.url"
@@ -864,7 +863,8 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
         mock_storage.create_resumable_upload_session.assert_not_called()
 
     def test_resumable_upload_to_emulator(self):
-        content = b"resumable audio upload"
+        content = uuid.uuid4().bytes
+        self.file["name"] = "mismatched.pdf"
         self.file["size"] = len(content)
         self.file["checksum"] = hashlib.md5(content).hexdigest()
         self.client.force_authenticate(user=self.user)
@@ -879,4 +879,12 @@ class ResumableUploadURLTestCase(StudioAPITestCase):
         self.addCleanup(default_storage.delete, path)
         upload = requests.put(data["uploadURL"], data=content, timeout=30)
         upload.raise_for_status()
-        self.assertTrue(default_storage.exists(path))
+        saved = models.File.objects.get(pk=data["file"]["id"])
+        self.assertEqual(saved.file_on_disk.name, path)
+        self.assertEqual(data["file"]["url"], "/content/" + path)
+        with saved.file_on_disk.open("rb") as stored:
+            self.assertEqual(stored.read(), content)
+        repeat = self.client.post(reverse("file-upload-url"), self.file, format="json")
+        self.assertEqual(repeat.status_code, 200)
+        self.assertTrue(repeat.json()["alreadyUploaded"])
+        self.assertIsNone(repeat.json()["uploadURL"])

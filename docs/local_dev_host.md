@@ -154,6 +154,8 @@ Either of the above commands will take a few minutes to build the frontend. When
 
 ## Use a real GCS bucket
 
+`make dcup` and `make dctest` always use the emulator.
+
 Export these in every terminal that runs `pnpm services`, `make run-services`, `make devceleryworkers`, `pnpm devsetup` or `pnpm devserver`:
 
 ```bash

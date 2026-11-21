@@ -2,13 +2,11 @@ x-studio-environment:
   &studio-environment
     MPLBACKEND: ps
     SHELL: /bin/bash
-    STUDIO_GCS_EMULATOR: "${STUDIO_GCS_EMULATOR:-1}"
-    STORAGE_EMULATOR_HOST: ${STORAGE_EMULATOR_HOST:-http://gcs:4443}
-    GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-studio-emulator}
-    AWS_BUCKET_NAME: ${AWS_BUCKET_NAME:-content}
-    AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-https://storage.googleapis.com}
-    DATA_DB_HOST: postgres
+    STORAGE_EMULATOR_HOST: http://gcs:4443
+    GOOGLE_CLOUD_PROJECT: studio-emulator
+    AWS_BUCKET_NAME: content
     DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
+    DATA_DB_HOST: postgres
     CELERY_TIMEZONE: America/Los_Angeles
     CELERY_REDIS_DB: 0
     CELERY_BROKER_ENDPOINT: redis
@@ -55,7 +53,6 @@ services:
     <<: *studio-worker
     command: make prodceleryworkers
 
-  # this service is for development emulation only
   gcs:
     image: fsouza/fake-gcs-server:1.55.1
     entrypoint: ["sh", "-c", "mkdir -p /storage/content && exec /bin/fake-gcs-server \"$$@\"", "--"]

@@ -68,16 +68,19 @@ class GoogleCloudStorage(Storage):
                 " Please use Storage.save() instead."
             )
 
-        if not blob_object:
+        if blob_object is None:
             # the old studio storage had a prefix if /contentworkshop_content/
             # before the path; remove that first before passing it in to GCS
             # TODO (aron): remove hack once we've migrated all File models to remove the prefix
             if name.startswith(OLD_STUDIO_STORAGE_PREFIX):
                 name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
-            metadata = self.bucket.get_blob(name)
-            if metadata is None:
-                raise FileNotFoundError("{} not found".format(name))
-            blob = self.bucket.blob(name, generation=metadata.generation)
+            if settings.GCS_EMULATOR_HOST:
+                blob = self.bucket.blob(name)
+            else:
+                metadata = self.bucket.get_blob(name)
+                if metadata is None:
+                    raise FileNotFoundError("{} not found".format(name))
+                blob = self.bucket.blob(name, generation=metadata.generation)
         else:
             blob = blob_object
 
@@ -143,7 +146,6 @@ class GoogleCloudStorage(Storage):
                 fobj.seek(0)
             blob.upload_from_file(fobj, content_type=content_type)
         finally:
-            # Close StringIO object and discard memory buffer if created
             if buffer is not None:
                 buffer.close()
 
@@ -213,16 +215,13 @@ class GoogleCloudStorage(Storage):
 
     def generate_upload_url(self, name, md5, lifetime_sec, size):
         """
-        :param md5: hex-encoded md5 of the file; the uploader must send it
+        :param md5: hex-encoded md5 of the file; signed PUT requests send it
             base64-encoded as the Content-MD5 header.
         :param lifetime_sec: lifetime of the URL, in seconds.
         :param size: the size of the file, in bytes.
         """
         if settings.GCS_EMULATOR_HOST:
             return self.create_resumable_upload_session(name, md5, size)
-        # convert the lifetime to a timedelta, so gcloud library will interpret the lifetime
-        # as the seconds from right now. If we use an absolute integer, it's the number of seconds
-        # from unix time
         return self.bucket.blob(name).generate_signed_url(
             method="PUT",
             content_md5=hex_to_base64(md5).strip(),
@@ -232,7 +231,9 @@ class GoogleCloudStorage(Storage):
 
     def get_stored_object_md5(self, name):
         blob = self.bucket.get_blob(name)
-        return base64_to_hex(blob.md5_hash) if blob is not None else None
+        return (
+            base64_to_hex(blob.md5_hash) if blob is not None and blob.md5_hash else None
+        )
 
 
 class CompositeGCS(Storage):
@@ -327,11 +328,4 @@ class CompositeGCS(Storage):
         )
 
     def get_stored_object_md5(self, name):
-        # A not-yet-uploaded object exists in no backend; treat that as "no
-        # stored md5" (None) rather than raising, matching
-        # GoogleCloudStorage.get_stored_object_md5 for a missing blob.
-        try:
-            backend = self._get_readable_backend(name)
-        except FileNotFoundError:
-            return None
-        return backend.get_stored_object_md5(name)
+        return self._get_writeable_backend().get_stored_object_md5(name)

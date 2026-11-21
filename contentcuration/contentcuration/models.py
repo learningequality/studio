@@ -857,10 +857,6 @@ def generate_object_storage_name(checksum, filename, default_ext=""):
 
 
 def generate_storage_url(filename, request=None, *args):
-    """
-    Generate a storage URL for the given content filename.
-    """
-
     path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
     return "/content/{}".format(path)
 

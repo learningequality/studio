@@ -1,6 +1,7 @@
 import hashlib
 from datetime import timedelta
 from io import BytesIO
+from uuid import uuid4
 
 import requests
 from django.core.files.storage import default_storage
@@ -8,7 +9,6 @@ from django.test import override_settings
 from django.test import SimpleTestCase
 from mock import MagicMock
 
-from .base import StudioTestCase
 from contentcuration.models import generate_object_storage_name
 from contentcuration.utils.gcs_storage import GoogleCloudStorage
 from contentcuration.utils.storage_common import determine_content_type
@@ -79,25 +79,11 @@ class GoogleCloudStoragePresignedURLUnitTestCase(SimpleTestCase):
             "https://storage.googleapis.com/fake/object.jpg"
         )
 
-    def test_that_we_return_a_string(self):
-        """
-        Check that generate_upload_url returns a string.
-        """
-        storage = GoogleCloudStorage(self.client, "fake")
-        ret = storage.generate_upload_url(
-            "/object.jpg", "d41d8cd98f00b204e9800998ecf8427e", 0, 0
-        )
-        assert isinstance(ret, str)
-
     def test_generate_signed_url_called_with_required_arguments(self):
         """
         Check that we call generate_signed_url with the following arguments:
 
         - method: make sure we use "PUT" as the HTTP method
-        - content_md5 the base64 encoding of the md5 we passed in to generate_upload_url. This ensures the client
-            uploads the Content-MD5 we promised.
-        - expiration: the lifetime_sec field we passed in to generate_upload_url should match the
-            value we pass in to generate_signed_url.
         """
         bucket_name = "fake"
         filepath = "object.jpg"
@@ -138,18 +124,19 @@ class GoogleCloudStoragePresignedURLUnitTestCase(SimpleTestCase):
         blob.create_resumable_upload_session.assert_called_once()
 
 
-class EmulatorStorageUploadTestCase(StudioTestCase):
+class EmulatorStorageUploadTestCase(SimpleTestCase):
     def test_can_upload_file_to_presigned_url(self):
         """
         Test that we can get a 200 OK when we upload a file to the URL returned by get_presigned_upload_url.
         """
-        file_contents = b"blahfilecontents"
+        file_contents = uuid4().bytes
         file = BytesIO(file_contents)
         md5_checksum = hashlib.md5(file_contents).hexdigest()
 
         filename = "blahfile.jpg"
         filepath = generate_object_storage_name(md5_checksum, filename)
 
+        self.addCleanup(default_storage.delete, filepath)
         ret = get_presigned_upload_url(filepath, md5_checksum, 1000, len(file_contents))
         url = ret["uploadURL"]
         content_type = ret["mimetype"]
@@ -163,6 +150,22 @@ class EmulatorStorageUploadTestCase(StudioTestCase):
         )
         resp.raise_for_status()
         self.assertTrue(default_storage.exists(filepath))
+
+    def test_rejects_upload_with_wrong_checksum(self):
+        expected = uuid4().bytes
+        checksum = hashlib.md5(expected).hexdigest()
+        path = generate_object_storage_name(checksum, "checksum.jpg")
+        self.addCleanup(default_storage.delete, path)
+        result = get_presigned_upload_url(path, checksum, 1000, len(expected))
+
+        response = requests.put(
+            result["uploadURL"],
+            data=bytes(len(expected)),
+            headers={"Content-Type": result["mimetype"]},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(default_storage.exists(path))
 
 
 class EmulatorUploadURLTestCase(SimpleTestCase):

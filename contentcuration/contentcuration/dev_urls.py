@@ -24,9 +24,6 @@ def webpack_redirect_view(request):
 
 
 def file_server(request, storage_path=None):
-    """
-    Development fallback to redirect file storage requests to GCS or its emulator
-    """
     if storage_path is None:
         return HttpResponseNotFound()
 

@@ -1,6 +1,8 @@
 from io import BytesIO
+from threading import Barrier
 from unittest.mock import patch
 
+import requests
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -41,12 +43,36 @@ class EmulatorFileDiffTestCase(SimpleTestCase):
     )
     @patch("contentcuration.utils.files.requests.Session")
     def test_head_uses_host_independent_route(self, session):
-        head = session.return_value.head
+        head = session.return_value.__enter__.return_value.head
         head.return_value.status_code = 200
         self.assertEqual(get_file_diff(["abc.jpg"]), [])
         head.assert_called_once_with(
-            "http://alias:4443/download/storage/v1/b/content/o/storage/a/b/abc.jpg"
+            "http://alias:4443/download/storage/v1/b/content/o/storage/a/b/abc.jpg",
+            timeout=(5, 5),
         )
+
+    @override_settings(GCS_EMULATOR_HOST=None)
+    @patch("contentcuration.utils.files.requests.Session")
+    def test_live_head_has_no_emulator_timeout(self, session):
+        head = session.return_value.__enter__.return_value.head
+        head.return_value.status_code = 200
+        self.assertEqual(get_file_diff(["abc.jpg"]), [])
+        self.assertIsNone(head.call_args.kwargs.get("timeout"))
+
+    @override_settings(GCS_EMULATOR_HOST="http://alias:4443")
+    @patch("contentcuration.utils.files.requests.Session")
+    def test_timeout_stops_queued_requests(self, session):
+        head = session.return_value.__enter__.return_value.head
+        in_flight = Barrier(3, timeout=5)
+
+        def timeout(*args, **kwargs):
+            in_flight.wait()
+            raise requests.Timeout
+
+        head.side_effect = timeout
+        with self.assertRaises(requests.Timeout):
+            get_file_diff([f"abc{i}.jpg" for i in range(20)])
+        self.assertEqual(head.call_count, 3)
 
 
 class GetFileDiffTestCase(StudioTestCase):

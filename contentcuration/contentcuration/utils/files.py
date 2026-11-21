@@ -7,6 +7,7 @@ import re
 import tempfile
 from io import BytesIO
 from multiprocessing.dummy import Pool
+from threading import Event
 from urllib.parse import quote
 
 import requests
@@ -17,7 +18,6 @@ from PIL import Image
 from PIL import ImageFile
 
 from contentcuration.api import write_raw_content_to_storage
-
 
 # Do this to ensure that we infer mimetypes for files properly, specifically
 # zip file and epub files.
@@ -72,29 +72,38 @@ def get_file_diff(files):
     # The threaded method is found to be the fastest -- see
     # https://gist.github.com/aronasorman/57b8c01e5ed2b7cbf876e7734b7b9f38
     # for benchmarking details.
-    ret = []
+    stopped = Event()
+    emulator_host = settings.GCS_EMULATOR_HOST
+    bucket = settings.GCS_BUCKET_NAME
+    timeout = (5, 5) if emulator_host else None
 
-    session = requests.Session()
-
-    def check_file_url(f):
-        filepath = generate_object_storage_name(os.path.splitext(f)[0], f)
-        if settings.GCS_EMULATOR_HOST:
-            url = emulator_download_url(
-                settings.GCS_EMULATOR_HOST, settings.GCS_BUCKET_NAME, filepath
-            )
+    def check_file_url(filename):
+        if stopped.is_set():
+            return None
+        filepath = generate_object_storage_name(os.path.splitext(filename)[0], filename)
+        if emulator_host:
+            url = emulator_download_url(emulator_host, bucket, filepath)
         else:
-            url = "/".join(
-                [settings.GCS_ENDPOINT_URL, settings.GCS_BUCKET_NAME, filepath]
-            )
-        resp = session.head(url)
-        if resp.status_code != 200:
-            ret.append(f)
+            url = "/".join([settings.GCS_ENDPOINT_URL, bucket, filepath])
+        try:
+            response = session.head(url, timeout=timeout)
+        except requests.Timeout:
+            stopped.set()
+            raise
+        if response.status_code != 200:
+            return filename
 
-    # use a pool of 3 threads to make our queries
-    pool = Pool(3)
-    pool.map(check_file_url, files)
-
-    return ret
+    with requests.Session() as session, Pool(3) as pool:
+        try:
+            return [
+                filename
+                for filename in pool.imap_unordered(check_file_url, files)
+                if filename is not None
+            ]
+        finally:
+            stopped.set()
+            pool.close()
+            pool.join()
 
 
 def duplicate_file(

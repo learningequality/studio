@@ -9,6 +9,7 @@ WEBPACK_LOADER["DEFAULT"][  # noqa
 ] = "contentcuration.tests.webpack_loader.TestWebpackLoader"
 
 TEST_ENV = True
+RUNNING_TESTS = True
 
 INSTALLED_APPS += ("django_concurrent_tests",)  # noqa F405
 

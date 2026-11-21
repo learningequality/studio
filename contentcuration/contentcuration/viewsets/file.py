@@ -256,7 +256,6 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
             checksum, "{}.{}".format(checksum, file_format)
         )
         if resumable:
-            # Resumable response omits mimetype/might_skip.
             stored = default_storage.get_stored_object_md5(filepath) == checksum
             retval = {
                 "resumable": True,

@@ -1,12 +1,15 @@
 import os
 import subprocess
 import sys
+from uuid import uuid4
 
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.test import SimpleTestCase
 
 
-def load_storage_settings(module="dev_settings", **env):
+def load_storage_settings(module="dev_settings", *, object_name=None, **env):
     environ = {
         k: v
         for k, v in os.environ.items()
@@ -15,6 +18,16 @@ def load_storage_settings(module="dev_settings", **env):
     environ.pop("AWS_S3_ENDPOINT_URL", None)
     environ["DJANGO_SETTINGS_MODULE"] = "contentcuration." + module
     environ.update(env)
+    probe = """
+import django
+from django.core.files.storage import default_storage
+
+django.setup()
+with default_storage.open(os.environ["STUDIO_TEST_OBJECT"]) as stored:
+    print(stored.read().hex())
+"""
+    if object_name is not None:
+        environ["STUDIO_TEST_OBJECT"] = object_name
     output = subprocess.run(
         [
             sys.executable,
@@ -24,7 +37,8 @@ def load_storage_settings(module="dev_settings", **env):
             "print(s.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH);"
             "print(s.GCS_ENDPOINT_URL);"
             "print(s.GCS_EMULATOR_HOST);"
-            "import os; print(os.environ.get('STORAGE_EMULATOR_HOST'))",
+            "import os; print(os.environ.get('STORAGE_EMULATOR_HOST'))"
+            + (probe if object_name is not None else ""),
         ],
         cwd=settings.BASE_DIR,
         env=environ,
@@ -32,7 +46,7 @@ def load_storage_settings(module="dev_settings", **env):
         text=True,
         check=True,
     ).stdout
-    return output.splitlines()[-5:]
+    return output.splitlines()[-(6 if object_name is not None else 5) :]
 
 
 class DevStorageSettingsTestCase(SimpleTestCase):
@@ -92,3 +106,23 @@ class DevStorageSettingsTestCase(SimpleTestCase):
             load_storage_settings("test_settings", STORAGE_EMULATOR_HOST="")[-2:],
             ["http://localhost:4443", "http://localhost:4443"],
         )
+
+    def test_storage_uses_configured_emulator_host(self):
+        host = "http://gcs:4443"
+        for module in ("dev_settings", "test_settings"):
+            with self.subTest(module=module):
+                result = load_storage_settings(module, STORAGE_EMULATOR_HOST=host)
+                self.assertEqual(result[-3:], [host, host, host])
+
+    def test_default_storage_reads_from_configured_emulator(self):
+        content = b"Studio GCS settings probe"
+        name = default_storage.save(f"settings-probe-{uuid4()}", ContentFile(content))
+        self.addCleanup(default_storage.delete, name)
+        for module in ("dev_settings", "test_settings"):
+            with self.subTest(module=module):
+                result = load_storage_settings(
+                    module,
+                    object_name=name,
+                    STORAGE_EMULATOR_HOST=settings.GCS_EMULATOR_HOST,
+                )
+                self.assertEqual(result[-1], content.hex())
