@@ -5,6 +5,7 @@ from django.urls import reverse
 from contentcuration.constants import community_library_submission as cls_constants
 from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
+from contentcuration.models import Language
 from contentcuration.tests.base import BaseAPITestCase
 from contentcuration.tests.testdata import generated_base64encoding
 
@@ -77,6 +78,70 @@ class PublicAPITestCase(BaseAPITestCase):
         self.assertEqual(first_channel["name"], self.channel.name)
         self.assertEqual(first_channel["id"], self.channel.id)
         self.assertEqual(first_channel["icon_encoding"], generated_base64encoding())
+
+    def _publish_public_channel(self):
+        self.channel.public = True
+        self.channel.main_tree.published = True
+        self.channel.main_tree.save()
+        self.channel.save()
+
+    def test_public_channels_language_filter_returns_matching_channels(self):
+        """
+        Filtering by language returns channels whose included languages
+        contain that language.
+        """
+        self._publish_public_channel()
+        language, _created = Language.objects.get_or_create(
+            id="fr", defaults={"lang_code": "fr", "readable_name": "French"}
+        )
+        self.channel.included_languages.add(language)
+
+        response = self.client.get(self.channel_list_url + "?language=fr")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([c["id"] for c in response.data], [self.channel.id])
+
+    def test_public_channels_language_filter_excludes_other_languages(self):
+        """
+        Filtering by a language the channel does not include excludes it.
+        """
+        self._publish_public_channel()
+        french, _created = Language.objects.get_or_create(
+            id="fr", defaults={"lang_code": "fr", "readable_name": "French"}
+        )
+        Language.objects.get_or_create(
+            id="es", defaults={"lang_code": "es", "readable_name": "Spanish"}
+        )
+        self.channel.included_languages.add(french)
+
+        response = self.client.get(self.channel_list_url + "?language=es")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 0)
+
+    def test_public_channels_language_filter_nonexistent_language_returns_empty(
+        self,
+    ):
+        """
+        Filtering by a language code that does not exist returns no channels.
+        """
+        self._publish_public_channel()
+
+        response = self.client.get(self.channel_list_url + "?language=zz-nonexistent")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 0)
+
+    def test_public_channels_without_language_filter_returns_all_channels(self):
+        """
+        Omitting the language parameter does not filter by language.
+        """
+        self._publish_public_channel()
+
+        response = self.client.get(self.channel_list_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([c["id"] for c in response.data], [self.channel.id])
 
     def test_public_channel_lookup_with_channel_version_token_uses_channel_version(
         self,

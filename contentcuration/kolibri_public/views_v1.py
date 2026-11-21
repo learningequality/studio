@@ -125,7 +125,7 @@ def _get_channel_list_v1(params, identifier=None):
         )
 
     if language_id != "":
-        channels.filter(included_languages__id=language_id)
+        channels = channels.filter(included_languages__id=language_id)
 
     return (
         channels.annotate(
