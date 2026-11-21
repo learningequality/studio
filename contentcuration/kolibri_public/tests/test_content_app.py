@@ -262,6 +262,20 @@ class ContentNodeAPIBase(object):
         )
         self._recurse_and_assert([response.data], [self.root])
 
+    def test_contentnode_tree_uppercase_id(self):
+        lowercase_response = self._get(
+            reverse("publiccontentnode_tree-detail", kwargs={"pk": self.root.id})
+        )
+        uppercase_response = self._get(
+            reverse(
+                "publiccontentnode_tree-detail", kwargs={"pk": self.root.id.upper()}
+            )
+        )
+
+        self.assertEqual(uppercase_response.status_code, 200)
+        self.assertIn("children", uppercase_response.data)
+        self.assertEqual(uppercase_response.data, lowercase_response.data)
+
     def test_contentnode_tree_headers(self):
         channel = models.ChannelMetadata.objects.get()
         channel.last_updated = datetime.datetime.now()
