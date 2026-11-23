@@ -36,6 +36,7 @@ const {
   pasteWithoutFormatting$,
   formatHeader1$,
   formatHeader2$,
+  moreButtonText$,
 } = getTipTapEditorStrings();
 
 // Every editor read the toolbar makes while rendering: undo/redo availability,
@@ -76,10 +77,11 @@ function makeEditorStub({ canUndo = true, canRedo = false, isActive = () => fals
 async function renderToolbar(editorOptions, { insertActions = [], inlineOnly = false } = {}) {
   const user = userEvent.setup();
   const editor = makeEditorStub(editorOptions);
+  const insertActionsRef = ref(insertActions);
   const { container } = render(EditorToolbar, {
     provide: {
       editor: ref(editor),
-      insertActions: ref(insertActions),
+      insertActions: insertActionsRef,
       inlineOnly,
       insertContext: ref({
         editor,
@@ -93,7 +95,13 @@ async function renderToolbar(editorOptions, { insertActions = [], inlineOnly = f
   await nextTick();
   // Every button, not only the `data-toolbar-item` ones: an unmarked control
   // would be a second tab stop.
-  return { user, editor, container, controls: within(container).getAllByRole('button') };
+  return {
+    user,
+    editor,
+    container,
+    insertActions: insertActionsRef,
+    controls: within(container).getAllByRole('button'),
+  };
 }
 
 describe('EditorToolbar roving tabindex', () => {
@@ -480,6 +488,87 @@ describe('EditorToolbar dropdown menus', () => {
 
     expect(screen.getByRole('menu')).toBeVisible();
     expect(container).not.toContainElement(screen.getByRole('menu'));
+  });
+
+  describe('when the toolbar narrows', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    // jsdom measures every control 0 wide, so nothing collapses until they have a width.
+    // It has no ResizeObserver either: a change to the toolbar's items stands in for the
+    // resize that makes KListWithOverflow measure them again.
+    function narrowToolbar(insertActions) {
+      jest.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        bottom: 32,
+        right: 100,
+        width: 100,
+        height: 32,
+      });
+      insertActions.value = [
+        { name: 'widget', title: 'Insert widget', icon: 'add', handler: jest.fn() },
+      ];
+    }
+
+    async function openPasteMenu(user) {
+      const trigger = screen.getByRole('button', { name: pasteOptionsMenu$() });
+      await user.click(trigger);
+      expect(screen.getByRole('menu')).toBeVisible();
+      return trigger;
+    }
+
+    // KListWithOverflow keeps the collapsed paste button in the DOM, hidden, while the menu
+    // is rendered outside the toolbar.
+    it('closes the paste menu when the paste button collapses into More', async () => {
+      const { user, insertActions } = await renderToolbar();
+      const trigger = await openPasteMenu(user);
+
+      narrowToolbar(insertActions);
+
+      await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('hands the focus to More when the open paste menu collapses into it', async () => {
+      const { user, insertActions } = await renderToolbar();
+      await openPasteMenu(user);
+
+      narrowToolbar(insertActions);
+
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: moreButtonText$() })).toHaveFocus(),
+      );
+    });
+
+    // The menu is rendered outside More, so focus in it has left the button.
+    it.each([
+      ['More', (user, more) => more.focus()],
+      [
+        'its open menu',
+        async (user, more) => {
+          await user.click(more);
+          expect(screen.getByRole('menu')).toContainElement(document.activeElement);
+        },
+      ],
+    ])('hands the focus from %s to the first restored control when it widens', async (_, focus) => {
+      const { user, insertActions } = await renderToolbar();
+      const bold = screen.getByRole('button', { name: bold$() });
+      narrowToolbar(insertActions);
+      await waitFor(() => expect(bold).not.toBeVisible());
+      await focus(user, screen.getByRole('button', { name: moreButtonText$() }));
+
+      jest.restoreAllMocks();
+      insertActions.value = [];
+
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: moreButtonText$() })).not.toBeInTheDocument(),
+      );
+      expect(bold).toHaveFocus();
+    });
   });
 
   it('shows the format at the cursor on its trigger', async () => {

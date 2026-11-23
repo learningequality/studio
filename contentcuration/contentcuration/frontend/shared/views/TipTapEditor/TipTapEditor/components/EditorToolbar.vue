@@ -52,12 +52,14 @@
           :role="item.role"
           :aria-label="item.label"
           class="toolbar-group"
+          :data-group="item.name"
         >
           <template v-for="action in item.groupActions">
             <component
               :is="action.component"
               v-if="action.component"
               :key="`component-${action.name}`"
+              :collapsed="isCollapsed(item)"
             />
             <ToolbarButton
               v-else
@@ -82,58 +84,12 @@
       </template>
 
       <template #more="{ overflowItems }">
-        <button
-          class="more-button"
-          data-toolbar-item
-          :class="
-            $computedClass({
-              ':is([aria-expanded=\'true\'])': {
-                color: $themePalette.blue.v_600,
-                background: $themePalette.blue.v_100,
-              },
-            })
-          "
-        >
-          <span>{{ moreButtonText$() }}</span>
-          <img
-            :src="require('../../assets/icon-chevron-down.svg')"
-            aria-hidden="true"
-            class="more-button-icon"
-          >
-          <!-- Not kept inside the toolbar, which scrolls when too narrow, as its other menus -->
-          <KDropdownMenu
-            :options="flatOverflowOptions(overflowItems)"
-            :constrainToScrollParent="false"
-            @select="onOverflowSelect"
-          >
-            <template #option="{ option }">
-              <div
-                class="overflow-item"
-                :style="
-                  option.isActive
-                    ? {
-                      color: $themePalette.blue.v_600,
-                      backgroundColor: $themePalette.blue.v_100,
-                    }
-                    : null
-                "
-              >
-                <KIcon
-                  v-if="option.kIcon"
-                  :icon="option.kIcon"
-                  class="dropdown-item-icon"
-                />
-                <img
-                  v-else
-                  :src="option.icon"
-                  class="dropdown-item-icon"
-                  aria-hidden="true"
-                >
-                <span>{{ option.label }}</span>
-              </div>
-            </template>
-          </KDropdownMenu>
-        </button>
+        <ToolbarMoreButton
+          ref="moreButton"
+          :overflowItems="overflowItems"
+          @update:overflowItems="onCollapse"
+          @release-focus="focusFirstRestored"
+        />
       </template>
     </KListWithOverflow>
 
@@ -170,7 +126,7 @@
 
 <script>
 
-  import { ref, computed, inject } from 'vue';
+  import { ref, computed, inject, nextTick } from 'vue';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { useToolbarActions } from '../composables/useToolbarActions';
@@ -180,6 +136,7 @@
   import FormatDropdown from './toolbar/FormatDropdown.vue';
   import PasteDropdown from './toolbar/PasteDropdown.vue';
   import ToolbarDivider from './toolbar/ToolbarDivider.vue';
+  import ToolbarMoreButton from './toolbar/ToolbarMoreButton.vue';
 
   export default {
     name: 'EditorToolbar',
@@ -188,6 +145,7 @@
       FormatDropdown,
       PasteDropdown,
       ToolbarDivider,
+      ToolbarMoreButton,
     },
     setup(props, { emit }) {
       const toolbarRef = ref(null);
@@ -220,7 +178,6 @@
         scriptFormatting$,
         insertTools$,
         clearFormatting$,
-        moreButtonText$,
       } = getTipTapEditorStrings();
 
       const onInsertToolClick = (tool, event, { fromOverflow } = {}) => {
@@ -244,7 +201,7 @@
       // the wrapper a role="group"; omitting it renders a plain div (for
       // single-action groups that don't need grouping semantics).
       // Actions with a `component` key render that component instead of a
-      // ToolbarButton (e.g. PasteDropdown).
+      // ToolbarButton (e.g. PasteDropdown), told whether its group has collapsed into More.
       const toolbarGroups = computed(() => [
         {
           name: 'textFormat',
@@ -316,35 +273,36 @@
       // An unavailable action keeps its colour on hover, so it doesn't offer a click.
       const unavailableProminentStyle = { ':hover': { backgroundColor: themeTokens().primary } };
 
-      // Flattens the visible overflow groups into a KDropdownMenu-compatible
-      // options array. Maps `title` → `label` and `isAvailable` → `disabled`.
-      // Actions with `dropdownActions` (e.g. PasteDropdown) are expanded into
-      // their constituent items; other component-only actions are skipped.
-      const flatOverflowOptions = overflowItems => {
-        const options = [];
-        const toOption = a => ({
-          ...a,
-          label: a.title,
-          disabled: a.isAvailable !== undefined ? !a.isAvailable : false,
-        });
+      const collapsedGroups = ref([]);
+      const isCollapsed = group => collapsedGroups.value.some(({ name }) => name === group.name);
 
-        for (const group of overflowItems) {
-          if (group.type === 'divider') {
-            options.push(group);
-            continue;
-          }
-          for (const action of group.groupActions) {
-            if (action.dropdownActions) {
-              for (const dropdownAction of action.dropdownActions) {
-                options.push(toOption(dropdownAction));
-              }
-            } else {
-              options.push(toOption(action));
-            }
-          }
+      // KListWithOverflow hides a collapsed group in place, so a control in it loses the focus,
+      // and so does a menu one of them opened, once it closes. More now holds those controls.
+      const moreButton = ref(null);
+      const holdsFocus = group =>
+        group.contains(document.activeElement) ||
+        Boolean(group.querySelector('[aria-expanded="true"]'));
+      const onCollapse = async groups => {
+        // Unset while More renders with the toolbar, when nothing can hold the focus yet.
+        const groupEls = toolbarRef.value?.querySelectorAll('.toolbar-group') ?? [];
+        const lostFocus = Array.from(groupEls).some(
+          group => window.getComputedStyle(group).visibility === 'hidden' && holdsFocus(group),
+        );
+        collapsedGroups.value = groups;
+        if (lostFocus) {
+          await nextTick();
+          moreButton.value.$el.focus();
         }
-
-        return options;
+      };
+      // More, going once every group fits again, emits this before reporting none collapsed,
+      // so `collapsedGroups` still holds the groups now restored.
+      const focusFirstRestored = () => {
+        // Unset once More goes with the whole toolbar, which has nowhere to put the focus.
+        if (!toolbarRef.value) {
+          return;
+        }
+        const [{ name }] = collapsedGroups.value;
+        toolbarRef.value.querySelector(`[data-group="${name}"] [data-toolbar-item]`).focus();
       };
 
       /**
@@ -364,25 +322,22 @@
         return groups;
       });
 
-      const onOverflowSelect = (option, event) => {
-        option.handler(event, { fromOverflow: true });
-      };
-
       return {
         toolbarRef,
         inlineOnly,
         toolbarGroupsWithDividers,
-        flatOverflowOptions,
+        isCollapsed,
+        moreButton,
+        onCollapse,
+        focusFirstRestored,
         historyActions,
         prominentInsertTools,
         unavailableProminentStyle,
         windowIsSmall,
         minimizeAction,
-        onOverflowSelect,
         textFormattingToolbar$,
         historyActions$,
         textFormattingOptions$,
-        moreButtonText$,
       };
     },
   };
@@ -451,50 +406,6 @@
     /* Let it shrink if possible */
     flex: 1;
     flex-grow: 0;
-  }
-
-  .dropdown-item-icon {
-    /* Undoes KIcon's inline-text nudge, which misaligns it with the img icons. */
-    top: 0;
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-  }
-
-  .more-button {
-    display: flex;
-    align-items: center;
-    padding: 4px 8px;
-    cursor: pointer;
-    border: 0;
-    border-radius: 4px;
-    transition: background-color 0.15s ease;
-  }
-
-  .more-button:focus-visible {
-    background: #e6e6e6;
-    border-radius: 4px;
-    outline: 2px solid #0097f2;
-  }
-
-  .more-button-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 4px;
-    transition: transform 0.15s ease;
-  }
-
-  .more-button[aria-expanded='true'] .more-button-icon {
-    transform: rotate(180deg);
-  }
-
-  .overflow-item {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 8px 12px;
-    font-size: 1.2rem;
-    line-height: 140%;
   }
 
   .list-with-overflow-divider {

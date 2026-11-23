@@ -33,6 +33,7 @@
         class="dropdown-arrow"
       >
       <KDropdownMenu
+        ref="menu"
         :options="menuOptions"
         :constrainToScrollParent="false"
         @select="option => option.handler()"
@@ -56,14 +57,26 @@
 
 <script>
 
-  import { computed, defineComponent } from 'vue';
+  import { computed, defineComponent, ref, watch } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'PasteDropdown',
-    setup() {
+    setup(props) {
       const { handlePaste, pasteActions } = useToolbarActions();
+
+      // Collapsed into More, the button is hidden, but the menu is rendered on `body`
+      // and would stay open.
+      const menu = ref(null);
+      watch(
+        () => props.collapsed,
+        collapsed => {
+          if (collapsed) {
+            menu.value.closePopover();
+          }
+        },
+      );
 
       // KDropdownMenu reads each option's `label`.
       const menuOptions = computed(() =>
@@ -73,12 +86,22 @@
       const { paste$, pasteOptions$, pasteOptionsMenu$ } = getTipTapEditorStrings();
 
       return {
+        menu,
         menuOptions,
         handlePaste,
         paste$,
         pasteOptions$,
         pasteOptionsMenu$,
       };
+    },
+    props: {
+      /**
+       * Whether the toolbar has collapsed this button into its More menu.
+       */
+      collapsed: {
+        type: Boolean,
+        default: false,
+      },
     },
   });
 
