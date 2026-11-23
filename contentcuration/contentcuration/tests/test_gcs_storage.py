@@ -68,7 +68,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
 
     def test_uploads_cache_control_private_if_content_database(self):
         """
-        Check that set set a cache-control of private if we're uploading a content database.
+        Check that we set a cache-control of private if we're uploading a content database.
         This ensures that no proxy will cache this file.
         """
         filename = "content/databases/myfile.sqlite3"

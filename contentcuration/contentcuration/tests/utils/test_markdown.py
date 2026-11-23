@@ -15,13 +15,13 @@ class TexMathTestMixin:
         """Test conversion of markdown with inline math to HTML + MathML"""
 
         markdown_text = (
-            "What is the answer to this *question*? $$x\cdot y=z^2$$"  # noqa W605
+            r"What is the answer to this *question*? $$x\cdot y=z^2$$"
         )
         expected = (
             "<p>What is the answer to this <em>question</em>? "
             '<math display="inline">'
             "<semantics><mrow><mi>x</mi><mi>·</mi><mi>y</mi><mo>=</mo><msup><mi>z</mi><mn>2</mn></msup></mrow>"
-            '<annotation encoding="application/x-tex">x\cdot y=z^2</annotation></semantics>'  # noqa W605
+            r'<annotation encoding="application/x-tex">x\cdot y=z^2</annotation></semantics>'
             "</math></p>\n"
         )
 
@@ -122,7 +122,7 @@ class TexMathTestMixin:
             '<math display="block">'
             "<semantics><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>"
             "<mi>n</mi></mrow></munderover><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mi>y</mi></mrow>"
-            '<annotation encoding="application/x-tex">\sum_{i=1}^{n} x_i = y</annotation></semantics>'  # noqa W605
+            r'<annotation encoding="application/x-tex">\sum_{i=1}^{n} x_i = y</annotation></semantics>'
             "</math>"
             "<p>Back to text with more inline: "
             '<math display="inline"><semantics><mrow><msup><mi>z</mi><mn>2</mn></msup></mrow>'
