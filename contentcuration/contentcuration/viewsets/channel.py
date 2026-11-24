@@ -1,7 +1,6 @@
 import logging
 from functools import reduce
 from operator import or_
-from typing import Dict
 from typing import List
 from typing import Union
 
@@ -15,8 +14,8 @@ from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
-from django.http import HttpResponseNotFound
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_cte import With
@@ -883,12 +882,17 @@ class ChannelViewSet(ValuesViewset):
         :return: JsonResponse with exists=True if the language exists, False otherwise
         :rtype: JsonResponse
         """
-        if not self._channel_exists(pk):
-            return HttpResponseNotFound("No channel matching: {}".format(pk))
+        channel = get_object_or_404(
+            models.Channel.filter_view_queryset(
+                models.Channel.objects.all(), request.user
+            ).values("id", "language_id", "main_tree_id"),
+            pk=pk,
+        )
 
-        channel_lang, main_tree_id = self._get_channel_details(pk).values()
-        langs_in_channel = self._get_channel_content_languages(pk, main_tree_id)
-        lang_exists = channel_lang in langs_in_channel
+        langs_in_channel = self._get_channel_content_languages(
+            channel["id"], channel["main_tree_id"]
+        )
+        lang_exists = channel["language_id"] in langs_in_channel
 
         return JsonResponse({"exists": lang_exists})
 
@@ -904,12 +908,16 @@ class ChannelViewSet(ValuesViewset):
         :return: JsonResponse with a list of languages present in the channel
         :rtype: JsonResponse
         """
-        if not self._channel_exists(pk):
-            return HttpResponseNotFound("No channel matching: {}".format(pk))
+        channel = get_object_or_404(
+            models.Channel.filter_view_queryset(
+                models.Channel.objects.all(), request.user
+            ).values("id", "language_id", "main_tree_id"),
+            pk=pk,
+        )
 
-        channel_details = self._get_channel_details(pk)
-        main_tree_id = channel_details.get("main_tree_id")
-        langs_in_content = self._get_channel_content_languages(pk, main_tree_id)
+        langs_in_content = self._get_channel_content_languages(
+            channel["id"], channel["main_tree_id"]
+        )
         return JsonResponse({"languages": langs_in_content})
 
     @action(
@@ -978,43 +986,6 @@ class ChannelViewSet(ValuesViewset):
             channel_id=channel.id
         ).exists()
         return Response({"has_community_library_submission": has_submission})
-
-    def _channel_exists(self, channel_id) -> bool:
-        """
-        Check if a channel exists.
-
-        :param channel_id: The ID of the channel
-        :return: True if the channel exists, False otherwise
-        :rtype: bool
-        """
-        try:
-            return Channel.objects.filter(pk=channel_id).exists()
-        except Exception as e:
-            logging.error(f"Error checking if channel exists: {e}")
-            return False
-
-    def _get_channel_details(self, channel_id) -> Dict[str, any]:
-        """
-        Get the language set for a channel.
-
-        :param channel_id: The ID of the channel
-        :return: The language code set for the channel
-        :rtype: str
-        """
-        try:
-            channel_details = (
-                Channel.objects.filter(pk=channel_id)
-                .values("language_id", "main_tree_id")
-                .first()
-            )
-        except Channel.DoesNotExist as e:
-            logging.error(str(e))
-            channel_details = None
-
-        if not channel_details:
-            channel_details = dict(language_id=None, main_tree_id=None)
-
-        return channel_details
 
     def _get_channel_content_languages(
         self, channel_id, main_tree_id=None
