@@ -1,3 +1,7 @@
+import hashlib
+import hmac
+import json
+import time
 from unittest import mock
 
 import stripe
@@ -433,3 +437,75 @@ class StripeWebhookViewTest(StudioAPITestCase):
         self.assertEqual(response.status_code, 200)
         # Should still only have one subscription
         self.assertEqual(UserSubscription.objects.filter(user=self.user).count(), 1)
+
+
+def _signed_subscription_updated(secret, subscription_id, quantity):
+    payload = json.dumps(
+        {
+            "id": "evt_test",
+            "object": "event",
+            "type": "customer.subscription.updated",
+            "data": {
+                "object": {
+                    "id": subscription_id,
+                    "status": "active",
+                    "cancel_at_period_end": False,
+                    "items": {"data": [{"quantity": quantity}]},
+                }
+            },
+        }
+    )
+    timestamp = int(time.time())
+    signature = hmac.new(
+        secret.encode(), f"{timestamp}.{payload}".encode(), hashlib.sha256
+    ).hexdigest()
+    return payload, f"t={timestamp},v1={signature}"
+
+
+class StripeWebhookSignatureTest(StudioAPITestCase):
+    """Exercise real signature verification, without mocking construct_event."""
+
+    def setUp(self):
+        self.user = testdata.user(email="webhook-signature@test.com")
+        self.subscription = UserSubscription.objects.create(
+            user=self.user,
+            stripe_customer_id="cus_test123",
+            stripe_subscription_id="sub_test123",
+            stripe_subscription_status="active",
+            subscription_disk_space=0,
+        )
+        self.webhook_url = reverse("stripe_webhook")
+
+    def _post(self, secret):
+        payload, signature = _signed_subscription_updated(secret, "sub_test123", 50)
+        return self.client.post(
+            self.webhook_url,
+            data=payload,
+            content_type="application/json",
+            HTTP_STRIPE_SIGNATURE=signature,
+        )
+
+    @override_settings(STRIPE_WEBHOOK_SECRET="")
+    def test_rejects_event_signed_with_empty_secret_when_none_configured(self):
+        with self.assertLogs("contentcuration.views.subscription", "ERROR"):
+            response = self._post("")
+
+        self.assertEqual(response.status_code, 400)
+        self.subscription.refresh_from_db()
+        self.assertEqual(self.subscription.subscription_disk_space, 0)
+
+    @override_settings(STRIPE_WEBHOOK_SECRET="whsec_test_fake")
+    def test_handles_correctly_signed_event_when_secret_configured(self):
+        response = self._post("whsec_test_fake")
+
+        self.assertEqual(response.status_code, 200)
+        self.subscription.refresh_from_db()
+        self.assertEqual(self.subscription.subscription_disk_space, 50 * 10 ** 9)
+
+    @override_settings(STRIPE_WEBHOOK_SECRET="whsec_test_fake")
+    def test_rejects_event_signed_with_wrong_secret(self):
+        response = self._post("")
+
+        self.assertEqual(response.status_code, 400)
+        self.subscription.refresh_from_db()
+        self.assertEqual(self.subscription.subscription_disk_space, 0)
