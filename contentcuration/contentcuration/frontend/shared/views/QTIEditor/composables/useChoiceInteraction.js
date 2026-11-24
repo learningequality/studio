@@ -1,7 +1,7 @@
 import { computed, readonly } from 'vue';
 import { QuestionType } from '../constants';
-import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { choiceInteractionDescriptor } from '../interactions/choice/Descriptor';
+import { newChoice } from '../interactions/choice/parse';
 import { useInteraction } from './useInteraction';
 
 /**
@@ -22,10 +22,7 @@ export function useChoiceInteraction(interactionBlock, questionType) {
   function addChoice() {
     state.value = {
       ...state.value,
-      choices: [
-        ...state.value.choices,
-        { id: generateRandomSlug('choice'), content: '', correct: false },
-      ],
+      choices: [...state.value.choices, newChoice()],
     };
   }
 

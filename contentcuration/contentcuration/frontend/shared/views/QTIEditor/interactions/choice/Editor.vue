@@ -381,10 +381,7 @@
       watch(
         () => props.mode,
         newMode => {
-          if (newMode === 'edit') {
-            // Open the question, the first thing in the card, so the card opens at its start.
-            openQuestion();
-          } else {
+          if (newMode !== 'edit') {
             isQuestionOpen.value = false;
             openChoiceId.value = null;
           }
@@ -542,6 +539,9 @@
       const answersHeaderId = generateRandomSlug('answers-header');
 
       return {
+        // Public: opens the question for editing, which focuses it.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus: openQuestion,
         EditorImageProcessor,
         getPromptWrapperClass,
         promptWrapperStyle,

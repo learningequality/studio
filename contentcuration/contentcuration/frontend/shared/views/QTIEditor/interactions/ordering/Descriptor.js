@@ -1,6 +1,11 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
 import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseOrderingInteraction, buildOrderingInteractionXML } from './parse';
+import {
+  exportOrderingContent,
+  getOrderingConversionFormat,
+  importOrderingContent,
+} from './convert';
 import { validateOrderingInteraction } from './validation';
 
 /**
@@ -12,7 +17,6 @@ export class OrderingInteractionDescriptor extends InteractionDescriptor {
       type: QtiInteraction.ORDER,
       questionTypes: [QuestionType.ORDERING],
     });
-    this.convertsFrom = [];
   }
 
   getTypeOptions(tr) {
@@ -74,6 +78,29 @@ export class OrderingInteractionDescriptor extends InteractionDescriptor {
    */
   validate(state) {
     return validateOrderingInteraction(state);
+  }
+
+  /**
+   * @returns {import('../../conversion').ConversionFormat}
+   */
+  getConversionFormat() {
+    return getOrderingConversionFormat();
+  }
+
+  /**
+   * @param {object} state - OrderingState
+   * @returns {import('../../conversion').ConvertibleContent}
+   */
+  exportContent(state) {
+    return exportOrderingContent(state);
+  }
+
+  /**
+   * @param {import('../../conversion').ConvertibleContent} content
+   * @returns {object} OrderingState
+   */
+  importContent(content) {
+    return importOrderingContent(content);
   }
 }
 

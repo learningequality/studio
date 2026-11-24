@@ -434,3 +434,57 @@ describe('TipTapEditor — inline-only mode', () => {
     expect(screen.queryAllByRole('dialog')).toEqual([]);
   });
 });
+
+describe('TipTapEditor — focusing when it switches into edit mode', () => {
+  // Focusing scrolls the caret into view, which reads layout that jsdom doesn't have.
+  const rect = { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 };
+  beforeAll(() => {
+    Range.prototype.getClientRects = () => [rect];
+    Range.prototype.getBoundingClientRect = () => rect;
+    Element.prototype.getClientRects = () => [rect];
+  });
+  afterAll(() => {
+    delete Range.prototype.getClientRects;
+    delete Range.prototype.getBoundingClientRect;
+    delete Element.prototype.getClientRects;
+  });
+
+  // Switched to edit mode, with autofocus, as soon as it mounts: before the editor is ready.
+  const renderOpenedAtOnce = () => {
+    const ready = jest.fn();
+    render(
+      {
+        components: { TipTapEditor },
+        data: () => ({ mode: 'view', autofocus: false }),
+        mounted() {
+          this.mode = 'edit';
+          this.autofocus = true;
+        },
+        template: `<TipTapEditor
+          value="<p>question</p>"
+          format="html"
+          :mode="mode"
+          :autofocus="autofocus"
+          @ready="$listeners.ready"
+        />`,
+      },
+      { listeners: { ready }, routes: new VueRouter() },
+    );
+    return ready;
+  };
+
+  it('takes focus once it is ready when it was switched before then', async () => {
+    // A browser can paint, and run TipTap's focus, before the timeout in which TipTap puts its
+    // content into the page; jsdom always runs the timeout first.
+    const requestAnimationFrame = jest
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(callback => callback());
+    try {
+      const ready = renderOpenedAtOnce();
+      await waitFor(() => expect(ready).toHaveBeenCalled());
+      await waitFor(() => expect(document.activeElement.closest('.ProseMirror')).not.toBeNull());
+    } finally {
+      requestAnimationFrame.mockRestore();
+    }
+  });
+});
