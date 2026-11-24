@@ -1295,13 +1295,6 @@ class ChannelLanguageTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
 
-    def test_language_actions_non_member_gets_404(self):
-        for url_path in ("channel-language-exists", "channel-languages"):
-            response = self._perform_action(
-                url_path, self.channel.id, user=self.non_member
-            )
-            self.assertEqual(response.status_code, 404, response.content)
-
     def test_language_actions_nonexistent_channel_matches_non_member(self):
         for url_path in ("channel-language-exists", "channel-languages"):
             missing = self._perform_action(

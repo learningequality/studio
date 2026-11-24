@@ -1,7 +1,6 @@
 import logging
 from functools import reduce
 from operator import or_
-from typing import Dict
 from typing import List
 from typing import Union
 
@@ -16,6 +15,7 @@ from django.db.models import Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_cte import With
@@ -882,12 +882,17 @@ class ChannelViewSet(ValuesViewset):
         :return: JsonResponse with exists=True if the language exists, False otherwise
         :rtype: JsonResponse
         """
-        channel = self.get_object()
+        channel = get_object_or_404(
+            models.Channel.filter_view_queryset(
+                models.Channel.objects.all(), request.user
+            ).values("id", "language_id", "main_tree_id"),
+            pk=pk,
+        )
 
         langs_in_channel = self._get_channel_content_languages(
-            channel.id, channel.main_tree_id
+            channel["id"], channel["main_tree_id"]
         )
-        lang_exists = channel.language_id in langs_in_channel
+        lang_exists = channel["language_id"] in langs_in_channel
 
         return JsonResponse({"exists": lang_exists})
 
@@ -903,10 +908,15 @@ class ChannelViewSet(ValuesViewset):
         :return: JsonResponse with a list of languages present in the channel
         :rtype: JsonResponse
         """
-        channel = self.get_object()
+        channel = get_object_or_404(
+            models.Channel.filter_view_queryset(
+                models.Channel.objects.all(), request.user
+            ).values("id", "language_id", "main_tree_id"),
+            pk=pk,
+        )
 
         langs_in_content = self._get_channel_content_languages(
-            channel.id, channel.main_tree_id
+            channel["id"], channel["main_tree_id"]
         )
         return JsonResponse({"languages": langs_in_content})
 
