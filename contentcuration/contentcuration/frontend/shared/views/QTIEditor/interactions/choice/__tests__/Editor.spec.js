@@ -63,6 +63,7 @@ afterEach(() => {
 const choiceLabel = number => tr.$tr('choiceItemLabel', { number });
 const moveUpName = number => dragTr.$tr('moveItemUpLabel', { item: choiceLabel(number) });
 const moveDownName = number => dragTr.$tr('moveItemDownLabel', { item: choiceLabel(number) });
+const deleteButtons = () => screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') });
 
 // `focused` renders it as its card does when the card opens.
 const renderEditor = (props = {}, { focused = false } = {}) =>
@@ -547,8 +548,6 @@ describe('ChoiceInteractionEditor', () => {
         interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      const deleteButtons = () =>
-        screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') });
       // Delete Venus and Earth, keeping Mercury, the correct choice.
       await fireEvent.click(deleteButtons()[2]);
       const lastDeleteButton = deleteButtons()[1];
@@ -606,6 +605,78 @@ describe('ChoiceInteractionEditor', () => {
       });
       expect(screen.queryByText(tr.$tr('warningSingleChoice'))).not.toBeInTheDocument();
       expect(sendPoliteMessage).not.toHaveBeenCalledWith(tr.$tr('warningSingleChoice'));
+    });
+  });
+
+  describe('too many choices warning', () => {
+    const tooManyWarning = () => tr.$tr('warningTooManyChoices', { count: 5 });
+    const choicesXml =
+      count => `<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Pick one.</qti-prompt>
+      ${Array.from(
+        { length: count },
+        (_, i) => `<qti-simple-choice identifier="c${i}">Option ${i}</qti-simple-choice>`,
+      ).join('')}
+    </qti-choice-interaction>`;
+    const choicesDecl =
+      cardinality => `<qti-response-declaration identifier="RESPONSE" cardinality="${cardinality}" base-type="identifier">
+      <qti-correct-response><qti-value>c0</qti-value></qti-correct-response>
+    </qti-response-declaration>`;
+    const renderWithChoices = (count, questionType, cardinality, props = {}) =>
+      renderEditor({
+        interaction: blockWithDecl(choicesXml(count), choicesDecl(cardinality)),
+        questionType,
+        ...props,
+      });
+    describe.each([
+      [QuestionType.SINGLE_SELECT, 'single'],
+      [QuestionType.MULTI_SELECT, 'multiple'],
+    ])('%s', (questionType, cardinality) => {
+      it('does not warn at 5 choices', () => {
+        renderWithChoices(5, questionType, cardinality);
+        expect(screen.queryByText(tooManyWarning())).not.toBeInTheDocument();
+        expect(sendPoliteMessage).not.toHaveBeenCalledWith(tooManyWarning());
+      });
+
+      it('warns and announces at 6 choices without reporting an error', () => {
+        const { emitted } = renderWithChoices(6, questionType, cardinality);
+        expect(
+          within(screen.getByTestId('answersSection')).getByText(tooManyWarning()),
+        ).toBeInTheDocument();
+        expect(sendPoliteMessage).toHaveBeenCalledWith(tooManyWarning());
+        expect(emitted()['update:errors'].at(-1)[0]).toEqual([]);
+      });
+
+      it('warns and announces as soon as a blank 6th choice is added', async () => {
+        renderWithChoices(5, questionType, cardinality);
+        await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addChoiceBtn') }));
+        expect(
+          within(screen.getByTestId('answersSection')).getByText(tooManyWarning()),
+        ).toBeInTheDocument();
+        expect(sendPoliteMessage).toHaveBeenCalledWith(tooManyWarning());
+      });
+
+      it('stops warning once a choice is deleted, leaving 5', async () => {
+        renderWithChoices(6, questionType, cardinality);
+        await fireEvent.click(deleteButtons()[5]);
+        expect(screen.queryByText(tooManyWarning())).not.toBeInTheDocument();
+      });
+
+      it('still adds a 7th choice, without announcing the warning again', async () => {
+        renderWithChoices(6, questionType, cardinality);
+        await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addChoiceBtn') }));
+        expect(deleteButtons()).toHaveLength(7);
+        expect(openTextarea()).toHaveFocus();
+        expect(sendPoliteMessage.mock.calls.filter(([m]) => m === tooManyWarning())).toHaveLength(
+          1,
+        );
+      });
+
+      it('does not warn in view mode', () => {
+        renderWithChoices(6, questionType, cardinality, { mode: 'view', showAnswers: true });
+        expect(screen.queryByText(tooManyWarning())).not.toBeInTheDocument();
+        expect(sendPoliteMessage).not.toHaveBeenCalledWith(tooManyWarning());
+      });
     });
   });
 

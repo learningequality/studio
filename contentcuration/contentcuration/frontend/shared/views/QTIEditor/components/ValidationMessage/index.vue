@@ -39,7 +39,7 @@
       // A polite region inserted already filled is often skipped by screen readers,
       // so announce through KDS's persistent live region instead.
       function announceWarning() {
-        if (props.warning) {
+        if (props.warning && props.alert) {
           sendPoliteMessage(warningText.value.textContent.trim());
         }
       }
@@ -56,8 +56,8 @@
         default: false,
       },
       /**
-       * Whether an error is an alert, read out as it appears. Off when the component showing
-       * it announces its messages itself.
+       * Whether the message is read out as it appears: an error as an alert, a warning
+       * politely. Off when the component showing it announces its messages itself.
        */
       alert: {
         type: Boolean,
