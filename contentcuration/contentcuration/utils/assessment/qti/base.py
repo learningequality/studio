@@ -18,6 +18,7 @@ from pydantic import ConfigDict
 from pydantic import PrivateAttr
 
 from .constants import Dir
+from .constants import MATHML_NAMESPACE
 from .fields import entry_pattern as srcset_entry_pattern
 from contentcuration.utils.assessment.qti.fields import BCP47Language
 
@@ -212,7 +213,8 @@ class RegistryMeta(BaseSequenceMetaclass):
     def get_class_for_tag(cls, tag_name: str) -> Optional[Type]:
         """Get the registered class for a given tag name"""
         cls._ensure_registry_complete()
-        return getattr(cls, "_registry", {}).get(tag_name)
+        local_name = tag_name.removeprefix(f"{{{MATHML_NAMESPACE}}}")
+        return getattr(cls, "_registry", {}).get(local_name)
 
 
 @lru_cache(maxsize=1)

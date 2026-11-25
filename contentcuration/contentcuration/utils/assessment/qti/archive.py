@@ -29,6 +29,7 @@ from contentcuration.utils.assessment.qti.imsmanifest import Metadata
 from contentcuration.utils.assessment.qti.imsmanifest import Resource
 from contentcuration.utils.assessment.qti.imsmanifest import Resources
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
+from contentcuration.utils.assessment.qti.media import render_qti_latex_spans
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
@@ -139,6 +140,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         # depending only on which editor wrote them.
         item_xml = set_qti_item_language(item_xml, self._node_language())
         item_xml = strip_studio_attributes(item_xml)
+        item_xml = render_qti_latex_spans(item_xml)
 
         self._add_resource(
             QTIResource(

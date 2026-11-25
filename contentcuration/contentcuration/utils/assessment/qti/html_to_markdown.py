@@ -25,6 +25,8 @@ from typing import Iterable
 from le_utils.constants import exercises
 from lxml import etree
 
+from contentcuration.utils.assessment.markdown import LATEX_ATTRIBUTE
+from contentcuration.utils.assessment.markdown import latex_source
 from contentcuration.utils.assessment.markdown import STRIKETHROUGH_DECORATION
 from contentcuration.utils.assessment.markdown import UNDERLINE_DECORATION
 from contentcuration.utils.assessment.qti.media import img_pixel_size
@@ -67,7 +69,7 @@ def _render_math(el):
             _localname(annotation) == "annotation"
             and annotation.get("encoding") == "application/x-tex"
         ):
-            return "$${}$${}".format(annotation.text or "", suffix)
+            return latex_source(annotation.text or "") + suffix
     logger.warning("MathML element without an application/x-tex annotation; dropping")
     return ""
 
@@ -102,10 +104,14 @@ def _render_span(el):
     """A decorated span is how a strikethrough and an underline are carried.
 
     ``render_markdown`` writes the first; the editor writes either, since the QTI
-    HTML profile has no ``<s>`` and no ``<u>``. Any other span unwraps, keeping its
-    content: whatever a foreign QTI package styles a span with has nothing in
-    Perseus markdown to say it.
+    HTML profile has no ``<s>`` and no ``<u>``. The editor also writes a formula as
+    an empty span carrying its LaTeX. Any other span unwraps, keeping its content:
+    whatever a foreign QTI package styles a span with has nothing in Perseus
+    markdown to say it.
     """
+    latex = el.get(LATEX_ATTRIBUTE)
+    if latex is not None:
+        return latex_source(latex)
     decorations = _text_decorations(el)
     rendered = _render_inline(el)
     if UNDERLINE_DECORATION in decorations:

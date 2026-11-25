@@ -97,6 +97,13 @@ def test_underlined_span_becomes_a_perseus_underline():
     )
 
 
+def test_formula_span_becomes_double_dollar_latex():
+    assert (
+        _markdown_from_html('<p>Is <span data-latex="x^2"></span> even?</p>')
+        == "Is $$x^2$$ even?"
+    )
+
+
 def test_span_carrying_both_decorations_keeps_both():
     assert (
         _markdown_from_html(

@@ -33,15 +33,18 @@ from contentcuration.tests.testdata import create_studio_file
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.tests.utils.qti.test_convert import _normalize_xml
+from contentcuration.tests.utils.qti.test_media import _with_latex_spans
 from contentcuration.tests.utils.qti.test_perseus_derive import _text_item
 from contentcuration.tests.utils.qti.test_perseus_derive import TOLERANCE_ITEM
 from contentcuration.tests.utils.qti.test_validation import _item_xml
+from contentcuration.tests.utils.qti.test_validation import SINGLE_HINT_CATALOG
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.base import resize_image
 from contentcuration.utils.assessment.perseus import answerless_input_ids
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
+from contentcuration.utils.assessment.qti.constants import MATHML_NAMESPACE
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
@@ -145,6 +148,12 @@ def _mpo_bytes():
     return _exif_rotated_jpeg_bytes(
         "MPO", save_all=True, append_images=[Image.new("RGB", (400, 300))]
     )
+
+
+_FORMULA = '<span data-latex="x^2"></span>'
+FORMULA_CHOICE_ITEM = _with_latex_spans(
+    f"Is {_FORMULA} even?", f"Try {_FORMULA}."
+).replace(">Option A<", f">{_FORMULA}<")
 
 
 SVG_BYTES = b'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"/>'
@@ -2847,6 +2856,23 @@ class TestQTIExerciseCreation(StudioTestCase):
             _canonical_xml(raw_data.replace(' data-studio-prompt=""', "")),
         )
 
+    def test_native_qti_item_formulas_published_as_mathml(self):
+        item = self._create_native_qti_item(FORMULA_CHOICE_ITEM)
+
+        self._create_qti_zip(_exercise_data([item]))
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        item_xml = zip_file.read("items/item_1.xml")
+        root = parse_qti_xml(item_xml).getroot()
+        annotations = root.findall(f".//{{{MATHML_NAMESPACE}}}annotation")
+        self.assertEqual([a.text for a in annotations], ["x^2"] * 3)
+        self.assertEqual(root.xpath("//*[@data-latex]"), [])
+        validation = validate_qti_item(item_xml)
+        self.assertTrue(validation.is_valid, validation.errors)
+        item.refresh_from_db()
+        self.assertEqual(item.raw_data, FORMULA_CHOICE_ITEM)
+
     def test_native_qti_item_media_included_and_addressed(self):
         # fileobj_exercise_image() writes real bytes to storage keyed by their
         # actual md5 checksum + "jpg" ext -- use that real checksum/ext rather
@@ -3224,12 +3250,7 @@ class TestQTIExerciseCreation(StudioTestCase):
 
     def test_native_qti_perseus_derivation(self):
         """A native QTI choice item is derived into a rendered Perseus item JSON."""
-        catalog_info = (
-            '<qti-catalog-info><qti-catalog id="kolibri-hints">'
-            '<qti-card support="ext:kolibri-hint">'
-            "<qti-html-content><p>First hint.</p></qti-html-content>"
-            "</qti-card></qti-catalog></qti-catalog-info>"
-        )
+        catalog_info = SINGLE_HINT_CATALOG.format(hint="First hint.")
         raw_data = VALID_CHOICE_ITEM.replace(
             "<qti-response-processing", catalog_info + "<qti-response-processing"
         )
@@ -3280,6 +3301,22 @@ class TestQTIExerciseCreation(StudioTestCase):
         # The kolibri-hint catalog card is derived back into a Perseus hint.
         hint_content = "".join(hint["content"] for hint in item_json["hints"])
         self.assertIn("First hint.", hint_content)
+
+    def test_native_qti_perseus_derivation_keeps_formulas(self):
+        item = self._create_native_qti_item(FORMULA_CHOICE_ITEM)
+
+        self._create_perseus_zip(_exercise_data([item]))
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        with storage.open(exercise_file.file_on_disk.name, "rb") as f:
+            zip_file = zipfile.ZipFile(BytesIO(f.read()))
+        item_json = json.loads(zip_file.read("item_1.json").decode("utf-8"))
+        self.assertIn("Is $x^2$ even?", item_json["question"]["content"])
+        choices = item_json["question"]["widgets"]["radio 1"]["options"]["choices"]
+        self.assertIn("$x^2$", [choice["content"] for choice in choices])
+        self.assertEqual(
+            [hint["content"] for hint in item_json["hints"]], ["Try $x^2$."]
+        )
 
     def test_native_qti_perseus_derivation_resizes_sized_images(self):
         image_file = fileobj_exercise_image(size=(400, 300), color="blue")
