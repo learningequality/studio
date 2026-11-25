@@ -6,7 +6,6 @@ import zipfile
 
 from django.template.loader import render_to_string
 from django.utils.functional import cached_property
-from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
@@ -14,6 +13,7 @@ from le_utils.constants import format_presets
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
 from contentcuration.utils.assessment.base import image_filenames
 from contentcuration.utils.assessment.base import packageable_answers
+from contentcuration.utils.assessment.qti.archive import qti_package_identifier
 from contentcuration.utils.assessment.qti.convert import accepted_answers
 from contentcuration.utils.assessment.qti.convert import format_number
 from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
@@ -41,8 +41,6 @@ def is_perseus_readable_input_item(assessment_item):
 
 
 def answerless_input_ids(ccnode):
-    """Input questions an exercise's Perseus archive leaves out, judged from
-    stored answers, as exercise.json is written before any item is processed."""
     return {
         item.assessment_id
         for item in ccnode.assessment_items.filter(type=exercises.INPUT_QUESTION)
@@ -70,8 +68,9 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         "true_false": "perseus/multiple_selection.json",
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, qti_item_ids=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.qti_item_ids = qti_item_ids
         # Derived proxies for native QTI items, keyed by source assessment_id.
         # Computed once and reused by both exercise.json and item processing.
         self._derived_cache = None
@@ -82,7 +81,9 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         not be derived (already logged) and so is skipped from the archive."""
         if self._derived_cache is None:
             self._derived_cache = {
-                item.assessment_id: derive_perseus_item(item)
+                item.assessment_id: (
+                    derive_perseus_item(item) if qti_package_identifier(item) else None
+                )
                 for item in self.ccnode.assessment_items.all()
                 if item.type == exercises.QTI
             }
@@ -90,9 +91,6 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
 
     @cached_property
     def _answerless_input_ids(self):
-        """Units keep them: their pre/post test lists every id."""
-        if self.ccnode.kind_id != content_kinds.EXERCISE:
-            return set()
         answerless_ids = answerless_input_ids(self.ccnode)
         for item in self.ccnode.assessment_items.filter(
             assessment_id__in=answerless_ids
@@ -121,12 +119,11 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         if assessment_item.type == exercises.QTI:
             derived = self._derived_items().get(assessment_item.assessment_id)
             if derived is None:
-                # derive_perseus_item already logs why it could not derive.
                 return
             return super().process_assessment_item(derived)
         if assessment_item.type == exercises.PERSEUS_QUESTION:
             self._write_raw_perseus_assets(assessment_item, self.get_image_file_path())
-        if self._derived_items():
+        if self.qti_item_ids:
             # Dual-published: AssessmentMetaData records the QTI manifest id.
             assessment_item = copy.copy(assessment_item)
             assessment_item.assessment_id = hex_to_qti_id(assessment_item.assessment_id)
@@ -158,14 +155,6 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         return f"${exercises.IMG_PLACEHOLDER}/images"
 
     def _exercise_data_for_archive(self):
-        """``exercise.json`` must list the same item ids and types as the item
-        JSON files written into this archive. When the node has native QTI
-        items, every item is written by its QTI manifest id, and native items
-        carry their derived proxy's legacy Perseus ``type``. On a mismatch,
-        ``restore_channel``'s ``extract_assessment_items`` opens ``{hex}.json``
-        and raises ``FileNotFoundError``, and ``generate_assessment_item``
-        receives a ``qti`` type it cannot map.
-        """
         assessment_ids = [
             assessment_id
             for assessment_id in self.exercise_data.get("all_assessment_items", [])
@@ -185,7 +174,9 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
                 new_ids.append(proxy.assessment_id)
                 new_mapping[proxy.assessment_id] = proxy.type
             else:
-                item_id = hex_to_qti_id(assessment_id) if derived else assessment_id
+                item_id = (
+                    hex_to_qti_id(assessment_id) if self.qti_item_ids else assessment_id
+                )
                 new_ids.append(item_id)
                 if assessment_id in original_mapping:
                     new_mapping[item_id] = original_mapping[assessment_id]

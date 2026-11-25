@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any
 from typing import Dict
 from typing import List
@@ -34,10 +35,16 @@ from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_p
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
 from contentcuration.utils.assessment.qti.media import strip_studio_attributes
 from contentcuration.utils.assessment.qti.perseus_derive import (
+    declares_unreadable_number,
+)
+from contentcuration.utils.assessment.qti.perseus_derive import (
     is_answerless_numeric_entry,
 )
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
+
+
+_ANSWERLESS_REASON = "has no correct answer"
 
 
 @dataclass
@@ -45,6 +52,41 @@ class QTIResource:
     identifier: str
     filepath: str
     file_dependencies: List[str]
+
+
+def _native_qti_item_identifier(raw_data):
+    return parse_qti_xml(raw_data).getroot().get("identifier")
+
+
+@lru_cache(maxsize=256)
+def _native_qti_item_exclusion(raw_data) -> Optional[Tuple[int, str]]:
+    """
+    :returns: the log level and reason a native QTI item is left out of the
+        package, or None when it ships.
+    """
+    result = validate_qti_item(raw_data)
+    if not result.is_valid:
+        error_messages = "; ".join(
+            f"line {e.line}, column {e.column}: {e.message}" for e in result.errors
+        )
+        return logging.ERROR, f"failed schema validation ({error_messages})"
+    if declares_unreadable_number(raw_data):
+        return logging.WARNING, "has a correct response that is not a number"
+    if is_answerless_numeric_entry(raw_data):
+        return logging.WARNING, _ANSWERLESS_REASON
+    return None
+
+
+def qti_package_identifier(assessment_item) -> Optional[str]:
+    """
+    :returns: the item's identifier in the QTI package, or None when the
+        package leaves it out.
+    """
+    if assessment_item.type != exercises.QTI:
+        return hex_to_qti_id(assessment_item.assessment_id)
+    if _native_qti_item_exclusion(assessment_item.raw_data):
+        return None
+    return _native_qti_item_identifier(assessment_item.raw_data)
 
 
 class QTIExerciseGenerator(ExerciseArchiveGenerator):
@@ -94,10 +136,11 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
         self.qti_resources.append(resource)
 
-    def _warn_answerless(self, assessment_item):
-        logging.warning(
+    def _log_exclusion(self, assessment_item, level, reason):
+        logging.log(
+            level,
             f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
-            f"has no correct answer and will be excluded from the package"
+            f"{reason} and will be excluded from the package",
         )
 
     def _skip_answerless_input(self, assessment_item, answers) -> bool:
@@ -105,27 +148,16 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         # answerless float entry.
         is_answerless = is_answerless_input(assessment_item.type, answers)
         if is_answerless:
-            self._warn_answerless(assessment_item)
+            self._log_exclusion(assessment_item, logging.WARNING, _ANSWERLESS_REASON)
         return is_answerless
 
     def _create_native_qti_item(self, assessment_item) -> Optional[Tuple[str, bytes]]:
-        result = validate_qti_item(assessment_item.raw_data)
-        if not result.is_valid:
-            error_messages = "; ".join(
-                f"line {e.line}, column {e.column}: {e.message}" for e in result.errors
-            )
-            logging.error(
-                f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
-                f"failed schema validation and will be excluded from the package: "
-                f"{error_messages}"
-            )
+        exclusion = _native_qti_item_exclusion(assessment_item.raw_data)
+        if exclusion:
+            self._log_exclusion(assessment_item, *exclusion)
             return None
 
-        if is_answerless_numeric_entry(assessment_item.raw_data):
-            self._warn_answerless(assessment_item)
-            return None
-
-        identifier = parse_qti_xml(assessment_item.raw_data).getroot().get("identifier")
+        identifier = _native_qti_item_identifier(assessment_item.raw_data)
         if not identifier:
             raise ValueError(
                 f"QTI item {assessment_item.assessment_id} is missing a root identifier attribute"

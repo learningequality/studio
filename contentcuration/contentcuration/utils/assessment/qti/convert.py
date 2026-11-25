@@ -292,6 +292,10 @@ def format_number(answer: str) -> Optional[str]:
     return f"{mantissa}e{int(exponent):+d}"
 
 
+def is_finite_double(value: str) -> bool:
+    return bool(_JS_NUMBER.fullmatch(value)) and format_number(value) is not None
+
+
 def _create_choice_interaction_and_response(
     item: LegacyAssessmentItem,
 ) -> Tuple[ChoiceInteraction, ResponseDeclaration]:
