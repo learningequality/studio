@@ -1,149 +1,115 @@
-import { shallowMount, mount } from '@vue/test-utils';
+import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import ActivityDuration from '../CompletionOptions/ActivityDuration';
+import { CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
+import { createTranslator } from 'shared/i18n';
+
+const { minutesRequired$, optionalLabel$, notOptionalLabel$ } = createTranslator(
+  'ActivityDuration',
+  ActivityDuration.$trs,
+);
+const { SHORT_ACTIVITY, LONG_ACTIVITY, EXACT_TIME } = DurationDropdownMap;
+
+function renderComponent(props = {}) {
+  return render(ActivityDuration, { props, router: new VueRouter() });
+}
+
+async function getMinuteOptions(selectedDuration) {
+  const user = userEvent.setup();
+  renderComponent({ selectedDuration });
+  await user.click(screen.getByRole('combobox', { name: minutesRequired$() }));
+  return screen.getAllByRole('option').map(option => Number(option.textContent.trim()));
+}
 
 describe('ActivityDuration', () => {
-  it('smoke test', () => {
-    const wrapper = shallowMount(ActivityDuration);
-    expect(wrapper.exists()).toBe(true);
+  it('renders the minutes input', () => {
+    renderComponent();
+    expect(screen.getByRole('spinbutton', { name: minutesRequired$() })).toBeInTheDocument();
   });
 
-  describe(`minutes input`, () => {
-    const shortActivityMin = 5;
-    const shortActivityMax = 30;
-    const longActivityMin = 40;
-    const longActivityMax = 120;
+  it('displays seconds from the parent as whole minutes', async () => {
+    const { updateProps } = renderComponent({ value: 600 });
+    expect(screen.getByRole('spinbutton', { name: minutesRequired$() })).toHaveValue(10);
 
-    describe(`convert seconds to minutes for display`, () => {
-      it(`should display the seconds passed down from parent as minutes`, async () => {
-        const wrapper = shallowMount(ActivityDuration, {
-          propsData: { value: 600 },
-        });
-        expect(wrapper.vm.minutes).toBe(10);
-        await wrapper.setProps({ value: 4821 });
-        expect(wrapper.vm.minutes).toBe(80);
-      });
+    await updateProps({ value: 4821 });
+
+    expect(screen.getByRole('spinbutton', { name: minutesRequired$() })).toHaveValue(80);
+  });
+
+  it('emits minutes entered in the number field as seconds', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent();
+
+    await user.type(screen.getByRole('spinbutton', { name: minutesRequired$() }), '40');
+
+    expect(emitted().input.slice(-1)[0]).toEqual([2400]);
+  });
+
+  describe.each([
+    [SHORT_ACTIVITY, 5, 30, 5],
+    [LONG_ACTIVITY, 40, 120, 10],
+  ])('%s minutes', (selectedDuration, min, max, step) => {
+    it('uses the activity increment', async () => {
+      const options = await getMinuteOptions(selectedDuration);
+      const increments = options.slice(1).map((value, index) => value - options[index]);
+
+      expect(increments.length).toBeGreaterThan(0);
+      expect(increments.every(increment => increment === step)).toBe(true);
     });
 
-    describe(`convert minutes to seconds to emit to parent`, () => {
-      it(`should emit time to parent`, async () => {
-        const seconds = 2400;
-        const wrapper = mount(ActivityDuration);
-        wrapper.vm.minutes = 40;
-        await wrapper.vm.$nextTick();
-
-        const emittedTime = wrapper.emitted('input').pop()[0];
-        expect(emittedTime).toEqual(seconds);
-      });
+    it('uses the activity minimum', async () => {
+      const options = await getMinuteOptions(selectedDuration);
+      expect(Math.min(...options)).toBe(min);
     });
 
-    describe(`in 'Short activity'`, () => {
-      const wrapper = mount(ActivityDuration, {
-        propsData: {
-          selectedDuration: 'shortActivity',
-        },
-      });
-      it(`should increment by 5-minute intervals`, () => {
-        expect(wrapper.html()).toContain(`step="5"`);
-        expect(wrapper.html()).not.toContain(`step="10"`);
-      });
-      it(`minimum accepted input should be 5 minutes`, () => {
-        expect(wrapper.vm.minRange).toBe(shortActivityMin);
-        expect(wrapper.vm.minRange).not.toBe(longActivityMin);
-      });
-      it(`maximum accepted input should be 30 minutes`, () => {
-        expect(wrapper.vm.maxRange).toBe(shortActivityMax);
-        expect(wrapper.vm.maxRange).not.toBe(longActivityMax);
-      });
+    it('uses the activity maximum', async () => {
+      const options = await getMinuteOptions(selectedDuration);
+      expect(Math.max(...options)).toBe(max);
+    });
+  });
+
+  describe('completion hints', () => {
+    it.each([SHORT_ACTIVITY, LONG_ACTIVITY])(
+      'shows the optional hint for %s audio/video',
+      selectedDuration => {
+        renderComponent({ audioVideoUpload: true, selectedDuration });
+
+        expect(screen.getByText(optionalLabel$())).toBeInTheDocument();
+      },
+    );
+
+    it('hides hints for exact time on audio/video', () => {
+      renderComponent({ selectedDuration: EXACT_TIME, audioVideoUpload: true });
+
+      expect(screen.queryByText(optionalLabel$())).not.toBeInTheDocument();
+      expect(screen.queryByText(notOptionalLabel$())).not.toBeInTheDocument();
     });
 
-    describe(`in 'Long activity'`, () => {
-      const wrapper = mount(ActivityDuration, {
-        propsData: {
-          selectedDuration: 'longActivity',
-        },
+    it('shows the optional hint for short activity with all content viewed', () => {
+      renderComponent({
+        selectedDuration: SHORT_ACTIVITY,
+        selectedCompletion: CompletionDropdownMap.allContent,
       });
-      it(`should increment by 10-minute intervals`, () => {
-        expect(wrapper.html()).toContain(`step="10"`);
-        expect(wrapper.html()).not.toContain(`step="5"`);
-      });
-      it(`minimum accepted input should be 40 minutes`, () => {
-        expect(wrapper.vm.minRange).not.toBe(shortActivityMin);
-        expect(wrapper.vm.minRange).toBe(longActivityMin);
-      });
-      it(`maximum accepted input should be 120 minutes`, () => {
-        expect(wrapper.vm.maxRange).not.toBe(shortActivityMax);
-        expect(wrapper.vm.maxRange).toBe(longActivityMax);
-      });
+
+      expect(screen.getByText(optionalLabel$())).toBeInTheDocument();
     });
 
-    describe(`hints`, () => {
-      const optionalHint =
-        '(Optional) Time required for the resource to be marked as completed. This value will not be displayed to learners.';
-      const requiredHint =
-        'Time required for the resource to be marked as completed. This value will not be displayed to learners.';
-      describe(`audio/video resource`, () => {
-        it(`should display optional hint when 'Short activity' is chosen`, () => {
-          const wrapper = shallowMount(ActivityDuration, {
-            propsData: {
-              audioVideoUpload: true,
-              selectedDuration: 'shortActivity',
-            },
-          });
-          expect(wrapper.html()).toContain(optionalHint);
-        });
-        it(`should display optional hint when 'Long activity' is chosen`, () => {
-          const wrapper = shallowMount(ActivityDuration, {
-            propsData: {
-              audioVideoUpload: true,
-              selectedDuration: 'longActivity',
-            },
-          });
-          expect(wrapper.html()).toContain(optionalHint);
-        });
-        it(`should not display any hints when 'Exact time to complete' is chosen`, () => {
-          const wrapper = shallowMount(ActivityDuration, {
-            propsData: {
-              audioVideoUpload: true,
-              selectedDuration: 'exactTime',
-            },
-          });
-          expect(wrapper.html()).not.toContain(requiredHint);
-          expect(wrapper.html()).not.toContain(optionalHint);
-        });
+    it('shows the required hint for short activity with complete duration', () => {
+      renderComponent({
+        selectedDuration: SHORT_ACTIVITY,
+        selectedCompletion: CompletionDropdownMap.completeDuration,
       });
-      describe(`all other resources`, () => {
-        it(`should display optional hint when 'All content viewed' is selected in the Completion dropdown and 'Short/Long activity' is chosen`, () => {
-          const wrapper = shallowMount(ActivityDuration, {
-            propsData: {
-              audioVideoUpload: false,
-              selectedCompletion: 'allContent',
-              selectedDuration: 'shortActivity',
-            },
-          });
-          expect(wrapper.html()).toContain(optionalHint);
-        });
-        it(`should display required hint when 'Complete duration' is selected in the Completion dropdown and 'Short/Long activity' is chosen`, () => {
-          const wrapper = shallowMount(ActivityDuration, {
-            propsData: {
-              audioVideoUpload: false,
-              selectedCompletion: 'completeDuration',
-              selectedDuration: 'shortActivity',
-            },
-          });
-          expect(wrapper.html()).not.toContain('(Optional)');
-          expect(wrapper.html()).toContain(requiredHint);
-        });
-        it(`should not display any hints when 'Exact time to complete' is chosen`, () => {
-          const wrapper = shallowMount(ActivityDuration, {
-            propsData: {
-              audioVideoUpload: false,
-              selectedDuration: 'exactTime',
-            },
-          });
-          expect(wrapper.html()).not.toContain(requiredHint);
-          expect(wrapper.html()).not.toContain(optionalHint);
-        });
-      });
+
+      expect(screen.getByText(notOptionalLabel$())).toBeInTheDocument();
+      expect(screen.queryByText(optionalLabel$())).not.toBeInTheDocument();
+    });
+
+    it('hides hints for exact time on other resources', () => {
+      renderComponent({ selectedDuration: EXACT_TIME });
+
+      expect(screen.queryByText(optionalLabel$())).not.toBeInTheDocument();
+      expect(screen.queryByText(notOptionalLabel$())).not.toBeInTheDocument();
     });
   });
 });
