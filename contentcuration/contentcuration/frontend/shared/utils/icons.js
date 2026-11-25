@@ -9,8 +9,12 @@ const CONTENT_KIND_ICONS = {
   [ContentKindsNames.SLIDESHOW]: 'slideshow',
   [ContentKindsNames.EXERCISE]: 'exercise',
   [ContentKindsNames.DOCUMENT]: 'document',
+  [ContentKindsNames.H5P]: 'html5',
   [ContentKindsNames.HTML5]: 'html5',
   [ContentKindsNames.ZIM]: 'html5',
+  // Not a content kind. Base Vuetify uses error_outline; KDS has no such token.
+  // Unknown kinds still throw below.
+  unsupported: 'error',
 };
 
 export function getContentKindIcon(kind, isEmpty = false) {
