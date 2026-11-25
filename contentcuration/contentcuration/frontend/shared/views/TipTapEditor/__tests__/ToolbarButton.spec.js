@@ -21,6 +21,10 @@ describe('ToolbarButton', () => {
     user = userEvent.setup();
   });
 
+  afterEach(() => {
+    delete window.isRTL;
+  });
+
   it('keeps an unavailable control focusable and marks it aria-disabled', async () => {
     const { button } = renderButton({ isAvailable: false });
 
@@ -46,5 +50,31 @@ describe('ToolbarButton', () => {
     await user.click(button);
 
     expect(emitted().click).toHaveLength(1);
+  });
+
+  it('renders the RTL icon in RTL', () => {
+    window.isRTL = true;
+    renderButton({ rtlIcon: 'bold-rtl.svg' });
+
+    expect(screen.getByRole('img', { name: TITLE })).toHaveAttribute('src', 'bold-rtl.svg');
+  });
+
+  it('renders the default icon in LTR', () => {
+    renderButton({ rtlIcon: 'bold-rtl.svg' });
+
+    expect(screen.getByRole('img', { name: TITLE })).toHaveAttribute('src', 'bold.svg');
+  });
+
+  it('does not flip the icon in LTR', () => {
+    renderButton({ shouldFlipInRtl: true });
+
+    expect(screen.getByRole('img', { name: TITLE })).not.toHaveClass('rtl-flip');
+  });
+
+  it('flips the icon in RTL when asked to', () => {
+    window.isRTL = true;
+    renderButton({ shouldFlipInRtl: true });
+
+    expect(screen.getByRole('img', { name: TITLE })).toHaveClass('rtl-flip');
   });
 });
