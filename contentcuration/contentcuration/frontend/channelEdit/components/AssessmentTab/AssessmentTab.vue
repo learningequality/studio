@@ -20,6 +20,7 @@
       @addItem="onAddAssessmentItem"
       @updateItem="onUpdateAssessmentItem"
       @updateItems="onUpdateAssessmentItems"
+      @questionOpen="setQtiReloadBlocked"
       @deleteItem="onDeleteAssessmentItem"
     />
 
@@ -102,15 +103,19 @@
         return this.$tr('incompleteItemsCountMessage', { invalidItemsCount });
       },
     },
+    beforeDestroy() {
+      this.setQtiReloadBlocked(false);
+    },
     methods: {
       ...mapActions('assessmentItem', [
         'addAssessmentItem',
         'updateAssessmentItem',
         'updateAssessmentItems',
         'deleteAssessmentItem',
+        'setQtiReloadBlocked',
       ]),
       async onAddAssessmentItem(item) {
-        await this.addAssessmentItem(item);
+        return this.addAssessmentItem(item);
       },
       async onUpdateAssessmentItem(item) {
         await this.updateAssessmentItem(item);

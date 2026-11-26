@@ -87,3 +87,10 @@ export function contentNodesTotalSize(state) {
     ).reduce((sum, f) => sum + f.file_size, 0);
   };
 }
+
+export function filesAreUploading(state) {
+  return (
+    state.pendingUploadCount > 0 ||
+    Object.values(state.fileUploadsMap).some(file => !file.error && file.loaded < file.total)
+  );
+}

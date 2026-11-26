@@ -95,7 +95,7 @@
                     :iconActionsConfig="itemToolbarIconActions(item)"
                     :displayMenu="true"
                     :menuActionsConfig="itemToolbarMenuActions"
-                    :canEdit="!isPerseusItem(item)"
+                    :canEdit="!isItemLocked(item)"
                     :canMoveUp="!isItemFirst(item)"
                     :canMoveDown="!isItemLast(item)"
                     :collapse="!$vuetify.breakpoint.mdAndUp"
@@ -150,7 +150,7 @@
   import { AssessmentItemTypes, DELAYED_VALIDATION } from 'shared/constants';
 
   function areItemsEqual(item1, item2) {
-    if (!item1 || !item2) {
+    if (!item1 || !item2 || item1.contentnode !== item2.contentnode) {
       return false;
     }
     if (item1.assessment_id !== undefined && item2.assessment_id !== undefined) {
@@ -227,11 +227,18 @@
     },
     watch: {
       items(newItems) {
-        if (!newItems) {
+        if (!this.activeItem) {
           return;
         }
-        const updatedActiveItem = newItems.find(item => areItemsEqual(item, this.activeItem));
-        if (updatedActiveItem) {
+        if (this.activeItem.contentnode !== this.nodeId) {
+          this.closeActiveItem();
+          return;
+        }
+        const updatedActiveItem = newItems?.find(item => areItemsEqual(item, this.activeItem));
+        if (!updatedActiveItem || this.isItemLocked(updatedActiveItem)) {
+          this.activeItem = null;
+          this.$emit('questionOpen', false);
+        } else {
           this.activeItem = updatedActiveItem;
         }
       },
@@ -248,9 +255,10 @@
         return this.sortedItems.findIndex(i => areItemsEqual(i, item));
       },
       openItem(item) {
-        if (!this.isPerseusItem(item)) {
+        if (!this.isItemLocked(item)) {
           this.closeActiveItem();
           this.activeItem = item;
+          this.$emit('questionOpen', true);
         }
       },
       closeActiveItem() {
@@ -262,12 +270,17 @@
           [DELAYED_VALIDATION]: false,
         });
         this.activeItem = null;
+        this.$emit('questionOpen', false);
       },
       isItemActive(item) {
-        return areItemsEqual(this.activeItem, item);
+        return !this.isItemLocked(item) && areItemsEqual(this.activeItem, item);
       },
-      isPerseusItem(item) {
-        return item && item.type === AssessmentItemTypes.PERSEUS_QUESTION;
+      isItemLocked(item) {
+        return (
+          item &&
+          (item.type === AssessmentItemTypes.PERSEUS_QUESTION ||
+            item.type === AssessmentItemTypes.QTI)
+        );
       },
       isItemFirst(item) {
         return areItemsEqual(this.firstItem, item);
@@ -289,6 +302,9 @@
 
         if (!this.isItemActive(item)) {
           classes.push('closed');
+          if (!this.isItemLocked(item)) {
+            classes.push('openable');
+          }
         }
 
         return classes;
@@ -339,11 +355,13 @@
           order: reorderedItems.indexOf(item),
         }));
 
-        // ensure state updates are finished before opening the new item
         await this.$listeners.updateItems(newOrders);
-        await this.$listeners.addItem(newItem);
+        const savedKey = await this.$listeners.addItem(newItem);
 
-        this.openItem(newItem);
+        if (newItem.contentnode !== this.nodeId || this._isDestroyed) {
+          return;
+        }
+        this.openItem({ ...newItem, ...savedKey });
         this.$analytics.trackAction('exercise_editor', 'Add', {
           eventLabel: 'Question',
         });
@@ -407,7 +425,7 @@
         this.swapItems(item, nextItem);
       },
       onItemClick(event, item) {
-        if (this.isItemActive(item)) {
+        if (this.isItemActive(item) || this.isItemLocked(item)) {
           return;
         }
 
@@ -480,6 +498,9 @@
 
     &.closed {
       margin: 0 4px;
+    }
+
+    &.openable {
       cursor: pointer;
     }
   }

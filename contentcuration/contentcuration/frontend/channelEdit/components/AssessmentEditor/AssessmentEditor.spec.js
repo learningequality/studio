@@ -132,7 +132,7 @@ describe('AssessmentEditor', () => {
   let wrapper;
   const listeners = {
     deleteItem: jest.fn(),
-    addItem: jest.fn(),
+    addItem: jest.fn(item => ({ ...item, assessment_id: 'new' })),
     updateItem: jest.fn(),
     updateItems: jest.fn(),
   };
@@ -149,6 +149,71 @@ describe('AssessmentEditor', () => {
       },
       listeners,
     });
+  });
+
+  it.each([
+    { items: [] },
+    { items: [{ ...ITEM1, contentnode: 'copy' }] },
+    { items: [{ ...ITEM1, type: AssessmentItemTypes.QTI }] },
+  ])('closes the active editor when its row is unavailable or locked (%j)', async ({ items }) => {
+    await clickEdit(getItems(wrapper).at(0));
+    await wrapper.setProps({ items });
+    expect(wrapper.findComponent('[data-test="editor"]').exists()).toBe(false);
+    expect(wrapper.emitted('questionOpen')).toEqual([[true], [false]]);
+    expect(wrapper.emitted('updateItem')).toBeUndefined();
+  });
+
+  it('closes a new question when switching to another exercise with the same order', async () => {
+    await wrapper.setProps({ items: [] });
+    await wrapper.vm.addItem({});
+    const draft = wrapper.vm.activeItem;
+    const { order } = draft;
+    await wrapper.setProps({
+      nodeId: 'other',
+      items: [{ ...ITEM1, order, contentnode: 'other' }],
+    });
+    expect(wrapper.findComponent('[data-test="editor"]').exists()).toBe(false);
+    expect(wrapper.emitted('questionOpen')).toEqual([[true], [false]]);
+    expect(wrapper.emitted('updateItem')).toEqual([
+      [{ ...assessmentItemKey(draft), [DELAYED_VALIDATION]: false }],
+    ]);
+  });
+
+  it('opens only the saved question when a QTI create shares its order', async () => {
+    await wrapper.setProps({ items: [] });
+    const locked = { ...ITEM1, type: AssessmentItemTypes.QTI, order: 0 };
+    listeners.addItem.mockImplementationOnce(async item => {
+      const saved = { ...item, assessment_id: 'new' };
+      await wrapper.setProps({ items: [locked, saved] });
+      return saved;
+    });
+    await wrapper.vm.addItem({});
+    expect(wrapper.findAll('[data-test="editor"]')).toHaveLength(1);
+    expect(wrapper.vm.activeItem.assessment_id).toBe('new');
+  });
+
+  it('does not open a new question after switching exercises during the write', async () => {
+    let finishWrite;
+    listeners.addItem.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finishWrite = resolve;
+        }),
+    );
+    const adding = wrapper.vm.addItem({});
+    await Promise.resolve();
+    await wrapper.setProps({ nodeId: 'other', items: [] });
+    finishWrite();
+    await adding;
+    expect(wrapper.emitted('questionOpen')).toBeUndefined();
+    expect(wrapper.vm.activeItem).toBeNull();
+  });
+
+  it('reports when a question opens and closes', async () => {
+    const item = getItems(wrapper).at(0);
+    await clickEdit(item);
+    await clickClose(item);
+    expect(wrapper.emitted('questionOpen')).toEqual([[true], [false]]);
   });
 
   it('smoke test', () => {
@@ -248,6 +313,45 @@ describe('AssessmentEditor', () => {
     expect(isItemOpen(items.at(1))).toBe(true);
     expect(isItemOpen(items.at(2))).toBe(false);
     expect(isItemOpen(items.at(3))).toBe(false);
+  });
+
+  it.each(['QTI', AssessmentItemTypes.PERSEUS_QUESTION])(
+    'locks editing for %s while retaining list operations',
+    async type => {
+      jest.clearAllMocks();
+      const item = { ...ITEM2, type };
+      await wrapper.setProps({ items: [ITEM1, item, ITEM3] });
+      const card = getItems(wrapper).at(1);
+
+      await card.trigger('click');
+      expect(isItemOpen(card)).toBe(false);
+      const editIcon = card.find(
+        `[data-test="toolbarIcon-${AssessmentItemToolbarActions.EDIT_ITEM}"]`,
+      );
+      expect(editIcon.attributes('disabled')).toBeDefined();
+      await clickEdit(card);
+      expect(isItemOpen(card)).toBe(false);
+
+      expect(wrapper.emitted('questionOpen')).toBeUndefined();
+
+      await clickMoveUp(card);
+      expect(listeners.updateItems).toHaveBeenCalledWith(
+        expect.arrayContaining([{ ...assessmentItemKey(item), order: 0 }]),
+      );
+      await clickDelete(card);
+      expect(listeners.deleteItem).toHaveBeenCalledWith(item);
+      await clickAddQuestionAbove(card);
+      expect(listeners.addItem).toHaveBeenLastCalledWith(expect.objectContaining({ order: 1 }));
+      await clickAddQuestionBelow(card);
+      expect(listeners.addItem).toHaveBeenLastCalledWith(expect.objectContaining({ order: 2 }));
+    },
+  );
+
+  it('opens a legacy item with raw data', async () => {
+    await wrapper.setProps({ items: [{ ...ITEM1, raw_data: '{}' }] });
+    const card = getItems(wrapper).at(0);
+    await card.trigger('click');
+    expect(isItemOpen(card)).toBe(true);
   });
 
   it('closes an item on close button click', async () => {

@@ -856,7 +856,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     return promise;
   }
 
-  conditionalFetch(objs, params, doRefresh) {
+  conditionalFetch(objs, params, doRefresh, onBackgroundRefresh) {
     if (objs === EMPTY_ARRAY) {
       return [];
     }
@@ -896,6 +896,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (!objs.length && !objs.results?.length) {
         return fetch;
       }
+      onBackgroundRefresh?.(fetch);
     }
     return objs;
   }
@@ -905,7 +906,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
    * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
    * @return {Promise<Object[]>}
    */
-  where(params = {}, doRefresh = true) {
+  where(params = {}, doRefresh = true, onBackgroundRefresh) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
@@ -917,7 +918,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       ? this.loadPagination(paramsSerializer(params))
       : Promise.resolve(null);
     return Promise.all([super.where(params), paginationLoadPromise]).then(([objs, more]) => {
-      objs = this.conditionalFetch(objs, params, doRefresh);
+      objs = this.conditionalFetch(objs, params, doRefresh, onBackgroundRefresh);
       if (!isArray(objs) && !objs.more && more) {
         objs.more = more;
       }

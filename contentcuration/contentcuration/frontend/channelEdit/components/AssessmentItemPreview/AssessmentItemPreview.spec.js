@@ -58,6 +58,18 @@ describe('AssessmentItemPreview', () => {
       });
     });
 
+    it('hides the type label and answers for QTI', async () => {
+      const kindLabel = '[data-test="item-kind-label"]';
+      const answers = '[data-test="item-answers-preview"]';
+      await wrapper.setProps({ item: { type: 'QTI', question: '', answers: [], hints: [] } });
+      expect(wrapper.find(kindLabel).exists()).toBe(false);
+      expect(wrapper.find(answers).exists()).toBe(false);
+    });
+
+    it('shows the type label for legacy items', () => {
+      expect(wrapper.find('[data-test="item-kind-label"]').exists()).toBe(true);
+    });
+
     it('renders answers', () => {
       const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
       // We expect 1 for the question + 3 for the answers = 4 total editors.

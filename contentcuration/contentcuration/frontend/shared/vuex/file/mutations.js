@@ -50,3 +50,11 @@ export function REMOVE_FILE(state, file) {
     Vue.delete(state.contentNodeFilesMap[file.contentnode], file.id);
   }
 }
+
+export function START_UPLOAD(state) {
+  state.pendingUploadCount += 1;
+}
+
+export function FINISH_UPLOAD(state) {
+  state.pendingUploadCount -= 1;
+}

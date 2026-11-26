@@ -1,3 +1,11 @@
+import {
+  cancelQtiReload as cancelReload,
+  finishQtiLoad,
+  isQtiItem,
+  markQtiLoadStart,
+  requestQtiReload,
+  setQtiReloadBlocked as setReloadBlocked,
+} from './qtiReload';
 import { AssessmentItem } from 'shared/data/resources';
 import { isNodeComplete } from 'shared/utils/validation';
 import db from 'shared/data/db';
@@ -41,12 +49,37 @@ export function loadNodeAssessmentItems(context, nodeId) {
 }
 
 export function loadAssessmentItems(context, params = {}) {
-  return AssessmentItem.where(params).then(assessmentItems => {
-    assessmentItems.forEach(assessmentItem => {
-      context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
+  const loadStart = markQtiLoadStart(params.contentnode__in);
+  let backgroundCheck;
+  const checkForQti = items => {
+    const nodeIds = items.filter(isQtiItem).map(item => item.contentnode);
+    if (nodeIds.length) {
+      requestQtiReload(context, nodeIds, loadStart);
+    }
+  };
+  return AssessmentItem.where(params, true, refresh => {
+    backgroundCheck = refresh.then(checkForQti).catch(() => {});
+  })
+    .then(assessmentItems => {
+      assessmentItems.forEach(item => context.commit('UPDATE_ASSESSMENTITEM', item));
+      checkForQti(assessmentItems);
+      return assessmentItems;
+    })
+    .finally(() => {
+      if (backgroundCheck) {
+        backgroundCheck.finally(() => finishQtiLoad(loadStart));
+      } else {
+        finishQtiLoad(loadStart);
+      }
     });
-    return assessmentItems;
-  });
+}
+
+export function cancelQtiReload(context, nodeIds) {
+  cancelReload(nodeIds);
+}
+
+export function setQtiReloadBlocked(context, blocked) {
+  setReloadBlocked(blocked);
 }
 
 export function addAssessmentItem(context, assessmentItem) {
@@ -67,7 +100,8 @@ export function addAssessmentItem(context, assessmentItem) {
           contentnode,
           assessment_id,
         });
-        return updateNodeComplete(contentnode, context);
+        updateNodeComplete(contentnode, context);
+        return { contentnode, assessment_id };
       });
     },
   );

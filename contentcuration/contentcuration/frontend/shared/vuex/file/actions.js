@@ -168,7 +168,20 @@ export function uploadFileToStorage(
 /**
  * @return {Promise<{uploadPromise: Promise, fileObject: Object}>}
  */
-export async function uploadFile(context, { file, preset = null } = {}) {
+export async function uploadFile(context, options) {
+  context.commit('START_UPLOAD');
+  try {
+    const result = await prepareFileUpload(context, options);
+    const finish = () => context.commit('FINISH_UPLOAD');
+    result.uploadPromise.then(finish, finish);
+    return result;
+  } catch (error) {
+    context.commit('FINISH_UPLOAD');
+    throw error;
+  }
+}
+
+async function prepareFileUpload(context, { file, preset = null } = {}) {
   const file_format = file.name.split('.').pop().toLowerCase();
   file = await cleanFile(file, preset);
   const hashPromise = getHash(file).catch(() => Promise.reject(fileErrors.CHECKSUM_HASH_FAILED));

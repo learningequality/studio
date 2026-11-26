@@ -158,6 +158,7 @@ export const AssessmentItemTypes = {
   TRUE_FALSE: 'true_false',
   INPUT_QUESTION: 'input_question',
   PERSEUS_QUESTION: 'perseus_question',
+  QTI: 'QTI',
   FREE_RESPONSE: 'free_response',
 };
 

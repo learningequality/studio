@@ -208,6 +208,7 @@
         this.$emit('upload');
 
         if (!this.readonly) {
+          this.$store.commit('file/START_UPLOAD');
           try {
             files = this.allowMultiple ? files : [files[0]];
             files = await this.validateFiles(files);
@@ -240,6 +241,7 @@
               return objects;
             });
           } finally {
+            this.$store.commit('file/FINISH_UPLOAD');
             this.resetFileInput();
           }
         }
