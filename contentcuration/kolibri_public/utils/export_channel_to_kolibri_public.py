@@ -2,15 +2,22 @@ import logging
 import os
 import shutil
 import tempfile
+import zlib
 
 from django.conf import settings
 from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
+from django.db import transaction
 from kolibri_content.apps import KolibriContentConfig
 from kolibri_content.models import ChannelMetadata as ExportedChannelMetadata
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
+from kolibri_public.models import ChannelMetadata
 from kolibri_public.utils.mapper import ChannelMapper
+
+from contentcuration.constants.locking import KOLIBRI_PUBLIC_LOCK
+from contentcuration.db.advisory_lock import advisory_lock
+from contentcuration.models import Channel
 
 
 logger = logging.getLogger(__file__)
@@ -89,3 +96,20 @@ def export_channel_to_kolibri_public(
             countries=countries,
         )
         mapper.run()
+
+
+def lock_kolibri_public_channel(channel_id):
+    advisory_lock(KOLIBRI_PUBLIC_LOCK, key2=zlib.crc32(channel_id.encode("utf-8")))
+
+
+def sync_channel_to_kolibri_public(channel_id):
+    with transaction.atomic():
+        lock_kolibri_public_channel(channel_id)
+        if Channel.objects.filter(
+            id=channel_id, public=True, deleted=False, main_tree__published=True
+        ).exists():
+            export_channel_to_kolibri_public(channel_id)
+        else:
+            channel = ChannelMetadata.objects.filter(id=channel_id, public=True).first()
+            if channel:
+                channel.root.get_descendants(include_self=True).delete()

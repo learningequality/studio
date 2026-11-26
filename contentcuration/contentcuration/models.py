@@ -27,6 +27,7 @@ from django.core.validators import MinValueValidator
 from django.db import connection
 from django.db import IntegrityError
 from django.db import models
+from django.db import transaction
 from django.db.models import Count
 from django.db.models import Exists
 from django.db.models import F
@@ -56,6 +57,7 @@ from django.utils.translation import gettext as _
 from django_cte import CTEManager
 from django_cte import CTEQuerySet
 from django_cte import With
+from kombu.exceptions import OperationalError as KombuOperationalError
 from le_utils import proquint
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -90,6 +92,7 @@ from contentcuration.db.models.manager import CustomManager
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.i18n import closest_supported_locale
 from contentcuration.utils.parser import load_json_string
+from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.urls import canonical_url
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
@@ -1406,17 +1409,40 @@ class Channel(models.Model):
                 channel=self, version=self.version
             )
 
+        return ("public" in original_values or "deleted" in original_values) and (
+            self.public or original_values.get("public")
+        )
+
+    def _schedule_kolibri_public_sync(self):
+        from contentcuration.tasks import sync_channel_to_kolibri_public_task
+
+        channel_id = self.id
+
+        def send_task():
+            try:
+                sync_channel_to_kolibri_public_task.apply_async(
+                    kwargs={"channel_id": channel_id}
+                )
+            except KombuOperationalError as e:
+                report_exception(e)
+
+        transaction.on_commit(send_task)
+
     def save(self, *args, **kwargs):
         self._actor_id = kwargs.pop("actor_id", None)
         creating = self._state.adding
+        sync_kolibri_public = False
         if creating:
             if self._actor_id is None:
                 raise ValueError("No actor_id passed to save method")
             self.on_create()
         else:
-            self.on_update()
+            sync_kolibri_public = self.on_update()
 
         super(Channel, self).save(*args, **kwargs)
+
+        if sync_kolibri_public:
+            self._schedule_kolibri_public_sync()
 
         if creating:
             self.history.create(
@@ -1482,6 +1508,7 @@ class Channel(models.Model):
             Channel.objects.filter(id=self.id).update(public=True)
             # clear the channel cache
             delete_public_channel_cache_keys()
+            self._schedule_kolibri_public_sync()
         else:
             self.public = True
             self.save()
@@ -3567,6 +3594,12 @@ class File(models.Model):
                 name=FILE_DURATION_CONSTRAINT,
             )
         ]
+
+
+@receiver(models.signals.post_delete, sender=Channel)
+def sync_kolibri_public_on_channel_delete(sender, instance, **kwargs):
+    if instance.public:
+        instance._schedule_kolibri_public_sync()
 
 
 @receiver(models.signals.post_delete, sender=File)

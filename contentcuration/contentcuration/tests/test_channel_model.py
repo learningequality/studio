@@ -13,6 +13,7 @@ from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
+from contentcuration.tests.helpers import record_published_tasks
 from contentcuration.tests.utils import mixer
 
 
@@ -30,8 +31,58 @@ class PublicChannelsTestCase(StudioTestCase):
         c.make_public()
         assert c.public
 
-    # TODO(aron): test the bypass_signals arg to make_public
-    #
+    def setUp(self):
+        super().setUp()
+        self.published = record_published_tasks(self)
+
+    def _published_syncs(self):
+        return [
+            kwargs
+            for name, kwargs in self.published
+            if name == "sync_channel_to_kolibri_public_task"
+        ]
+
+    def test_make_public_publishes_sync_only_after_commit(self):
+        for bypass_signals in (False, True):
+            with self.subTest(bypass_signals=bypass_signals):
+                self.published.clear()
+                c = channel()
+
+                with self.captureOnCommitCallbacks() as callbacks:
+                    c.make_public(bypass_signals=bypass_signals)
+
+                self.assertEqual(self._published_syncs(), [])
+                for callback in callbacks:
+                    callback()
+                self.assertEqual(self._published_syncs(), [{"channel_id": c.id}])
+
+    def test_soft_deleting_private_channel_publishes_no_sync(self):
+        c = channel()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            c.deleted = True
+            c.save(actor_id=self.admin_user.id)
+
+        self.assertEqual(self._published_syncs(), [])
+
+    def test_hard_deleting_private_channel_publishes_no_sync(self):
+        c = channel()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            c.delete()
+
+        self.assertEqual(self._published_syncs(), [])
+
+    def test_renaming_public_channel_publishes_no_sync(self):
+        c = channel()
+        Channel.objects.filter(id=c.id).update(public=True)
+        c = Channel.objects.get(id=c.id)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            c.name = "renamed"
+            c.save()
+
+        self.assertEqual(self._published_syncs(), [])
 
 
 class ChannelTokenTestCase(StudioTestCase):
