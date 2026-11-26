@@ -744,7 +744,10 @@
     watch: {
       // Listen to node id specifically to avoid recursive call to watcher,
       // but still get updated properly if need to wait for node to be loaded
-      'node.id'() {
+      'node.id'(id, previousId) {
+        if (previousId) {
+          this.cancelQtiReload([previousId]);
+        }
         this.showAnswers = false;
         this.loadNode();
         this.tab = this.isExercise ? 'questions' : 'details';
@@ -754,10 +757,13 @@
       this.loadNode();
       this.tab = this.isExercise ? 'questions' : 'details';
     },
+    beforeDestroy() {
+      this.cancelQtiReload([this.nodeId]);
+    },
     methods: {
       ...mapActions('contentNode', ['loadContentNodes', 'loadRelatedResources']),
       ...mapActions('file', ['loadFiles']),
-      ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
+      ...mapActions('assessmentItem', ['loadNodeAssessmentItems', 'cancelQtiReload']),
       getText(field) {
         return this.node[field] || this.defaultText;
       },

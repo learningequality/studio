@@ -345,6 +345,13 @@
         },
       },
     },
+    watch: {
+      detailNodeIds(next, previous) {
+        const remaining = new Set((next || '').split(','));
+        const removed = (previous || '').split(',').filter(id => id && !remaining.has(id));
+        this.cancelQtiReload(removed);
+      },
+    },
     beforeRouteEnter(to, from, next) {
       if (
         to.name === RouteNames.CONTENTNODE_DETAILS ||
@@ -434,6 +441,11 @@
         });
       }
     },
+    beforeDestroy() {
+      clearInterval(this.storagePoll);
+      this.hideHTMLScroll(false);
+      this.cancelQtiReload();
+    },
     methods: {
       ...mapActions(['fetchUserStorage']),
       /* eslint-disable vue/no-unused-properties */
@@ -445,7 +457,11 @@
         'createContentNode',
       ]),
       ...mapActions('file', ['loadFiles', 'updateFile']),
-      ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
+      ...mapActions('assessmentItem', [
+        'loadAssessmentItems',
+        'updateAssessmentItems',
+        'cancelQtiReload',
+      ]),
       /* eslint-enable vue/no-unused-properties */
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal(changed = false) {
@@ -461,6 +477,7 @@
         this.promptInvalid = false;
         this.promptFailed = false;
         clearInterval(this.storagePoll);
+        this.cancelQtiReload();
         this.navigateBack();
       },
       navigateBack() {
