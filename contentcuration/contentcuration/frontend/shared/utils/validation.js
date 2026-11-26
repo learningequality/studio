@@ -539,8 +539,10 @@ export function sanitizeAssessmentItem(assessmentItem, removeEmpty = false) {
 export function getAssessmentItemErrors(assessmentItem, freeResponseInvalid = false) {
   const errors = [];
 
-  // Don't validate perseus questions
-  if (assessmentItem.type === AssessmentItemTypes.PERSEUS_QUESTION) {
+  if (
+    assessmentItem.type === AssessmentItemTypes.PERSEUS_QUESTION ||
+    assessmentItem.type === AssessmentItemTypes.QTI
+  ) {
     return errors;
   }
   // Convert answers to string to handle numeric responses

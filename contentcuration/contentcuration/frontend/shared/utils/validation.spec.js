@@ -488,6 +488,8 @@ describe('channelEdit utils', () => {
           },
         };
         expect(isNodeComplete({ nodeDetails: details, assessmentItems })).toBe(true);
+        const qtiItem = { type: 'QTI', question: '', answers: [], hints: [] };
+        expect(isNodeComplete({ nodeDetails: details, assessmentItems: [qtiItem] })).toBe(true);
       });
     });
 
@@ -924,6 +926,11 @@ describe('channelEdit utils', () => {
   });
 
   describe('getAssessmentItemErrors', () => {
+    it('accepts a blank QTI item', () => {
+      const item = { type: 'QTI', question: '', answers: [], hints: [] };
+      expect(getAssessmentItemErrors(item)).toEqual([]);
+    });
+
     describe('when question text is missing', () => {
       it('returns negative validation results', () => {
         const assessmentItem = {

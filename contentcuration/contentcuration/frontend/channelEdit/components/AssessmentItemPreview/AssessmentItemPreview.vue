@@ -6,7 +6,11 @@
       justify-space-between
     >
       <VFlex mt-2>
-        <div class="caption grey--text mb-2">
+        <div
+          v-if="!isQti"
+          class="caption grey--text mb-2"
+          data-test="item-kind-label"
+        >
           {{ kindLabel }}
         </div>
         <TipTapEditor
@@ -18,7 +22,7 @@
     </VLayout>
 
     <VLayout
-      v-if="detailed && !isPerseus"
+      v-if="detailed && !isPerseus && !isQti"
       mt-3
       class="item-answers-preview"
       data-test="item-answers-preview"
@@ -191,6 +195,9 @@
       },
       isPerseus() {
         return this.kind === AssessmentItemTypes.PERSEUS_QUESTION;
+      },
+      isQti() {
+        return this.kind === AssessmentItemTypes.QTI;
       },
       answers() {
         if (!this.item || !this.item.answers) {
