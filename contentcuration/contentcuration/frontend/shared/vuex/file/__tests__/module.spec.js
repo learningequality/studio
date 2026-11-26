@@ -1,11 +1,24 @@
+import { mount } from '@vue/test-utils';
 import JSZip from 'jszip';
-import { getH5PMetadata } from '../utils';
+import {
+  cancelQtiReload,
+  finishQtiLoad,
+  markQtiLoadStart,
+  requestQtiReload,
+} from '../../../../channelEdit/vuex/assessmentItem/qtiReload';
+import * as fileUtils from '../utils';
+import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+import { reloadBrowser } from 'shared/utils/navigation';
 import storeFactory from 'shared/vuex/baseStore';
+import Uploader from 'shared/views/files/Uploader';
 import { File, injectVuexStore } from 'shared/data/resources';
 import client from 'shared/client';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 jest.mock('shared/vuex/connectionPlugin');
+jest.mock('shared/utils/navigation', () => ({ reloadBrowser: jest.fn() }));
+
+const { getH5PMetadata } = fileUtils;
 
 const contentnode = 'testnode';
 window.storageBaseUrl = 'www.test.com/';
@@ -64,6 +77,34 @@ describe('file store', () => {
     return File.table.toCollection().delete();
   });
   describe('file getters', () => {
+    it('tracks pending and failed uploads', () => {
+      const progress = { id, loaded: 10, total: 10 };
+      store.commit('file/ADD_FILE', progress);
+      expect(store.getters['file/filesAreUploading']).toBe(false);
+      store.commit('file/ADD_FILE', { ...progress, loaded: 0 });
+      expect(store.getters['file/filesAreUploading']).toBe(true);
+      store.commit('file/ADD_FILE', { id, error: 'failed' });
+      expect(store.getters['file/filesAreUploading']).toBe(false);
+    });
+
+    it('tracks an upload while hashing and clears it after a hash failure', async () => {
+      let rejectHash;
+      const hash = jest.spyOn(fileUtils, 'getHash').mockReturnValue(
+        new Promise((resolve, reject) => {
+          rejectHash = reject;
+        }),
+      );
+      const file = new window.File(['content'], 'document.pdf');
+      const upload = store.dispatch('file/uploadFile', { file });
+      await Promise.resolve();
+      expect(hash).toHaveBeenCalledWith(file);
+      expect(store.getters['file/filesAreUploading']).toBe(true);
+      rejectHash(new Error('hash failed'));
+      const { uploadPromise } = await upload;
+      await expect(uploadPromise).rejects.toBeDefined();
+      expect(store.getters['file/filesAreUploading']).toBe(false);
+    });
+
     it('getContentNodeFileById', () => {
       const file = store.getters['file/getContentNodeFileById'](contentnode, id);
       expect(file.id).toEqual(id);
@@ -132,6 +173,112 @@ describe('file store', () => {
       });
     });
     describe('upload actions', () => {
+      it('holds a QTI reload from a file drop through validation and storage upload', async () => {
+        function defer() {
+          let resolve;
+          const promise = new Promise(done => {
+            resolve = done;
+          });
+          return { promise, resolve };
+        }
+        const uploadUrl = defer();
+        const storagePut = defer();
+        const completed = jest.fn();
+        const { createObjectURL, revokeObjectURL } = URL;
+        const imageUrl = 'blob:dropped-image';
+        URL.createObjectURL = jest.fn(() => imageUrl);
+        URL.revokeObjectURL = jest.fn();
+        const setImageSrc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src').set;
+        let image;
+        jest.spyOn(HTMLImageElement.prototype, 'src', 'set').mockImplementation(function (src) {
+          if (src === imageUrl) {
+            image = this;
+          }
+          setImageSrc.call(this, src);
+        });
+        jest.spyOn(fileUtils, 'getHash').mockResolvedValue('00000000000000000000000000000000');
+        const requestUrl = jest.spyOn(File, 'uploadUrl').mockReturnValue(uploadUrl.promise);
+        const put = jest.spyOn(client, 'put').mockReturnValue(storagePut.promise);
+        const sessionClient = jest.requireActual('../../../client').default;
+        jest.spyOn(sessionClient, 'get').mockResolvedValue({ data: 0 });
+        store.commit('UPDATE_SESSION', { disk_space: 100, disk_space_used: 0 });
+        store.registerModule('connection', { state: { online: true } });
+        store.commit('SET_UNSAVED_CHANGES', false);
+        jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
+        sessionStorage.clear();
+        const uploader = mount(Uploader, {
+          store,
+          propsData: {
+            allowDrop: true,
+            presetID: FormatPresetsNames.SLIDESHOW_IMAGE,
+            uploadCompleteHandler: completed,
+          },
+        });
+
+        try {
+          const load = markQtiLoadStart([contentnode]);
+          requestQtiReload(
+            { rootState: store.state, rootGetters: store.getters },
+            [contentnode],
+            load,
+          );
+          finishQtiLoad(load);
+          const file = new window.File(['file'], 'image.png', { type: 'image/png' });
+          await uploader.find('[data-test="dropzone"]').trigger('drop', {
+            dataTransfer: { files: [file] },
+          });
+          jest.advanceTimersByTime(2000);
+          expect(reloadBrowser).not.toHaveBeenCalled();
+
+          image.dispatchEvent(new Event('load'));
+          await jest.advanceTimersByTimeAsync(2000);
+          expect(requestUrl).toHaveBeenCalledTimes(1);
+          expect(reloadBrowser).not.toHaveBeenCalled();
+
+          uploadUrl.resolve({
+            file: { ...testFile, id: 'dropped-file', preset: FormatPresetsNames.SLIDESHOW_IMAGE },
+            uploadURL: 'test_url',
+          });
+          await jest.advanceTimersByTimeAsync(2000);
+          expect(put).toHaveBeenCalledTimes(1);
+          expect(reloadBrowser).not.toHaveBeenCalled();
+
+          storagePut.resolve();
+          await jest.advanceTimersByTimeAsync(2000);
+          expect(completed).toHaveBeenCalledTimes(1);
+          expect(reloadBrowser).toHaveBeenCalledTimes(1);
+        } finally {
+          uploader.destroy();
+          Object.assign(URL, { createObjectURL, revokeObjectURL });
+          cancelQtiReload();
+          reloadBrowser.mockClear();
+          jest.useRealTimers();
+        }
+      });
+
+      it('tracks an empty file until the storage PUT settles', async () => {
+        const checksum = '00000000000000000000000000000000';
+        jest.spyOn(fileUtils, 'getHash').mockResolvedValue(checksum);
+        jest.spyOn(File, 'uploadUrl').mockResolvedValue({
+          file: { id: 'empty-file' },
+          uploadURL: 'test_url',
+        });
+        let finishPut;
+        jest.spyOn(client, 'put').mockReturnValue(
+          new Promise(resolve => {
+            finishPut = resolve;
+          }),
+        );
+
+        const { uploadPromise } = await store.dispatch('file/uploadFile', {
+          file: new window.File([], 'empty.pdf'),
+        });
+        expect(store.getters['file/filesAreUploading']).toBe(true);
+        finishPut();
+        await uploadPromise;
+        expect(store.getters['file/filesAreUploading']).toBe(false);
+      });
+
       it('uploadFileToStorage should call client.put with upload url', () => {
         const payload = {
           id: 'file-id',

@@ -7,3 +7,7 @@
 export function redirectBrowser(url) {
   window.location.assign(url);
 }
+
+export function reloadBrowser() {
+  window.location.reload();
+}

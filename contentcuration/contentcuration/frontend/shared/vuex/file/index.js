@@ -19,6 +19,7 @@ export default {
       // A map for tracking file upload info
       // keyed by file id
       fileUploadsMap: {},
+      pendingUploadCount: 0,
     };
   },
   getters,
