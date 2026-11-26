@@ -11,6 +11,9 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.translation import override
+from kolibri_public.utils.export_channel_to_kolibri_public import (
+    sync_channel_to_kolibri_public,
+)
 
 from contentcuration.celery import app
 from contentcuration.models import Change
@@ -106,6 +109,11 @@ def generateusercsv_task(user_id, language=settings.LANGUAGE_CODE):
 @app.task(name="deletetree_task")
 def deletetree_task(tree_id):
     ContentNode.objects.filter(tree_id=tree_id).delete()
+
+
+@app.task(name="sync_channel_to_kolibri_public_task")
+def sync_channel_to_kolibri_public_task(channel_id):
+    sync_channel_to_kolibri_public(channel_id)
 
 
 @app.task(name="getnodedetails_task")

@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 
 import mock
 from celery import states
+from celery.signals import before_task_publish
 from django.urls import reverse
 from django_celery_results.models import TaskResult
 from search.models import ContentNodeFullTextSearch
@@ -26,6 +27,22 @@ def clear_tasks(except_task_id=None):
     for task_id in qs.values_list("task_id", flat=True):
         app.control.revoke(task_id, terminate=True)
     qs.update(status=states.REVOKED)
+
+
+def record_published_tasks(testcase):
+    """
+    :return: A list that collects `(task name, task kwargs)` for each task sent
+        to the broker until the test ends
+    """
+    published = []
+
+    def record(sender=None, body=None, **kwargs):
+        published.append((sender, body[1]))
+
+    before_task_publish.connect(record, weak=False)
+    testcase.addCleanup(before_task_publish.disconnect, record)
+    testcase.addCleanup(app.control.purge)
+    return published
 
 
 def mock_class_instance(target):

@@ -8,7 +8,9 @@ from django.db.models import F
 from django.db.models import Q
 from django.utils import timezone
 from kolibri_public.models import ChannelMetadata
-from kolibri_public.utils import export_channel_to_kolibri_public
+from kolibri_public.utils.export_channel_to_kolibri_public import (
+    sync_channel_to_kolibri_public,
+)
 
 from contentcuration.models import Channel
 from contentcuration.models import User
@@ -46,7 +48,7 @@ class Command(BaseCommand):
         count = 0
         for channel_id in ids_to_export:
             try:
-                export_channel_to_kolibri_public(channel_id)
+                sync_channel_to_kolibri_public(channel_id)
                 count += 1
             except FileNotFoundError:
                 logger.warning(
